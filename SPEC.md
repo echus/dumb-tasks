@@ -113,7 +113,7 @@ Calm and minimal, so the focus is on the tasks:
 - Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
   (follows light/dark) and app icon are the same circle on its own. On narrow phones, while
   the add box is open, only the circle shows so the box has room.
-- Greyscale surfaces, corners only just rounded (4px; 8px for the lists and the add box),
+- Greyscale surfaces, corners only just rounded (4px),
   1px hairlines. The lists have a faint glow edge instead of borders; the add box has an
   ink border. An empty list has no panel, just its "nothing yet..." text.
 - Every list is white on the light grey page. Bucket names are plain text above each list

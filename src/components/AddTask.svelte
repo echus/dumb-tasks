@@ -51,7 +51,7 @@
     min-width: 0;
     padding: 7px 12px;
     border: none;
-    border-radius: var(--panel-radius);
+    border-radius: var(--radius);
     background: var(--surface);
     box-shadow:
       inset 0 0 0 1px var(--text),

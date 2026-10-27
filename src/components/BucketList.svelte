@@ -77,7 +77,7 @@
   .list {
     position: relative;
     overflow: hidden;
-    border-radius: var(--panel-radius);
+    border-radius: var(--radius);
     background: var(--surface);
     box-shadow: 0 0 10px var(--glow);
   }
