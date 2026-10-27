@@ -90,7 +90,7 @@ with a fluorescent colour taken from the emoji; the circle is also the checkbox 
 - Icons are guessed fresh from the text when shown, so keyword improvements reach older
   tasks too; an icon the AI set is kept.
 - Each icon has its own circle colour, matching the emoji (green 🌱, yellow ✏️). Pure red is
-  never used (it means overdue).
+  never used (it means overdue), nor orange (it looks dull beside the fluoro colours).
 - Each icon also has a broad **category** (home, errands, health, people, money, work,
   creative), kept on the task for sorting and the AI; it doesn't show in the UI.
 - Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.

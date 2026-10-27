@@ -1,33 +1,34 @@
 // Emoji for each icon the guesser can pick, with a fluorescent colour for its circle taken
-// from the emoji itself (the sprout's green, the pencil's yellow). Pure red is left out: it
-// means "overdue". Keys are the names stored on tasks (they predate the switch to emoji, so
-// they describe the old icon rather than the emoji).
+// from the emoji itself (the sprout's green, the pencil's yellow). Pure red is left out (it
+// means "overdue"), and so is orange, which looks dull next to the fluoro colours.
+// Keys are the names stored on tasks (they predate the switch to emoji, so they describe
+// the old icon rather than the emoji).
 export const TASK_ICONS: Record<string, [emoji: string, colour: string]> = {
   'baby': ['👶', '#ff7ac8'],
-  'bike': ['🏃', '#ff9500'],
+  'bike': ['🏃', '#c6ff00'],
   'book-open': ['📖', '#2f8bff'],
-  'briefcase': ['💼', '#ffaa00'],
+  'briefcase': ['💼', '#8f6bff'],
   'cake': ['🎂', '#ff4fd8'],
   'calendar': ['📅', '#ff5c8a'],
   'camera': ['📷', '#00d4ff'],
-  'car': ['🚗', '#ff6a1a'],
-  'cat': ['🐈', '#ffa31a'],
+  'car': ['🚗', '#ff3d8b'],
+  'cat': ['🐈', '#ffd000'],
   'code': ['⌨️', '#39ff14'],
   'credit-card': ['💳', '#00e676'],
-  'dog': ['🐕', '#ffc400'],
+  'dog': ['🐕', '#ffe600'],
   'dumbbell': ['🏋️', '#ff2fd0'],
   'file-text': ['📄', '#fff200'],
-  'fuel': ['⛽', '#ff7a00'],
+  'fuel': ['⛽', '#00e5ff'],
   'gift': ['🎁', '#ff2fa8'],
   'graduation-cap': ['🎓', '#a64dff'],
   'heart-pulse': ['🧘', '#c77dff'],
-  'house': ['🏠', '#ff8c1a'],
+  'house': ['🏠', '#fff200'],
   'keyboard-music': ['🎵', '#4d7cff'],
   'landmark': ['🏦', '#00e0c0'],
   'laptop': ['💻', '#00d4ff'],
   'lightbulb': ['💡', '#ffe600'],
   'mail': ['✉️', '#4dc3ff'],
-  'package': ['📦', '#ffb000'],
+  'package': ['📦', '#ffd000'],
   'paintbrush': ['🎨', '#ff3df2'],
   'pen-line': ['✏️', '#ffd600'],
   'phone': ['📞', '#ff4f9a'],
@@ -43,8 +44,8 @@ export const TASK_ICONS: Record<string, [emoji: string, colour: string]> = {
   'stethoscope': ['🩺', '#2bffa1'],
   'trash': ['🗑️', '#a0ff1a'],
   'users': ['👥', '#5c7cff'],
-  'utensils': ['🍽️', '#ff9100'],
+  'utensils': ['🍽️', '#2bffa1'],
   'wallet': ['💰', '#4dff4d'],
   'washing-machine': ['🧺', '#00e5ff'],
-  'wrench': ['🔧', '#ff9f1a'],
+  'wrench': ['🔧', '#2f8bff'],
 };
