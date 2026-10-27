@@ -38,7 +38,7 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
   Today's "add a task" row is focused on launch; on Android the PWA registers as a share target so text
   can be shared into it from any app.
 - **Add:** every list starts with an "add a task" row, laid out like a task with an empty
-  + ring for its icon. Enter adds the task just below it, ready for the next one.
+  + ring for its icon. It stays in view (under the phone tabs) while a long list scrolls. Enter adds the task just below it, ready for the next one.
 - **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
   long-press a task to pick it up (a copy of the task follows your finger and the original fades). Drop on a list to
   place it above or below the task under the pointer, or at the end. A thin line showing

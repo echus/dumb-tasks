@@ -38,8 +38,14 @@
 </form>
 
 <style>
-  /* Laid out like a task row (see TaskRow) */
+  /* Laid out like a task row (see TaskRow). Stays in view, just under the phone tabs, while
+     a long list scrolls past. */
   form {
+    position: sticky;
+    top: var(--sticky-top, 0px);
+    z-index: 1;
+    background: var(--surface);
+    box-shadow: 0 1px 0 var(--bg); /* the divider, over the first task's, so it stays when stuck */
     display: flex;
     align-items: center;
     gap: 10px;

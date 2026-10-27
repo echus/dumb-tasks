@@ -23,6 +23,9 @@
 
   // Which bucket shows when they're tabs (below desktop width)
   let activeTab = $state<Bucket>('today');
+
+  // The phone tab bar sticks to the top, so each list's add row sticks just below it.
+  let barHeight = $state(0);
 </script>
 
 <header>
@@ -39,7 +42,7 @@
   </div>
 </header>
 
-<div class="bar">
+<div class="bar" bind:clientHeight={barHeight}>
   <!-- Dropping a task on a tab sends it to the end of that list, without switching tabs -->
   <div class="tabs" role="tablist" aria-label="Buckets">
     {#each BUCKETS as bucket (bucket)}
@@ -71,7 +74,7 @@
   </div>
 </div>
 
-<main>
+<main style:--sticky-top="{barHeight}px">
   {#each BUCKETS as bucket (bucket)}
     <BucketList {bucket} active={activeTab === bucket} tasks={grouped[bucket]} />
   {/each}

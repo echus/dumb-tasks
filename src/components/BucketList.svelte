@@ -69,9 +69,11 @@
     text-transform: lowercase;
   }
 
+  /* clip, not hidden: hidden would make the list a scroll box, and the sticky add row
+     would stick inside it instead of to the page */
   .list {
     position: relative;
-    overflow: hidden;
+    overflow: clip;
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: 0 0 10px var(--glow);
@@ -82,7 +84,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: 2; /* above the sticky add row too */
     border-radius: inherit;
     box-shadow: inset 0 0 0 1px var(--glow-ring);
     pointer-events: none;
