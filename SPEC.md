@@ -89,7 +89,7 @@ with a fluoro colour of its own; the circle is also the checkbox (hovering shows
   above verbs ("buy birthday present" → 🎂, not 🛒).
 - **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
   exact keyword matches.
-- **No match → a 🖊️ pen** (not ✏️, which is for writing tasks; the pen shows on every hue).
+- **No match → a ⭐ star** (on the hues it shows up on, like any other icon).
 - **Guessed once, then stored:** the icon is picked when a task is added and re-picked
   whenever its text is edited; otherwise the stored pick is shown. The AI can replace the
   pick with its own; that holds until the user next edits the text (like deadlines).
@@ -164,7 +164,7 @@ interface Task {
     phrase: string | null;    // phrase it was parsed from, for underlining; null if AI-set
   } | null;
   dismissedPhrases?: string[]; // phrases the user said aren't dates; parsing skips them
-  icon: string | null;        // an emoji; null: no keyword matched (shows 🖊️)
+  icon: string | null;        // an emoji; null: no keyword matched (shows ⭐)
   colour: string;             // icon circle's CSS colour: random, re-picked when the icon changes
   aiNote: string;             // context the AI keeps about this task
 

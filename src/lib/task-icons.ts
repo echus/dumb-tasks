@@ -1,5 +1,5 @@
-/** Shown when no keyword matched. A pen, not ✏️ (writing tasks), and visible on every hue. */
-export const PLAIN_ICON = '🖊️';
+/** Shown when no keyword matched. Too pale for green and cyan circles, so it skips them. */
+export const PLAIN_ICON = '⭐';
 
 // Icon circles are fluoro: full saturation, any hue except straight orange and red, which
 // look dull beside the rest. The warm end runs from golden yellow round to pinky red.
@@ -56,7 +56,7 @@ export const CLASHING_HUES: Record<string, [from: number, to: number][]> = {
   '✉️': [[44, 222], [284, 346]],
   '💳': [[44, 56], [72, 226], [322, 346]],
   '🛒': [[214, 256]],
-  '🖊️': [],
+  '⭐': [[44, 56], [76, 170], [186, 214], [314, 346]],
 };
 
 /** The parts of the fluoro range the icon stays visible on, in hue order. */

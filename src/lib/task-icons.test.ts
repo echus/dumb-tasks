@@ -64,7 +64,7 @@ describe('pickCircleColour', () => {
     }
   });
 
-  it('treats no icon as the plain pen', () => {
+  it('treats no icon as the plain star', () => {
     expect(sweep(null)).toEqual(sweep(PLAIN_ICON));
   });
 
