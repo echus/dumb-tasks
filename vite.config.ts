@@ -34,4 +34,8 @@ export default defineConfig({
       },
     }),
   ],
+  // Lets `npm run preview` be reached through a Cloudflare quick tunnel for phone testing
+  preview: {
+    allowedHosts: ['.trycloudflare.com'],
+  },
 })
