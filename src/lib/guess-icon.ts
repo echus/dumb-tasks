@@ -47,6 +47,9 @@ const RULES: [emoji: string, words: string][] = [
   ['🛒', 'buy shop shopping order groceries supermarket milk bread eggs grocery tesco sainsburys aldi lidl asda toilet loo batteries'],
 ];
 
+/** Every emoji the keyword table can pick */
+export const ICONS = RULES.map(([emoji]) => emoji);
+
 const LOOKUP = new Map<string, string>(); // keyword → emoji
 for (const [emoji, words] of [...RULES].reverse()) {
   for (const w of words.split(' ')) LOOKUP.set(w, emoji);

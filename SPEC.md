@@ -93,7 +93,10 @@ with a fluoro colour of its own; the circle is also the checkbox (hovering shows
   again only when the icon changes (an edit or the AI picking a different icon), so a
   new icon is easy to spot. Hue and lightness vary continuously, so no two tasks
   quite match. Any hue but straight orange and red (they look dull beside the rest): the
-  warm end runs from golden yellow round to pinky red.
+  warm end runs from golden yellow round to pinky red. Hues an icon would vanish on are
+  skipped (e.g. the grey trolley on blue; white icons get the darker blues and violets),
+  from a per-emoji table measured off Apple's emoji by `scripts/measure-icon-clashes.js`.
+  Emoji not in the table (AI picks) can have any hue.
 - Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.
 
 ## Visual design

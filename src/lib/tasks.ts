@@ -70,7 +70,7 @@ export async function addTask(
       deletedAt: null,
       aiNote: '',
       ...derived,
-      colour: pickCircleColour(),
+      colour: pickCircleColour(derived.icon),
     };
     await db.tasks.add({
       id,
@@ -91,7 +91,7 @@ export async function editText(id: string, text: string, now = new Date()) {
     if (!task) return;
     const derived = derive(text, now);
     // A new icon gets a new colour, so the change is easy to spot.
-    const colour = derived.icon === task.icon ? {} : { colour: pickCircleColour() };
+    const colour = derived.icon === task.icon ? {} : { colour: pickCircleColour(derived.icon) };
     await updateTask(id, { text, ...derived, ...colour }, now);
   });
 }
