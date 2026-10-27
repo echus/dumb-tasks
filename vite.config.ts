@@ -15,7 +15,7 @@ export default defineConfig({
       manifest: {
         name: 'Dumb Tasks',
         short_name: 'Dumb Tasks',
-        description: 'A deliberately simple task list.',
+        description: 'A really simple task list.',
         start_url: '/',
         display: 'standalone',
         background_color: '#000000',
