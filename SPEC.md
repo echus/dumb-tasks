@@ -3,7 +3,7 @@
 *Status: draft, 2026-10-26. Milestone 1 built.*
 
 A deliberately simple, local-first task list. You brain-dump one-line tasks, drop them into
-Today / Week / Month / Icebox, and optionally plan your day by talking to the AI you already use.
+Today / Week / Month / Someday, and optionally plan your day by talking to the AI you already use.
 
 ## Who it's for
 
@@ -28,7 +28,7 @@ are not the primary audience and don't drive design decisions.
 | Today   | The working list. Perpetual — not one list per date; undone tasks simply stay. **New tasks land here.** |
 | Week    | Upcoming; candidates for promotion into Today. |
 | Month   | Needs doing on some timeline, not urgent. |
-| Icebox  | Ideas and someday stuff. |
+| Someday | Ideas and maybe-one-day stuff (stored as `icebox`). |
 
 Completed tasks leave their bucket but are kept (with completion time) as history.
 
@@ -245,7 +245,7 @@ itself has no chat and needs no API key.
 
 **Suggested morning flow** (encoded as an MCP prompt): sort unsorted tasks from Today →
 flag deadlines and overdue items → agree a realistic Today given the user's time and energy →
-push the rest to Week / Month / Icebox → note anything learned in memory.
+push the rest to Week / Month / Someday → note anything learned in memory.
 
 **Why MCP first:** planning seems most useful with the most capable models (Opus-class) and
 the AI client's own memory. Through MCP that comes with the user's existing subscription at no

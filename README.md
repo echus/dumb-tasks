@@ -1,7 +1,7 @@
 # Dumb Tasks
 
 A deliberately simple, local-first task list. Brain-dump one-line tasks, then sort them into
-**Today**, **Week**, **Month** or **Icebox**. See [SPEC.md](SPEC.md) for the full design.
+**Today**, **Week**, **Month** or **Someday**. See [SPEC.md](SPEC.md) for the full design.
 
 Everything is stored in your browser (IndexedDB). There's no account and no server. Optionally,
 tasks sync between devices through a hidden folder in your Google Drive.
