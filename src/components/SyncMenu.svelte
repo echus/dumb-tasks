@@ -187,7 +187,10 @@
     border-radius: var(--radius);
     /* The page colour, so it doesn't read as another list */
     background: var(--bg);
-    box-shadow: inset 0 0 0 1px var(--glow-ring); /* the same faint edge as the lists */
+    /* The same faint edge as the lists, and a small, fairly tight shadow */
+    box-shadow:
+      inset 0 0 0 1px var(--glow-ring),
+      0 2px 8px rgb(0 0 0 / 0.15);
   }
 
   section {
