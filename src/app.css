@@ -36,11 +36,12 @@
   --glow-ring: rgb(255 255 255 / 0.14);
   --glow: rgb(255 255 255 / 0.08);
 
-  /* Icon circles: each task's fluoro colour mixed into a pale base, so they stay bright on
-     the grey lists. --on-tint colours the hover tick. */
+  /* Icon circles: each task's fluoro colour with a little pale base mixed in, so they hold
+     their own beside the fluoro badges without blues turning dark on the grey lists.
+     --on-tint colours the hover tick. */
   --tint-base: #f0f0f2;
   --on-tint: #1b1c1f;
-  --circle-tint: 55%;
+  --circle-tint: 75%;
 
   /* Header icon buttons: muted on the black page (anything darker gets lost), and a
      dimmer grey when they can't be used */
