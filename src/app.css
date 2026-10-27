@@ -75,7 +75,7 @@
     --due-soon-ink-mix: 92%;
     --due-near-ink: #d69e00;
     --glow-ring: rgb(0 0 0 / 0.1);
-    --glow: rgb(0 0 0 / 0.07);
+    --glow: transparent; /* no shadow on white: the edge is enough */
     --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
     --icon-disabled: color-mix(in srgb, var(--icon-quiet) 30%, var(--bg));
     --tint-base: var(--surface);
@@ -97,7 +97,7 @@
   --due-soon-ink-mix: 92%;
   --due-near-ink: #d69e00;
   --glow-ring: rgb(0 0 0 / 0.1);
-  --glow: rgb(0 0 0 / 0.07);
+  --glow: transparent; /* no shadow on white: the edge is enough */
   --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
   --icon-disabled: color-mix(in srgb, var(--icon-quiet) 30%, var(--bg));
   --tint-base: var(--surface);
