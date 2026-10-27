@@ -190,7 +190,7 @@
     /* The same faint edge as the lists, and a small, fairly tight shadow */
     box-shadow:
       inset 0 0 0 1px var(--glow-ring),
-      0 2px 8px rgb(0 0 0 / 0.15);
+      0 1px 4px rgb(0 0 0 / 0.1);
   }
 
   section {
