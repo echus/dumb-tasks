@@ -3,17 +3,13 @@
   import { effectiveTheme, toggleTheme } from '../lib/theme.svelte';
   import * as ui from '../lib/ui-icons';
 
-  // Shows the current theme; clicking switches to the other.
+  // Shows the theme a click switches to: a sun in dark mode, a moon in light mode.
   const dark = $derived(effectiveTheme() === 'dark');
+  const label = $derived(dark ? 'Switch to light mode' : 'Switch to dark mode');
 </script>
 
-<button
-  aria-pressed={dark}
-  aria-label="Dark mode"
-  title={dark ? 'Dark mode (click for light)' : 'Light mode (click for dark)'}
-  onclick={toggleTheme}
->
-  <Icon svg={dark ? ui.moon : ui.sun} size={18} />
+<button aria-label={label} title={label} onclick={toggleTheme}>
+  <Icon svg={dark ? ui.sun : ui.moon} size={18} />
 </button>
 
 <style>
