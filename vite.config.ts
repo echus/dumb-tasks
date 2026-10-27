@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { cloudflare } from '@cloudflare/vite-plugin'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -7,6 +8,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     svelte(),
+    // Runs the Worker (worker/index.ts) alongside the app in dev and preview. Not in tests.
+    !process.env.VITEST && cloudflare(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],

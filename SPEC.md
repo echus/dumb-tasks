@@ -193,10 +193,13 @@ Optional and pluggable. The app pulls the data file, merges, and pushes back.
   full Drive access. Found by name each sync, so a deleted file is simply made again.
   The app folder belongs to the OAuth client: check the MCP server can share it before
   milestone 4.
-- **Sign-in:** Google Identity Services in the browser, no server. Tokens last an hour and
-  there are no refresh tokens without a server, so after that the menu asks you to "Sign in
-  again" (one tap; the popup closes itself). Edits made meanwhile wait locally. A token
-  exchange on the MCP server's host would remove this later.
+- **Sign-in:** Google Identity Services' popup gives a one-time code; a small Worker
+  (`worker/index.ts`, beside the static files) swaps it for a refresh token, which needs the
+  client secret, and keeps it in an HttpOnly cookie. When the hour-long access token runs out,
+  the app quietly gets a new one from the Worker, so people stay signed in until they
+  disconnect or revoke access. "Sign in again" shows only if that fails. No tasks pass
+  through the Worker. Disconnect forgets this device's cookie without revoking Google's grant,
+  which would sign out every device.
 - **Merge:** last-write-wins **per field** using `fieldUpdatedAt`, so editing text on one
   device and moving the task on another both survive. Deletes are tombstones. (Built, and
   already used by backup import.)
@@ -265,7 +268,7 @@ Both would reuse the MCP tool definitions.
 
 ## Platforms and distribution
 
-- PWA, served as static files (GitHub Pages / Netlify / Cloudflare Pages).
+- PWA, served as static files plus the small sign-in Worker (Cloudflare Workers).
 - Capacitor wrapper for the Play Store.
 - Docker image serving the static app, for self-hosters.
 - Hosted MCP server (small and stateless).

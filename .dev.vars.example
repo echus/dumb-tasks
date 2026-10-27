@@ -1,0 +1,2 @@
+# The OAuth client's secret, for the sign-in Worker in local dev. Copy to .dev.vars.
+GOOGLE_CLIENT_SECRET=

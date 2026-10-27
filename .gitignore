@@ -29,5 +29,6 @@ dev-dist
 # Throwaway design mockups
 mockups
 
-# Wrangler local state
+# Wrangler local state and secrets
 .wrangler
+.dev.vars

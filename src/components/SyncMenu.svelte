@@ -91,7 +91,7 @@
         {:else}
           <p class="account">{sync.email}</p>
           {#if sync.needsSignIn}
-            <p>Google asks you to sign in again every so often to keep syncing.</p>
+            <p>Google signed this device out. Sign in again to keep syncing.</p>
           {:else if sync.syncing}
             <p>Syncing…</p>
           {:else if sync.lastSyncedAt}

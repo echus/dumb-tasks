@@ -1,6 +1,6 @@
 import { db } from './db';
 import { DriveAuthError, DriveBackend, fetchEmail } from './drive';
-import { CLIENT_ID, loadGoogle, requestToken, revokeToken, type AccessToken } from './google-auth';
+import { CLIENT_ID, loadGoogle, refreshToken, signIn, signOut, type AccessToken } from './google-auth';
 import { onLocalChange, syncWith } from './sync';
 
 // When and how the app syncs with Google Drive, and the state the sync menu shows.
@@ -11,8 +11,8 @@ const EDIT_DELAY = 3_000;
 const INTERVAL = 5 * 60_000;
 const EXPIRY_MARGIN = 60_000; // don't start a sync with a token about to run out
 
-// Device-only, in the settings table. The token is kept so reopening the app within the
-// hour doesn't need another sign-in; it only grants access to the app's own Drive folder.
+// Device-only, in the settings table. The token is kept so syncs within its hour don't each
+// ask the Worker for a new one; it only grants access to the app's own Drive folder.
 interface DriveSettings {
   email: string;
   token: AccessToken;
@@ -24,7 +24,7 @@ export const sync = $state({
   connected: false,
   email: '',
   syncing: false,
-  needsSignIn: false, // the token expired: a click on Reconnect gets a new one
+  needsSignIn: false, // Google signed this device out: a click on Sign in again fixes it
   error: '',
   lastSyncedAt: null as string | null,
 });
@@ -48,19 +48,34 @@ function show() {
   sync.lastSyncedAt = settings?.lastSyncedAt ?? null;
 }
 
-async function runOnce() {
+/** The saved token, or a new one from the Worker once it runs out. Null: sign in again. */
+async function freshToken(): Promise<string | null> {
+  if (settings!.token.expiresAt - EXPIRY_MARGIN > Date.now()) return settings!.token.value;
+  const token = await refreshToken();
+  if (!settings) return null; // disconnected meanwhile
+  sync.needsSignIn = !token;
+  if (!token) return null;
+  settings.token = token;
+  await save();
+  return token.value;
+}
+
+async function runOnce(retry = true): Promise<void> {
   if (!settings) return;
-  if (settings.token.expiresAt - EXPIRY_MARGIN < Date.now()) {
-    sync.needsSignIn = true;
-    return;
-  }
   sync.syncing = true;
   try {
-    await syncWith(new DriveBackend(settings.token.value));
+    const token = await freshToken();
+    if (!token) return;
+    await syncWith(new DriveBackend(token));
     settings.lastSyncedAt = new Date().toISOString();
     await save();
     sync.error = '';
   } catch (e) {
+    // Google can end a token early; one fresh token, then ask to sign in.
+    if (e instanceof DriveAuthError && retry && settings) {
+      settings.token.expiresAt = 0;
+      return await runOnce(false);
+    }
     if (e instanceof DriveAuthError) sync.needsSignIn = true;
     else if (e instanceof TypeError) sync.error = "Couldn't reach Google Drive. Will try again.";
     else sync.error = (e as Error).message;
@@ -91,7 +106,7 @@ export function syncNow(): Promise<void> {
 export async function connect() {
   sync.error = '';
   try {
-    const token = await requestToken();
+    const token = await signIn();
     settings = { email: await fetchEmail(token.value), token, lastSyncedAt: null };
     await save();
     show();
@@ -101,12 +116,12 @@ export async function connect() {
   }
 }
 
-/** Gets a fresh token after the old one expired. From a click: it opens a popup. */
+/** Signs in again after Google signed this device out. From a click: it opens a popup. */
 export async function reconnect() {
   if (!settings) return;
   sync.error = '';
   try {
-    settings.token = await requestToken(fullSignIn ? undefined : settings.email);
+    settings.token = await signIn(fullSignIn ? undefined : settings.email);
     if (fullSignIn) settings.email = await fetchEmail(settings.token.value); // may have picked another account
     fullSignIn = false;
     sync.needsSignIn = false;
@@ -120,13 +135,12 @@ export async function reconnect() {
 
 /** Stops syncing on this device. Tasks stay here and in Drive. */
 export async function disconnect() {
-  const token = settings?.token.value;
   settings = null;
   sync.needsSignIn = false;
   sync.error = '';
   show();
   await save();
-  if (token) revokeToken(token).catch(() => {});
+  signOut().catch(() => {});
 }
 
 /** Called once at startup. */

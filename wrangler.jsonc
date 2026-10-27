@@ -1,7 +1,9 @@
-// Cloudflare Worker serving the built app as static files (no server code).
-// Workers Builds runs `npm run build`; set VITE_GOOGLE_CLIENT_ID as a build variable there.
+// Cloudflare Worker serving the built app as static files, plus the small sign-in helper in
+// worker/index.ts. Workers Builds runs `npm run build`; set VITE_GOOGLE_CLIENT_ID as a build
+// variable there, and GOOGLE_CLIENT_SECRET as a secret (locally: .dev.vars).
 {
   "name": "dumb-tasks",
+  "main": "./worker/index.ts",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./dist" }
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/auth/*"] }
 }

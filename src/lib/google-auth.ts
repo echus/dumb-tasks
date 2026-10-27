@@ -1,6 +1,7 @@
-// Google sign-in for Drive sync, straight from the browser with Google Identity Services.
-// With no server there are no refresh tokens: a token lasts about an hour, and getting a new
-// one opens a (usually instant) popup, so it has to start from a click.
+// Google sign-in for Drive sync. Google's popup signs the user in and hands back a one-time
+// code; the Worker (worker/index.ts) swaps it for a refresh token, kept in a cookie this page
+// can't read. From then on the Worker hands out fresh hour-long access tokens on request, with
+// no popup, until the user disconnects or removes the app's access in their Google account.
 
 // Only the app's own hidden folder in Drive, never the rest of the user's files.
 const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
@@ -11,11 +12,12 @@ export const CLIENT_ID: string | undefined = import.meta.env.VITE_GOOGLE_CLIENT_
 export interface AccessToken {
   value: string;
   expiresAt: number; // ms since epoch
+  remembered?: boolean; // the Worker kept a refresh token, so this device stays signed in
 }
 
-interface TokenResponse {
-  access_token: string;
-  expires_in: number;
+interface CodeResponse {
+  code: string;
+  scope: string;
   error?: string;
   error_description?: string;
 }
@@ -23,15 +25,14 @@ interface TokenResponse {
 interface Gis {
   accounts: {
     oauth2: {
-      initTokenClient(config: {
+      initCodeClient(config: {
         client_id: string;
         scope: string;
+        ux_mode: 'popup';
         login_hint?: string;
-        callback: (r: TokenResponse) => void;
+        callback: (r: CodeResponse) => void;
         error_callback: (e: { type: string }) => void;
-      }): { requestAccessToken(overrides?: { prompt?: string }): void };
-      hasGrantedAllScopes(r: TokenResponse, scope: string): boolean;
-      revoke(token: string, done?: () => void): void;
+      }): { requestCode(): void };
     };
   };
 }
@@ -65,22 +66,23 @@ export function loadGoogle(): Promise<Gis> {
 }
 
 /**
- * Asks Google for a Drive token. Call it from a click: it opens a popup. With `loginHint`
- * (an account that already said yes) the popup closes on its own.
+ * Signs in with Google's popup, so call it from a click. With `loginHint` (an account that
+ * already said yes) the popup closes on its own.
  */
-export async function requestToken(loginHint?: string): Promise<AccessToken> {
+export async function signIn(loginHint?: string): Promise<AccessToken> {
   const google = await loadGoogle();
-  return new Promise((resolve, reject) => {
-    const client = google.accounts.oauth2.initTokenClient({
+  const code = await new Promise<string>((resolve, reject) => {
+    const client = google.accounts.oauth2.initCodeClient({
       client_id: CLIENT_ID!,
       scope: SCOPE,
+      ux_mode: 'popup',
       login_hint: loginHint,
       callback: (r) => {
         if (r.error) reject(new Error(r.error_description ?? r.error));
         // The consent screen lets people untick Drive access.
-        else if (!google.accounts.oauth2.hasGrantedAllScopes(r, SCOPE)) {
+        else if (!r.scope.split(' ').includes(SCOPE)) {
           reject(new Error('Dumb Tasks needs access to Google Drive to sync.'));
-        } else resolve({ value: r.access_token, expiresAt: Date.now() + r.expires_in * 1000 });
+        } else resolve(r.code);
       },
       error_callback: (e) =>
         reject(
@@ -89,11 +91,33 @@ export async function requestToken(loginHint?: string): Promise<AccessToken> {
           ),
         ),
     });
-    client.requestAccessToken(loginHint ? { prompt: '' } : undefined);
+    client.requestCode();
   });
+  const token = await callWorker('/auth/exchange', { code });
+  if (!token) throw new Error("Google didn't accept the sign-in.");
+  if (!token.remembered) console.warn('No refresh token from Google: this sign-in lasts an hour.');
+  return token;
 }
 
-export async function revokeToken(token: string): Promise<void> {
-  const google = await loadGoogle();
-  await new Promise<void>((resolve) => google.accounts.oauth2.revoke(token, resolve));
+/** A fresh access token, no popup needed. Null when the user has to sign in again. */
+export function refreshToken(): Promise<AccessToken | null> {
+  return callWorker('/auth/token');
+}
+
+/** Forgets the sign-in on this device. Other devices stay signed in. */
+export async function signOut(): Promise<void> {
+  await fetch('/auth/signout', { method: 'POST' });
+}
+
+async function callWorker(path: string, body?: object): Promise<AccessToken | null> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: body && { 'Content-Type': 'application/json' },
+    body: body && JSON.stringify(body),
+  });
+  if (res.status === 400 || res.status === 401) return null;
+  if (res.status === 501) throw new Error("Sync isn't fully set up on the server.");
+  if (!res.ok) throw new Error("Couldn't reach Google. Will try again.");
+  const { value, expiresIn, remembered } = await res.json();
+  return { value, expiresAt: Date.now() + expiresIn * 1000, remembered };
 }
