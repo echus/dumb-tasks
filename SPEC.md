@@ -55,7 +55,7 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
 - **Undo / redo:** buttons in the header (and ⌘Z / ⇧⌘Z, Ctrl+Z / Ctrl+Y) step back and forward
   through adds, edits, completions, deletions and moves made this session. An undo is written
   as a fresh edit, so it syncs like any other change.
-- **Sync and backup:** a cloud button in the header opens a small menu: connect / disconnect
+- **Sync and backup:** a sync button (circling arrows) in the header opens a small menu: connect / disconnect
   Google Drive, sync status, and "Save backup" / "Restore…" for a full JSON backup.
   Restoring merges like sync does; it never deletes.
 
