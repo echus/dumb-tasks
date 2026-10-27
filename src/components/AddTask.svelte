@@ -1,17 +1,19 @@
 <script lang="ts">
+  import Icon from './Icon.svelte';
   import { track } from '../lib/history.svelte';
   import { addTask } from '../lib/tasks';
+  import * as ui from '../lib/ui-icons';
   import { BUCKET_LABELS, type Bucket } from '../lib/types';
 
-  // Shown by the header's + button, ready to type in. It stays open for the next task, and
-  // closes on Escape or when left empty.
-  let { bucket, onclose }: { bucket: Bucket; onclose: () => void } = $props();
+  // A row at the top of every list, like a task still to be written. Only Today's takes
+  // focus on open, so one tap captures a thought.
+  let { bucket, autofocus = false }: { bucket: Bucket; autofocus?: boolean } = $props();
 
   let text = $state('');
   let input: HTMLInputElement;
 
   $effect(() => {
-    input.focus();
+    if (autofocus) input.focus();
   });
 
   async function submit(e: SubmitEvent) {
@@ -24,6 +26,7 @@
 </script>
 
 <form onsubmit={submit}>
+  <span class="icon" aria-hidden="true"><Icon svg={ui.plus} size={14} /></span>
   <input
     bind:this={input}
     bind:value={text}
@@ -31,40 +34,44 @@
     aria-label="New task in {BUCKET_LABELS[bucket]}"
     autocomplete="off"
     enterkeyhint="done"
-    onkeydown={(e) => {
-      if (e.key === 'Escape') onclose();
-    }}
-    onblur={() => {
-      if (!text.trim()) onclose();
-    }}
   />
 </form>
 
 <style>
+  /* Laid out like a task row (see TaskRow) */
   form {
     display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 0 12px;
   }
 
-  /* An ink border (black, or white in dark mode), so the box stands out from the list */
+  /* An empty ring with a + where a task's emoji circle would be */
+  .icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    color: var(--muted);
+  }
+
   input {
     flex: 1;
     min-width: 0;
-    padding: 7px 12px;
+    padding: 11px 0;
     border: none;
-    border-radius: var(--radius);
-    background: var(--surface);
-    box-shadow:
-      inset 0 0 0 1px var(--text),
-      0 0 10px var(--glow);
+    background: none;
+    line-height: 1.4;
     caret-color: var(--accent);
+    outline: none;
   }
 
   input::placeholder {
     color: var(--icon-quiet);
     opacity: 1;
-  }
-
-  input:focus {
-    outline: none;
   }
 </style>

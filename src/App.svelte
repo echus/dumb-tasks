@@ -1,16 +1,12 @@
 <script lang="ts">
   import { liveQuery } from 'dexie';
-  import { MediaQuery } from 'svelte/reactivity';
-  import AddTask from './components/AddTask.svelte';
   import BucketList from './components/BucketList.svelte';
   import BucketName from './components/BucketName.svelte';
   import HistoryButtons from './components/HistoryButtons.svelte';
-  import Icon from './components/Icon.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from './lib/db';
   import { byPosition, isActive } from './lib/tasks';
   import { finishDrop } from './lib/dnd';
-  import * as ui from './lib/ui-icons';
   import { BUCKETS, type Bucket, type Task } from './lib/types';
   import { drag } from './lib/ui-state.svelte';
 
@@ -26,38 +22,16 @@
 
   // Which bucket shows when they're tabs (below desktop width)
   let activeTab = $state<Bucket>('today');
-  const desktop = new MediaQuery('min-width: 1100px');
-
-  // The add box is hidden until the + button opens it
-  let adding = $state(false);
 </script>
 
-<header class:adding>
+<header>
   <h1>
     <svg class="mark" viewBox="0 0 16 16" aria-hidden="true">
       <circle cx="8" cy="8" r="8" />
       <path d="M4.5 8.3 7 10.8 11.5 5.5" />
-    </svg><span class="wordmark">dumb tasks</span>
+    </svg>dumb tasks
   </h1>
-  <!-- One box for every list: it adds to the selected tab, or Today when there are no tabs -->
-  <div class="add">
-    {#if adding}
-      <AddTask bucket={desktop.current ? 'today' : activeTab} onclose={() => (adding = false)} />
-    {/if}
-  </div>
   <div class="header-actions">
-    <!-- Keeps the box focused on press, so its blur doesn't close it before the click
-         toggles it -->
-    <button
-      class="add-button"
-      aria-label="Add a task"
-      title="Add a task"
-      aria-expanded={adding}
-      onpointerdown={(e) => e.preventDefault()}
-      onclick={() => (adding = !adding)}
-    >
-      <Icon svg={ui.plus} size={18} />
-    </button>
     <HistoryButtons />
     <ThemeToggle />
   </div>
@@ -102,51 +76,11 @@
 </main>
 
 <style>
-  /* Logo, the add box filling the middle, then the buttons */
   header {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     padding: 20px 0 8px;
-  }
-
-  .add {
-    width: 100%;
-    max-width: 480px;
-    justify-self: center;
-  }
-
-  /* Same as the other header buttons; ink while its box is open */
-  .add-button {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    border: none;
-    background: none;
-    color: var(--ink-faded);
-    cursor: pointer;
-  }
-
-  .add-button:hover,
-  .add-button[aria-expanded='true'] {
-    color: var(--accent);
-  }
-
-  /* Narrow phones: just the ticked circle while the add box is open, so it has room */
-  @media (max-width: 480px) {
-    .adding .wordmark {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-    }
-
-    .adding h1 .mark {
-      margin-right: 0;
-    }
   }
 
   h1 {

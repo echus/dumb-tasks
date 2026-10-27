@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import AddTask from './AddTask.svelte';
   import BucketName from './BucketName.svelte';
   import TaskRow from './TaskRow.svelte';
   import { finishDrop } from '../lib/dnd';
@@ -10,10 +10,9 @@
     bucket: Bucket;
     active: boolean; // the selected tab, when buckets are shown as tabs
     tasks: Task[];
-    children?: Snippet; // shown between the bucket name and the list
   }
 
-  let { bucket, active, tasks, children }: Props = $props();
+  let { bucket, active, tasks }: Props = $props();
 
   // Over the list but not over a task: the task will go at the end, so the line sits there
   const dropAtEnd = $derived(!!drag.id && drag.bucket === bucket && !drag.overTask);
@@ -47,18 +46,14 @@
 >
   <h2 id="heading-{bucket}"><BucketName {bucket} /></h2>
 
-  {@render children?.()}
-
-  <div class="list" class:drop-end={dropAtEnd} class:bare={!tasks.length}>
-    {#if tasks.length}
-      <ul>
-        {#each tasks as task (task.id)}
-          <TaskRow {task} />
-        {/each}
-      </ul>
-    {:else}
-      <p class="empty">nothing yet...</p>
-    {/if}
+  <div class="list" class:drop-end={dropAtEnd}>
+    <!-- New tasks land at the top of a list, so the row to write one sits there -->
+    <AddTask {bucket} autofocus={bucket === 'today'} />
+    <ul>
+      {#each tasks as task (task.id)}
+        <TaskRow {task} />
+      {/each}
+    </ul>
   </div>
 </section>
 
@@ -91,16 +86,6 @@
     border-radius: inherit;
     box-shadow: inset 0 0 0 1px var(--glow-ring);
     pointer-events: none;
-  }
-
-  /* An empty list is just its "nothing yet" text on the page, with no panel */
-  .list.bare {
-    background: none;
-    box-shadow: none;
-  }
-
-  .list.bare::before {
-    content: none;
   }
 
   /* A straight line along the bottom (an inset shadow would follow the rounded corners) */
@@ -136,10 +121,8 @@
     padding: 0;
   }
 
-  .empty {
-    margin: 0;
-    padding: 11px 12px;
-    line-height: 1.4;
-    color: var(--border-strong);
+  /* The same divider under the "add a task" row as between tasks */
+  ul > :global(li:first-child) {
+    border-top: 1px solid var(--bg);
   }
 </style>
