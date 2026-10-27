@@ -68,10 +68,13 @@ Parsed from the task text — there is no deadline field in the UI.
   "by friday" would drift forever.
 - Only accept clear date signals: "by …", "due …", "on the 14th", weekday names, explicit dates.
   Prefer missing a deadline over inventing one ("read 1984", "call May", "march for climate").
+  Bare shorthand like "3d" or "2h" only counts after a trigger word ("3d printing" isn't a date).
 - Day/month order follows device locale, with a setting to override.
 - Display: subtly underline the parsed phrase and show a badge (e.g. `3 days left`) at a
   fixed spot on the right of the task, so badges line up and long text wraps before them.
-  Hovering a task swaps its badge for the delete ×, in the same spot.
+  Hovering a task swaps its badge for the delete ×, in the same spot, with a remove-date
+  button beside it for a date read wrongly. The task remembers the dismissed phrase, so
+  editing the text doesn't bring it back (a later, different date still counts).
   The badge gets bolder as the date approaches; past dates show `2 days overdue`.
 - The AI can set or correct a task's deadline; that overrides the parsed value until the
   user next edits the text.
@@ -98,6 +101,9 @@ with a fluoro colour of its own; the circle is also the checkbox (hovering shows
   skipped (e.g. the grey trolley on blue; white icons get the darker blues and violets),
   from a per-emoji table measured off Apple's emoji by `scripts/measure-icon-clashes.js`.
   Emoji not in the table (AI picks) can have any hue.
+  A new task's hue keeps at least 60° from the task it lands above, and its lightness sits on
+  the other side of the range, so neighbours never look alike. Icons with few usable hues
+  (like the plain 📄, blues and violets only) go as far away as they can.
 - Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.
 
 ## Visual design
@@ -155,6 +161,7 @@ interface Task {
     date: string;             // YYYY-MM-DD
     phrase: string | null;    // phrase it was parsed from, for underlining; null if AI-set
   } | null;
+  dismissedPhrases?: string[]; // phrases the user said aren't dates; parsing skips them
   icon: string | null;        // an emoji; null: no keyword matched (shows 📄)
   colour: string;             // icon circle's CSS colour: random, re-picked when the icon changes
   aiNote: string;             // context the AI keeps about this task
