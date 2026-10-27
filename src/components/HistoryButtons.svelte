@@ -47,7 +47,7 @@
   }
 
   button:disabled {
-    opacity: 0.3;
+    color: var(--icon-disabled);
     cursor: default;
   }
 </style>
