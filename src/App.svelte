@@ -131,7 +131,7 @@
   }
 
   /* Phone layout: the tabs are plain text like the desktop bucket names; the selected one
-     sits on a small panel of its own */
+     is underlined in ink */
   .tabs {
     display: flex;
     gap: 2px;
@@ -142,7 +142,7 @@
   .tabs button {
     padding: 8px clamp(6px, (100vw - 300px) / 8, 12px);
     border: none;
-    border-radius: var(--radius);
+    border-bottom: 2px solid transparent;
     background: none;
     color: var(--text);
     font-family: var(--font-title);
@@ -154,10 +154,7 @@
   }
 
   .tabs button[aria-selected='true'] {
-    background: var(--surface);
-    box-shadow:
-      inset 0 0 0 1px var(--glow-ring),
-      0 0 10px var(--glow);
+    border-bottom-color: var(--accent);
   }
 
   /* Dragging a task onto a tab: the same thin line as the insertion line, under its name */

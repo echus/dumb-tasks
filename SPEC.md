@@ -111,10 +111,11 @@ Calm and minimal, so the focus is on the tasks:
 - Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
   (follows light/dark) and app icon are the same circle on its own.
 - Greyscale surfaces, corners only just rounded (4px), 1px hairlines. Panels (lists, the
-  "add a task" boxes, the selected phone tab) have a faint glow edge instead of borders.
+  "add a task" boxes) have a faint glow edge instead of borders. The "add a task" boxes are
+  pills, so they read as separate from the lists.
 - Every list is white on the light grey page. Bucket names are plain text above each list
-  on desktop; on phones the tabs are the same plain text, and the selected one sits on a
-  small white panel of its own, apart from the list.
+  on desktop; on phones the tabs are the same plain text, and the selected one has a 2px ink
+  line under it.
 - Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
 - Deadline badges are traffic lights, drawn as outlines so they don't compete with the icon
   circles: green (more than a week) → yellow (this week) → red (≤ 2 days). Overdue is the
