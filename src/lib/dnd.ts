@@ -37,11 +37,12 @@ export function dragOver(x: number, y: number) {
   const row = el?.closest<HTMLElement>('li[data-task-id]');
   const list = el?.closest<HTMLElement>('section[id^="panel-"]');
 
-  drag.overTab = null;
   drag.overTask = null;
   if (tab) {
-    drag.bucket = drag.overTab = tab.dataset.tab as Bucket;
-  } else if (row && row.dataset.taskId !== drag.id) {
+    drag.bucket = tab.dataset.tab as Bucket; // a phone tab: drop at the end of that list
+  } else if (row && row.dataset.taskId === drag.id) {
+    drag.bucket = null; // over itself: nowhere to drop
+  } else if (row) {
     const box = row.getBoundingClientRect();
     drag.bucket = list?.id.replace('panel-', '') as Bucket;
     drag.overTask = row.dataset.taskId!;

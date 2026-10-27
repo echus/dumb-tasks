@@ -40,7 +40,8 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
 - **Add:** a single always-visible text input. Enter adds to the top of Today.
 - **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
   long-press a task to pick it up (a small label follows your finger). Drop on a list to
-  place it above or below the task under the pointer, or at the end. On phones, dropping on
+  place it above or below the task under the pointer, or at the end. A thin line showing
+  where it'll land is the only drag highlight. On phones, dropping on
   a tab sends the task to the end of that list without switching tabs.
 - **Reorder:** drag within a bucket.
 - **Complete:** click the task's icon; hovering it turns it into a tick. Task leaves the list.

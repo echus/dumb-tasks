@@ -108,17 +108,21 @@
   function ondragover(e: DragEvent) {
     if (!drag.id) return;
     e.stopPropagation();
-    drag.bucket = task.bucket;
-    drag.overTab = null;
     if (drag.id === task.id) {
+      // Over itself: nowhere to drop, so no insertion line
+      drag.bucket = null;
       drag.overTask = null;
       return;
     }
+    drag.bucket = task.bucket;
     e.preventDefault();
     const box = (e.currentTarget as HTMLElement).getBoundingClientRect();
     drag.overTask = task.id;
     drag.after = e.clientY > box.top + box.height / 2;
   }
+
+  // The insertion line is the only sign of where a dragged task will land
+  const dropLine = $derived(drag.id && drag.overTask === task.id ? (drag.after ? 'after' : 'before') : null);
 </script>
 
 <li
@@ -131,6 +135,8 @@
   }}
   ondragend={endDrag}
   {ondragover}
+  class:drop-before={dropLine === 'before'}
+  class:drop-after={dropLine === 'after'}
 >
   <div class="row">
     <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
@@ -187,6 +193,14 @@
   /* Barely-there dividers: the page background colour, against the white list */
   li:not(:first-child) {
     border-top: 1px solid var(--bg);
+  }
+
+  li.drop-before {
+    box-shadow: inset 0 1px 0 var(--accent);
+  }
+
+  li.drop-after {
+    box-shadow: inset 0 -1px 0 var(--accent);
   }
 
   .row {

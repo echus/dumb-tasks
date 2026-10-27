@@ -49,16 +49,12 @@
         aria-selected={activeTab === bucket}
         aria-controls="panel-{bucket}"
         data-tab={bucket}
-        class:drop-target={drag.id && drag.overTab === bucket}
         onclick={() => (activeTab = bucket)}
         ondragover={(e) => {
           if (!drag.id) return;
           e.preventDefault();
-          drag.bucket = drag.overTab = bucket;
+          drag.bucket = bucket;
           drag.overTask = null;
-        }}
-        ondragleave={() => {
-          if (drag.overTab === bucket) drag.bucket = drag.overTab = null;
         }}
         ondrop={(e) => {
           e.preventDefault();
@@ -156,10 +152,6 @@
 
   .tabs button[aria-selected='true'] {
     background: var(--surface);
-  }
-
-  .tabs button.drop-target {
-    box-shadow: inset 0 0 0 1px var(--border-strong);
   }
 
   /* Follows the finger during a touch drag */

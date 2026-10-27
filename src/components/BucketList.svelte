@@ -12,7 +12,8 @@
 
   let { bucket, active, tasks }: Props = $props();
 
-  const dropTarget = $derived(!!drag.id && drag.bucket === bucket);
+  // Over the list but not over a task: the task will go at the end, so the line sits there
+  const dropAtEnd = $derived(!!drag.id && drag.bucket === bucket && !drag.overTask);
 
   // Over a task: land above or below it. Anywhere else in the list: at the end.
   function ondrop(e: DragEvent) {
@@ -23,7 +24,6 @@
 
 <section
   id="panel-{bucket}"
-  class:drop-target={dropTarget}
   class:inactive={!active}
   aria-labelledby="heading-{bucket}"
   ondragover={(e) => {
@@ -31,7 +31,6 @@
     e.preventDefault();
     drag.bucket = bucket;
     drag.overTask = null;
-    drag.overTab = null;
   }}
   ondragleave={(e) => {
     const into = e.relatedTarget as Node | null;
@@ -44,7 +43,7 @@
 >
   <h2 id="heading-{bucket}">{BUCKET_LABELS[bucket]}</h2>
 
-  <div class="list">
+  <div class="list" class:drop-end={dropAtEnd}>
     {#if tasks.length}
       <ul>
         {#each tasks as task (task.id)}
@@ -74,10 +73,8 @@
     background: var(--surface);
   }
 
-  /* Dragging a task over a list outlines it in a mid grey */
-  .drop-target .list {
-    outline: 1px solid var(--border-strong);
-    outline-offset: -1px;
+  .list.drop-end {
+    box-shadow: inset 0 -1px 0 var(--accent);
   }
 
   /* Below desktop width the buckets are tabs: only the selected one shows, and the tab
