@@ -66,7 +66,8 @@
   h2 {
     margin: 0;
     padding: 0 2px 8px;
-    font-family: var(--font-display);
+    font-family: var(--font-title);
+    font-variation-settings: var(--title-opsz);
     font-size: 0.95rem;
     font-weight: 700;
     text-transform: lowercase;

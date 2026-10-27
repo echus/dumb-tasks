@@ -1,3 +1,15 @@
+/* Inter Display: Inter's variable font with the optical-size axis. Only the Latin file,
+   so the offline cache stays small. Use with --title-opsz to get the display cut. */
+@font-face {
+  font-family: 'Inter Display';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* Dark is the default. Light applies when the system prefers it, unless the
    theme switch has set data-theme="dark", or whenever it sets "light". */
 :root {
@@ -34,7 +46,9 @@
   --radius: 4px;
 
   --font-body: 'Inter', system-ui, sans-serif;
-  --font-display: 'Stack Sans Headline', var(--font-body); /* logo, labels, buttons */
+  --font-display: 'Stack Sans Headline', var(--font-body); /* badges */
+  --font-title: 'Inter Display', var(--font-body); /* logo, bucket names, tabs */
+  --title-opsz: 'opsz' 32;
 
   color-scheme: dark;
 }

@@ -97,7 +97,8 @@ with its category colour; the circle is also the checkbox (hovering shows a tick
 
 Calm and minimal, so the focus is on the tasks:
 
-- Inter for text; Stack Sans Headline, lowercase, for the logo, bucket names, buttons and badges.
+- Inter for text; Inter Display bold, lowercase, for the logo and bucket names (tabs on
+  phones); Stack Sans Headline for deadline badges.
   No monospace. (Latin subsets, bundled, work offline.)
 - **Ink accent:** the accent is the text colour itself (near-black in light mode, near-white
   in dark). The category-tinted emoji circles are the only colour in the app. Red only means
@@ -239,7 +240,7 @@ Both would reuse the MCP tool definitions.
 ## Stack
 
 TypeScript · Vite · Svelte 5 · Dexie · chrono-node · Lucide · fractional-indexing ·
-vite-plugin-pwa · Vitest · Inter · Stack Sans. Later: MCP TypeScript SDK.
+vite-plugin-pwa · Vitest · Inter / Inter Display · Stack Sans. Later: MCP TypeScript SDK.
 
 ## Milestones
 

@@ -93,7 +93,8 @@
 
   h1 {
     margin: 0;
-    font-family: var(--font-display);
+    font-family: var(--font-title);
+    font-variation-settings: var(--title-opsz);
     font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -147,7 +148,8 @@
     border-radius: var(--radius);
     background: none;
     color: var(--text);
-    font-family: var(--font-display);
+    font-family: var(--font-title);
+    font-variation-settings: var(--title-opsz);
     font-size: 0.95rem;
     font-weight: 700;
     text-transform: lowercase;
