@@ -15,11 +15,15 @@ npm run check    # type-check
 npm run build    # production build in dist/
 ```
 
+The service worker only runs in production builds; use `npm run build && npm run preview`
+to test offline behaviour.
+
 ## Layout
 
 - `src/lib/tasks.ts`: every task operation (add, move, complete, edit, delete)
 - `src/lib/deadline.ts`: finds deadlines in task text ("by friday", "14 nov")
 - `src/lib/guess-icon.ts`: picks an icon and colour category from keywords
-- `src/lib/merge.ts`: per-field merge used by import now and sync later
-- `src/lib/data-file.ts`: JSON export / import
+- `src/lib/theme.svelte.ts`: light/dark toggle (follows the system until used)
+- `src/lib/merge.ts`: per-field merge for backup import and, later, sync
+- `src/lib/data-file.ts`: JSON export / import (no UI yet; comes with sync)
 - `src/components/`: the UI (Svelte 5)

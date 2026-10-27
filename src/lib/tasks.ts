@@ -3,7 +3,7 @@ import { ulid } from 'ulid';
 import { db } from './db';
 import { parseDeadline } from './deadline';
 import { guessIcon } from './guess-icon';
-import type { MergedField } from './merge';
+import { MERGED_FIELDS, type MergedField } from './merge';
 import type { Bucket, Task } from './types';
 
 export function isActive(t: Task): boolean {
@@ -104,31 +104,27 @@ export async function moveTask(id: string, bucket: Bucket, beforeId: string | nu
   });
 }
 
-/** Moves a task to the top of another bucket — what the tap menu does. */
-export async function sendTo(id: string, bucket: Bucket, now = new Date()) {
-  await db.transaction('rw', db.tasks, async () => {
-    const first = (await activeIn(bucket)).find((t) => t.id !== id);
-    await moveTask(id, bucket, first?.id ?? null, now);
-  });
-}
-
-/** Clears the "new" marker without moving the task. */
-export async function keepHere(id: string, now = new Date()) {
-  await updateTask(id, { sorted: true }, now);
-}
-
 export async function completeTask(id: string, now = new Date()) {
   await updateTask(id, { completedAt: now.toISOString() }, now);
-}
-
-export async function uncompleteTask(id: string, now = new Date()) {
-  await updateTask(id, { completedAt: null }, now);
 }
 
 export async function deleteTask(id: string, now = new Date()) {
   await updateTask(id, { deletedAt: now.toISOString() }, now);
 }
 
-export async function restoreTask(id: string, now = new Date()) {
-  await updateTask(id, { deletedAt: null }, now);
+/**
+ * Puts a task's fields back to a saved copy, or tombstones it if there was no copy (it
+ * didn't exist yet). Written as a fresh edit, so sync treats an undo like any other change.
+ */
+export async function applySnapshot(id: string, snapshot: Task | undefined, now = new Date()) {
+  const current = await db.tasks.get(id);
+  if (!current) return;
+  const target: Task = snapshot ?? { ...current, deletedAt: now.toISOString() };
+  const patch: Partial<Pick<Task, MergedField>> = {};
+  for (const field of MERGED_FIELDS) {
+    if (JSON.stringify(current[field]) !== JSON.stringify(target[field])) {
+      Object.assign(patch, { [field]: target[field] });
+    }
+  }
+  if (Object.keys(patch).length) await updateTask(id, patch, now);
 }

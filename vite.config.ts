@@ -9,16 +9,17 @@ export default defineConfig({
     svelte(),
     VitePWA({
       registerType: 'autoUpdate',
-      devOptions: { enabled: true },
       includeAssets: ['favicon.svg'],
+      // Fonts too, so the app looks right offline.
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'] },
       manifest: {
         name: 'Dumb Tasks',
         short_name: 'Dumb Tasks',
         description: 'A deliberately simple task list.',
         start_url: '/',
         display: 'standalone',
-        background_color: '#faf9f7',
-        theme_color: '#faf9f7',
+        background_color: '#121314',
+        theme_color: '#121314',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },

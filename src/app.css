@@ -1,113 +1,131 @@
+/* Dark is the default. Light applies when the system prefers it, unless the
+   theme switch has set data-theme="dark", or whenever it sets "light". */
 :root {
-  color-scheme: light dark;
+  --bg: #121314;
+  --surface: #1a1b1e;
+  --text: #e3e4e6;
+  --muted: #888b92;
+  --border: #2a2b2f;
+  --border-strong: #45474d;
+  --accent: #ff8138; /* light red-orange; wider-gamut version below */
+  /* Thin orange outline for open / hover boxes, drawn as an inset shadow so it doesn't
+     shift layout */
+  --ring: inset 0 0 0 1px var(--accent);
+  --on-accent: #121314;
+  --danger: #ff4d4d;
+  --on-danger: #121314;
 
-  --bg: #faf9f7;
-  --surface: #ffffff;
-  --text: #1d1c1a;
-  --muted: #77736c;
-  --border: #e9e6e1;
-  --border-strong: #c9c4bc;
-  --chip: #f1efeb;
-  --accent: #3b5bdb;
-  --accent-ring: rgb(59 91 219 / 0.14);
-  --on-accent: #ffffff;
-  --warn: #9a5b00;
-  --warn-bg: #fdf0d9;
-  --danger: #b42318;
-  --danger-bg: #fde7e4;
-  --toast-bg: #1d1c1a;
-  --toast-text: #faf9f7;
-  --toast-action: #9db2ff;
+  /* Month and Icebox headers: barely off the background */
+  --bucket-grey: #202125;
 
-  /* Category colours (Okabe–Ito based, so they stay distinct for colour-blind users) */
-  --cat-home: #b46f00;
-  --cat-errands: #1f7fb8;
-  --cat-health: #00805c;
-  --cat-people: #b4508f;
-  --cat-money: #7d7400;
-  --cat-work: #0062a0;
-  --cat-creative: #c04f00;
-  --cat-none: #a8a39b;
+  /* Header icon buttons: a step quieter than muted text */
+  --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
-  line-height: 1.4;
-  -webkit-font-smoothing: antialiased;
-  -webkit-tap-highlight-color: transparent;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Stack Sans Headline', var(--font-body); /* logo, labels, buttons */
+
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #161615;
-    --surface: #1f1f1d;
-    --text: #ecebe8;
-    --muted: #9a968f;
-    --border: #2d2c2a;
-    --border-strong: #4a4844;
-    --chip: #2a2927;
-    --accent: #8aa2ff;
-    --accent-ring: rgb(138 162 255 / 0.18);
-    --on-accent: #10142a;
-    --warn: #f0b354;
-    --warn-bg: #3a2c14;
-    --danger: #ff8a7a;
-    --danger-bg: #3d1d19;
-    --toast-bg: #ecebe8;
-    --toast-text: #161615;
-    --toast-action: #3b5bdb;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: whitesmoke; /* #f5f5f5 */
+    --surface: #ffffff;
+    --text: #1b1c1f;
+    --muted: #5f6269;
+    --border: #d4d4d8;
+    --border-strong: #a9abb1;
+    --danger: #d42a2a;
+    --on-danger: #ffffff;
+    --on-accent: #ffffff;
 
-    --cat-home: #e6a23c;
-    --cat-errands: #6cbfec;
-    --cat-health: #3dc49a;
-    --cat-people: #e08cc2;
-    --cat-money: #d4c84a;
-    --cat-work: #5aa7e0;
-    --cat-creative: #f08a4b;
-    --cat-none: #6d6a64;
+    --bucket-grey: #eeeeee;
+
+    color-scheme: light;
   }
 }
 
-[data-category] {
-  --cat: var(--cat-none);
-  --cat-bg: color-mix(in srgb, var(--cat) 14%, transparent);
+:root[data-theme='light'] {
+  --bg: whitesmoke; /* #f5f5f5 */
+  --surface: #ffffff;
+  --text: #1b1c1f;
+  --muted: #5f6269;
+  --border: #d4d4d8;
+  --border-strong: #a9abb1;
+  --danger: #d42a2a;
+  --on-danger: #ffffff;
+  --on-accent: #ffffff;
+
+  --bucket-grey: #eeeeee;
+
+  color-scheme: light;
 }
-[data-category='home'] { --cat: var(--cat-home); }
-[data-category='errands'] { --cat: var(--cat-errands); }
-[data-category='health'] { --cat: var(--cat-health); }
-[data-category='people'] { --cat: var(--cat-people); }
-[data-category='money'] { --cat: var(--cat-money); }
-[data-category='work'] { --cat: var(--cat-work); }
-[data-category='creative'] { --cat: var(--cat-creative); }
-[data-category='none'] { --cat-bg: transparent; }
+
+/* On wide-gamut screens (most Macs and phones) use an orange beyond sRGB, for a
+   properly fluorescent look. Everything mixed from the accent follows. */
+@supports (color: color(display-p3 1 0 0)) {
+  :root {
+    --accent: color(display-p3 1 0.5 0.18);
+  }
+}
+
+/* Today is solid orange; Week, Month and Icebox share a grey just off the background. */
+[data-bucket] { --bucket-bg: var(--bucket-grey); --bucket-fg: var(--text); }
+[data-bucket='today'] { --bucket-bg: var(--accent); --bucket-fg: var(--on-accent); }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+  border-radius: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  font: 400 15px/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
 
 #app {
-  max-width: 640px;
+  --gutter: 16px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 0 16px;
-  padding-top: env(safe-area-inset-top);
+  padding: env(safe-area-inset-top) var(--gutter) 0;
 }
 
 @media (min-width: 1100px) {
   #app {
-    max-width: 1280px;
-    padding: 0 32px;
+    --gutter: 32px;
+    max-width: 1400px;
   }
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
 }
 
 button:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 1px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
 }

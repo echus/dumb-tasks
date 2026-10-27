@@ -8,16 +8,7 @@ export const BUCKET_LABELS: Record<Bucket, string> = {
   icebox: 'Icebox',
 };
 
-export const CATEGORIES = [
-  'home',
-  'errands',
-  'health',
-  'people',
-  'money',
-  'work',
-  'creative',
-] as const;
-export type Category = (typeof CATEGORIES)[number];
+export type Category = 'home' | 'errands' | 'health' | 'people' | 'money' | 'work' | 'creative';
 
 export interface Task {
   id: string; // ULID

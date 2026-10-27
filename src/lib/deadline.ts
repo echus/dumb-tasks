@@ -37,7 +37,7 @@ const parsers: Record<DateOrder, chrono.Chrono> = {
   mdy: makeParser('mdy'),
 };
 
-export function defaultDateOrder(): DateOrder {
+function defaultDateOrder(): DateOrder {
   const locale = Intl.DateTimeFormat().resolvedOptions().locale;
   return /^en-(US|PH)$/i.test(locale) ? 'mdy' : 'dmy';
 }

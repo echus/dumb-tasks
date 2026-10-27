@@ -24,7 +24,9 @@
     "workbox-window": "^7.4.1"
   },
   "dependencies": {
-    "@lucide/svelte": "^1.61.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/stack-sans-headline": "^5.3.0",
+    "@phosphor-icons/core": "^2.1.1",
     "chrono-node": "^2.10.3",
     "dexie": "^4.4.7",
     "fractional-indexing": "^4.0.0",

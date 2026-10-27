@@ -10,25 +10,5 @@ if (typeof document !== 'undefined') {
   setInterval(() => (clock.now = new Date()), 10 * 60_000);
 }
 
-export interface Toast {
-  message: string;
-  undo?: () => void;
-}
-
-export const toast = $state<{ current: Toast | null }>({ current: null });
-
-let timer: ReturnType<typeof setTimeout> | undefined;
-
-export function showToast(message: string, undo?: () => void) {
-  clearTimeout(timer);
-  toast.current = { message, undo };
-  timer = setTimeout(() => (toast.current = null), 5000);
-}
-
-export function dismissToast() {
-  clearTimeout(timer);
-  toast.current = null;
-}
-
 /** The task being dragged between buckets (desktop only). */
 export const drag = $state<{ id: string | null }>({ id: null });

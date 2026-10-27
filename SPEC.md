@@ -38,15 +38,20 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
   The input is focused on launch; on Android the PWA registers as a share target so text
   can be shared into it from any app.
 - **Add:** a single always-visible text input. Enter adds to the top of Today.
-- **"New" marker:** a subtle dot on tasks that have never been moved out of where they landed,
-  so unsorted brain-dumps are easy to spot.
-- **Move:** tap a task to show bucket buttons (all devices); drag between buckets on desktop.
-  Touch drag-and-drop may come later.
+- **Move:** drag between buckets. **Not yet possible on phones**, where buckets are tabs and
+  browser drag-and-drop doesn't work with touch; needs touch dragging (e.g. onto a tab) or
+  another gesture.
 - **Reorder:** drag within a bucket.
-- **Complete:** checkbox. Task leaves the list; a toast offers Undo.
-- **Edit:** tap the text. Editing re-parses the deadline.
-- **Delete:** removes from view (kept as a tombstone for sync); a toast offers Undo.
-- **Export / import:** full JSON backup, available with or without sync.
+- **Complete:** click the task's icon; hovering it turns it into a tick. Task leaves the list.
+- **Edit:** click into the text; it becomes a text field with the cursor where you clicked.
+  Enter or clicking away saves, Escape cancels. Editing re-parses the deadline.
+- **Delete:** a small × at the far right, shown on hover (on touch screens, while the task is
+  being edited; swipe-to-delete is an idea). Removes from view (kept as a tombstone for sync).
+- **Undo / redo:** buttons in the header (and ⌘Z / ⇧⌘Z, Ctrl+Z / Ctrl+Y) step back and forward
+  through adds, edits, completions, deletions and moves made this session. An undo is written
+  as a fresh edit, so it syncs like any other change.
+- **Export / import:** full JSON backup. The code exists (`data-file.ts`) but has no UI yet;
+  it'll get one alongside Google Drive sync.
 
 ## Deadlines
 
@@ -64,31 +69,41 @@ Parsed from the task text — there is no deadline field in the UI.
 - The AI can set or correct a task's deadline; that overrides the parsed value until the
   user next edits the text.
 
-## Icons and colour
+## Icons
 
-Chosen automatically; never asked of the user.
+Chosen automatically; never asked of the user. Each task shows an **emoji** in a thin box,
+which also works as its checkbox (hovering shows a tick).
 
-- Each icon belongs to one of ~8 **categories**, and colour comes from the category, so colour
-  works as an implicit grouping:
-  home · errands · health · people · money/admin · work · creative/learning · other
-- Fixed, colour-blind-safe palette, one colour per category.
-- **No confident match → neutral grey dot.** Better than a wrong guess.
-- The AI may override icon/category; that sticks until the user edits the text.
-- All guessing lives behind one `guessIcon(text) → { icon, category }` function.
+- `guessIcon(text) → { icon, category }` picks one of ~45 icons; each maps to an emoji.
+- **Keyword matching:** a hand-written table of keywords and word stems, with nouns ranked
+  above verbs ("buy birthday present" → 🎂, not 🛒).
+- **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
+  exact keyword matches.
+- **No match → an empty box**, like a plain checkbox; the tick appears in it on hover.
+- Icons are guessed fresh from the text when shown, so keyword improvements reach older
+  tasks too; an icon the AI set is kept.
+- Each icon also has a broad **category** (home, errands, health, people, money, work,
+  creative), stored on the task for the AI planner. It isn't shown.
+- Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.
 
-**v1 — keyword matching (built).** A hand-written table of keywords and word stems, with
-nouns ranked above verbs ("buy birthday present" → gift, not cart).
+## Visual design
 
-**v2 — on-device model (milestone 2).** A small text-embedding model run in the browser
-(e.g. via transformers.js) compares the task's meaning with a short description of each icon,
-so "sort out the boiler" finds the wrench without a keyword for it.
+Industrial / terminal look, related to echus.co:
 
-- No API key and no server: the model downloads once and is cached by the service worker.
-- Capture must stay instant: save the task with the keyword guess first, then update the
-  icon when the model's answer arrives.
-- Keywords remain the fallback while the model is downloading, on devices too slow to run
-  it, and for strong explicit matches the model gets wrong.
-- Below a similarity threshold, show the grey dot.
+- Inter for text; Stack Sans Headline, lowercase, for the logo, bucket names, buttons and badges.
+  No monospace. (Latin subsets, bundled, work offline.)
+- Logo: an orange ticked checkbox before "dumb tasks"; the favicon and app icon are the
+  same checkbox on its own.
+- Greyscale surfaces, square corners, 1px hairlines, no borders around the lists.
+- Today's header is solid orange and its list is framed in orange; Week, Month and Icebox share a grey just off the
+  background. Header text is dark throughout in light mode; in dark mode the grey headers
+  carry light text.
+- Hover: header buttons just turn orange; the task icon shows a tick in an orange outline.
+- One accent: light red-orange `#ff8138` (a wider-gamut P3 orange where screens support it), for focus, the Today bucket, and outlines on hover and open states. Red only means overdue. Category colours avoid both.
+- Deadline badges escalate by weight, not hue: outlined grey (later) → outlined (this week) →
+  inverted (≤ 2 days) → red (overdue).
+- Dark by default and follows the system, until the user flips the sun/moon toggle in the
+  header; that choice is stored per device and applied before first paint.
 
 ## Data model
 
@@ -110,7 +125,7 @@ interface Task {
   createdAt: string;       // ISO timestamps throughout
   bucketHistory: { bucket: string; at: string }[]; // every move; lets the AI spot tasks
                                                    // that keep slipping. Merged by union.
-  sorted: boolean;         // false until first moved → drives the "new" marker
+  sorted: boolean;         // false until first moved; not shown, but useful to the AI planner
   completedAt: string | null;
   deletedAt: string | null;   // tombstone
 
@@ -133,7 +148,7 @@ Device-only settings (never synced): sync credentials, locale override.
 
 - IndexedDB (via Dexie) in the browser/PWA.
 - Request `navigator.storage.persist()` on first run; Android may otherwise evict data.
-- Nudge users without sync to export a backup now and then.
+- Once backups have a UI, nudge users without sync to export one now and then.
 
 ## Sync
 
@@ -144,7 +159,7 @@ Optional and pluggable. The app pulls the data file, merges, and pushes back.
   Drive access. WebDAV / Nextcloud comes later as a bonus for self-hosters.
 - **Merge:** last-write-wins **per field** using `fieldUpdatedAt`, so editing text on one
   device and moving the task on another both survive. Deletes are tombstones. (Built, and
-  already used by import.)
+  already used by backup import.)
 - **Concurrency:** conditional writes (ETag / If-Match); on conflict, re-pull, re-merge, retry.
 - **When:** on app open, on tab focus, debounced after edits, and every few minutes.
 - **Tombstone purge:** after a long retention window (e.g. 90 days). A device offline longer
@@ -214,14 +229,15 @@ Both would reuse the MCP tool definitions.
 ## Stack
 
 TypeScript · Vite · Svelte 5 · Dexie · chrono-node · Lucide · fractional-indexing ·
-vite-plugin-pwa · Vitest. Later: transformers.js (icon model), MCP TypeScript SDK.
+vite-plugin-pwa · Vitest · Inter · Stack Sans. Later: MCP TypeScript SDK.
 
 ## Milestones
 
 1. ~~**Local PWA**~~ — four buckets, add / move / reorder / complete / edit, deadline parsing,
-   keyword icons, JSON export/import, installable and offline. *Built.*
-2. **On-device icon model** — embedding-based `guessIcon`, keywords as fallback.
-3. **Sync** — Google Drive backend on top of the existing merge logic.
+   keyword icons, JSON export/import (UI removed for now), installable and offline. *Built.*
+2. ~~**Redesign**~~ — industrial look, light/dark theme switch. *Built.*
+3. **Sync** — Google Drive backend on top of the existing merge logic, plus a settings place
+   for sync and backup export / import.
 4. **MCP server** — hosted, Drive-backed; tools and morning-planning prompt.
 5. **Release** — Play Store wrapper, docs site, Docker image, WebDAV backend.
 6. **Decide on more AI** — after daily use of the MCP planner, revisit the later options above.
@@ -243,7 +259,6 @@ vite-plugin-pwa · Vitest. Later: transformers.js (icon model), MCP TypeScript S
   access, before building milestone 4.
 - **Hosting the MCP server:** who pays, where it runs, and how that fits Google's
   verification for an app whose server touches user Drive data.
-- **Icon model download size** (~20–30 MB) on mobile data: download on Wi-Fi only, or ask first?
 - Completed tasks: a collapsible "done today" section? Undo window?
 - Allow a manual icon override (e.g. long-press), or keep it strictly automatic?
 - Licence (MIT vs AGPL).

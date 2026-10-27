@@ -11,7 +11,6 @@ import {
   editText,
   isActive,
   moveTask,
-  sendTo,
 } from './tasks';
 import type { Bucket } from './types';
 
@@ -61,7 +60,7 @@ describe('tasks', () => {
 
   it('moves between buckets, recording history and per-field timestamps', async () => {
     const id = (await addTask('renew passport', t0))!;
-    await sendTo(id, 'month', later(5));
+    await moveTask(id, 'month', null, later(5));
 
     const task = (await db.tasks.get(id))!;
     expect(task.bucket).toBe('month');
@@ -110,7 +109,7 @@ describe('mergeTask', () => {
     await editText(id, 'call mum about sunday', later(10));
     const phone = (await db.tasks.get(id))!;
     await db.tasks.put(base);
-    await sendTo(id, 'week', later(20));
+    await moveTask(id, 'week', null, later(20));
     const laptop = (await db.tasks.get(id))!;
 
     for (const merged of [mergeTask(phone, laptop), mergeTask(laptop, phone)]) {
@@ -128,7 +127,7 @@ describe('export / import', () => {
     const backup = parseDataFile(JSON.stringify(await exportData(later(1))));
     expect(backup.schemaVersion).toBe(1);
 
-    await sendTo(id, 'week', later(2));
+    await moveTask(id, 'week', null, later(2));
 
     const result = await importData(backup);
     expect(result).toEqual({ added: 0, merged: 1 });

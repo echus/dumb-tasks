@@ -1,35 +1,36 @@
 <script lang="ts">
-  import Check from '@lucide/svelte/icons/check';
-  import Pencil from '@lucide/svelte/icons/pencil';
-  import Trash from '@lucide/svelte/icons/trash';
+  import Icon from './Icon.svelte';
   import { deadlineUrgency, describeDeadline } from '../lib/deadline';
+  import { guessIcon } from '../lib/guess-icon';
   import { TASK_ICONS } from '../lib/task-icons';
+  import * as ui from '../lib/ui-icons';
   import {
     completeTask,
     deleteTask,
     editText,
-    keepHere,
     moveTask,
-    restoreTask,
-    sendTo,
-    uncompleteTask,
   } from '../lib/tasks';
-  import { BUCKETS, BUCKET_LABELS, type Task } from '../lib/types';
-  import { clock, drag, showToast } from '../lib/ui-state.svelte';
+  import { track } from '../lib/history.svelte';
+  import type { Task } from '../lib/types';
+  import { clock, drag } from '../lib/ui-state.svelte';
 
-  interface Props {
-    task: Task;
-    selected: boolean;
-    onselect: () => void;
-  }
+  let { task }: { task: Task } = $props();
 
-  let { task, selected, onselect }: Props = $props();
-
+  // Clicking a task turns it into a text field. Moving between buckets is by dragging.
   let editing = $state(false);
   let draft = $state('');
+  let caret = 0;
+  let words = $state<HTMLElement>();
   let dropBefore = $state(false);
 
-  const Icon = $derived(task.icon ? TASK_ICONS[task.icon] : null);
+  // Guessed fresh from the text, so older tasks pick up keyword improvements too; an icon
+  // the AI chose is kept. Anything unmatched is an empty box, like a plain checkbox.
+  const guess = $derived(
+    task.iconSource === 'ai' && task.icon
+      ? { icon: task.icon, category: task.category }
+      : guessIcon(task.text),
+  );
+  const emoji = $derived(guess ? TASK_ICONS[guess.icon] : undefined);
 
   // Split the text around the parsed deadline phrase so it can be underlined.
   const parts = $derived.by(() => {
@@ -42,43 +43,75 @@
     };
   });
 
-  function startEdit() {
+  /** Where in the text a click landed, so the caret goes there like in any text field. */
+  function clickOffset(e: MouseEvent): number | null {
+    let node: Node | null = null;
+    let offset = 0;
+    if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+      if (pos) ({ offsetNode: node, offset } = pos);
+    } else if (document.caretRangeFromPoint) {
+      const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+      if (range) ({ startContainer: node, startOffset: offset } = range);
+    }
+    if (!node || !words?.contains(node)) return null;
+
+    let before = 0;
+    const walker = document.createTreeWalker(words!, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (n === node) return before + offset;
+      before += n.textContent!.length;
+    }
+    return null;
+  }
+
+  function startEdit(e: MouseEvent) {
+    caret = clickOffset(e) ?? task.text.length;
     draft = task.text;
     editing = true;
+  }
+
+  function focusInput(node: HTMLInputElement) {
+    node.focus();
+    node.setSelectionRange(caret, caret);
   }
 
   async function saveEdit() {
     if (!editing) return;
     editing = false;
-    if (draft.trim() && draft.trim() !== task.text) await editText(task.id, draft);
+    if (draft.trim() && draft.trim() !== task.text) await track([task.id], () => editText(task.id, draft));
   }
 
+  function cancelEdit() {
+    draft = task.text;
+    editing = false;
+  }
+
+  // The delete button keeps the text field focused, so on touch screens it doesn't
+  // vanish (along with the field) before the tap lands.
+  const keepFocus = (e: PointerEvent) => e.preventDefault();
+
   async function complete() {
-    await completeTask(task.id);
-    showToast('Done', () => uncompleteTask(task.id));
+    await track([task.id], () => completeTask(task.id));
   }
 
   async function remove() {
-    await deleteTask(task.id);
-    showToast('Deleted', () => restoreTask(task.id));
-  }
-
-  function focusInput(node: HTMLInputElement) {
-    node.focus();
-    node.select();
+    editing = false;
+    await track([task.id], () => deleteTask(task.id));
   }
 
   function ondrop(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
     dropBefore = false;
-    if (drag.id && drag.id !== task.id) moveTask(drag.id, task.bucket, task.id);
+    const id = drag.id;
+    if (id && id !== task.id) track([id], () => moveTask(id, task.bucket, task.id));
     drag.id = null;
   }
 </script>
 
 <li
-  class:selected
+  class:editing
   class:drop-before={dropBefore}
   draggable={!editing}
   ondragstart={(e) => {
@@ -95,64 +128,54 @@
   {ondrop}
 >
   <div class="row">
-    <button class="check" aria-label="Mark done" onclick={complete}>
-      <Check size={14} strokeWidth={3} />
+    <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
+    <button class="icon" aria-label="Mark done" onclick={complete}>
+      {#if emoji}<span class="task-glyph">{emoji}</span>{/if}
+      <span class="done-glyph"><Icon svg={ui.check} size={16} /></span>
     </button>
-
-    <span class="icon" data-category={task.category ?? 'none'} aria-hidden="true">
-      {#if Icon}<Icon size={15} />{:else}<span class="dot"></span>{/if}
-    </span>
 
     {#if editing}
       <input
         class="edit"
         bind:value={draft}
         use:focusInput
-        aria-label="Edit task"
+        aria-label="Task"
         enterkeyhint="done"
         onkeydown={(e) => {
           if (e.key === 'Enter') saveEdit();
-          if (e.key === 'Escape') editing = false;
+          if (e.key === 'Escape') cancelEdit();
         }}
         onblur={saveEdit}
       />
     {:else}
-      <button class="text" aria-expanded={selected} onclick={onselect}>
-        {parts.before}{#if parts.phrase}<span class="phrase">{parts.phrase}</span>{/if}{parts.after}
+      <button class="text" aria-label="Edit {task.text}" onclick={startEdit}>
+        <span bind:this={words}
+          >{parts.before}{#if parts.phrase}<span class="phrase">{parts.phrase}</span>{/if}{parts.after}</span
+        >
         {#if task.deadline}
           <span class="badge" data-urgency={deadlineUrgency(task.deadline, clock.now)}>
             {describeDeadline(task.deadline, clock.now)}
           </span>
         {/if}
       </button>
-      {#if !task.sorted}<span class="new" title="Not sorted yet"></span>{/if}
     {/if}
+
+    <button class="delete" aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
+      <Icon svg={ui.x} size={14} />
+    </button>
   </div>
 
-  {#if selected && !editing}
-    <div class="actions">
-      {#each BUCKETS as b (b)}
-        {#if b !== task.bucket}
-          <button class="chip" onclick={() => sendTo(task.id, b)}>{BUCKET_LABELS[b]}</button>
-        {:else if !task.sorted}
-          <button class="chip" onclick={() => keepHere(task.id)}>Keep in {BUCKET_LABELS[b]}</button>
-        {/if}
-      {/each}
-      <span class="spacer"></span>
-      <button class="tool" aria-label="Edit" onclick={startEdit}><Pencil size={16} /></button>
-      <button class="tool" aria-label="Delete" onclick={remove}><Trash size={16} /></button>
-    </div>
-  {/if}
 </li>
 
 <style>
-  li {
-    border-top: 1px solid var(--border);
-    border-radius: 0;
+  /* Barely-there dividers: the page background colour, against the white list */
+  li:not(:first-child) {
+    border-top: 1px solid var(--bg);
   }
 
-  li:last-child {
-    border-bottom: 1px solid var(--border);
+  /* An orange edge marks the task being edited */
+  li.editing {
+    box-shadow: inset 3px 0 0 var(--accent);
   }
 
   li.drop-before {
@@ -160,157 +183,143 @@
   }
 
   .row {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
     min-height: 46px;
+    padding: 0 12px;
   }
 
-  .check {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    border: 1.5px solid var(--border-strong);
-    border-radius: 50%;
-    background: none;
-    color: transparent;
-    cursor: pointer;
-  }
-
-  .check:hover,
-  .check:focus-visible {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
+  /* The thin box is the same shape the orange tick box takes on hover */
   .icon {
     flex: none;
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    color: var(--cat);
-    background: var(--cat-bg);
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
   }
 
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--cat);
+  .task-glyph {
+    display: block;
+  }
+
+  .done-glyph {
+    display: none;
+  }
+
+  .icon:hover,
+  .icon:focus-visible {
+    color: var(--accent);
+    box-shadow: var(--ring);
+  }
+
+  .icon:hover .task-glyph,
+  .icon:focus-visible .task-glyph {
+    display: none;
+  }
+
+  .icon:hover .done-glyph,
+  .icon:focus-visible .done-glyph {
+    display: contents;
   }
 
   .text {
     flex: 1;
     min-width: 0;
-    padding: 10px 0;
+    padding: 11px 0;
     border: none;
     background: none;
-    color: var(--text);
-    font: inherit;
     text-align: left;
-    line-height: 1.35;
+    line-height: 1.4;
     overflow-wrap: anywhere;
-    cursor: pointer;
+    cursor: text;
   }
 
   .phrase {
     text-decoration: underline;
-    text-decoration-color: var(--border-strong);
+    text-decoration-color: var(--muted);
+    text-decoration-style: dotted;
     text-decoration-thickness: 1.5px;
-    text-underline-offset: 3px;
+    text-underline-offset: 4px;
   }
 
   .badge {
     display: inline-block;
-    margin-left: 6px;
-    padding: 1px 7px;
-    border-radius: 999px;
+    margin-left: 8px;
+    padding: 0 6px;
+    border: 1px solid var(--border-strong);
+    font-family: var(--font-display);
     font-size: 0.75rem;
-    font-weight: 550;
+    font-weight: 700;
+    line-height: 1.6;
+    text-transform: lowercase;
     white-space: nowrap;
     vertical-align: 1px;
     color: var(--muted);
-    background: var(--chip);
   }
 
   .badge[data-urgency='near'] {
-    color: var(--warn);
-    background: var(--warn-bg);
+    border-color: var(--text);
+    color: var(--text);
   }
 
-  .badge[data-urgency='soon'],
+  .badge[data-urgency='soon'] {
+    border-color: var(--text);
+    background: var(--text);
+    color: var(--bg);
+  }
+
   .badge[data-urgency='overdue'] {
-    color: var(--danger);
-    background: var(--danger-bg);
+    border-color: var(--danger);
+    background: var(--danger);
+    color: var(--on-danger);
   }
 
-  .new {
-    flex: none;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-
+  /* Sits exactly where the text was, so clicking in feels like editing in place */
   .edit {
     flex: 1;
     min-width: 0;
-    margin: 6px 0;
-    padding: 6px 8px;
-    font: inherit;
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text);
+    padding: 11px 0;
+    border: none;
+    background: none;
+    line-height: 1.4;
+    caret-color: var(--accent);
     outline: none;
   }
 
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    padding: 0 0 10px 32px;
-  }
-
-  .chip {
-    padding: 6px 12px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--surface);
-    color: var(--text);
-    font: inherit;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-
-  .chip:hover {
-    border-color: var(--accent);
-  }
-
-  .spacer {
-    flex: 1;
-  }
-
-  .tool {
+  /* A small x at the far right, shown on hover (or while the task is open on touch screens) */
+  .delete {
+    flex: none;
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 24px;
+    height: 24px;
+    margin-right: -6px;
+    padding: 0;
     border: none;
-    border-radius: 8px;
     background: none;
     color: var(--muted);
     cursor: pointer;
+    visibility: hidden;
   }
 
-  .tool:hover {
-    background: var(--chip);
+  li:hover .delete,
+  li:focus-within .delete {
+    visibility: visible;
+  }
+
+  .delete:hover {
+    background: var(--surface);
     color: var(--text);
+    box-shadow: var(--ring);
   }
 </style>

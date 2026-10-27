@@ -1,39 +1,35 @@
 <script lang="ts">
   import TaskRow from './TaskRow.svelte';
+  import { track } from '../lib/history.svelte';
   import { moveTask } from '../lib/tasks';
   import { BUCKET_LABELS, type Bucket, type Task } from '../lib/types';
   import { drag } from '../lib/ui-state.svelte';
 
   interface Props {
     bucket: Bucket;
+    active: boolean; // the selected tab, when buckets are shown as tabs
     tasks: Task[];
-    selectedId: string | null;
-    onselect: (id: string) => void;
   }
 
-  let { bucket, tasks, selectedId, onselect }: Props = $props();
+  let { bucket, active, tasks }: Props = $props();
 
   let dropTarget = $state(false);
-
-  const EMPTY: Record<Bucket, string> = {
-    today: 'Nothing yet. Dump a task above.',
-    week: 'Things to pull into Today soon.',
-    month: 'Needs doing, not urgent.',
-    icebox: 'Ideas for someday.',
-  };
 
   // Dropping on the list itself (not on a task) puts the task at the end.
   function ondrop(e: DragEvent) {
     e.preventDefault();
     dropTarget = false;
-    if (drag.id) moveTask(drag.id, bucket, null);
+    const id = drag.id;
+    if (id) track([id], () => moveTask(id, bucket, null));
     drag.id = null;
   }
 </script>
 
 <section
+  id="panel-{bucket}"
   class:drop-target={dropTarget}
-  class:today={bucket === 'today'}
+  data-bucket={bucket}
+  class:inactive={!active}
   aria-labelledby="heading-{bucket}"
   ondragover={(e) => {
     if (!drag.id) return;
@@ -45,51 +41,60 @@
   }}
   {ondrop}
 >
-  <h2 id="heading-{bucket}">
-    {BUCKET_LABELS[bucket]}
-    {#if tasks.length}<span class="count">{tasks.length}</span>{/if}
-  </h2>
+  <h2 id="heading-{bucket}">{BUCKET_LABELS[bucket]}</h2>
 
   {#if tasks.length}
     <ul>
       {#each tasks as task (task.id)}
-        <TaskRow {task} selected={selectedId === task.id} onselect={() => onselect(task.id)} />
+        <TaskRow {task} />
       {/each}
     </ul>
   {:else}
-    <p class="empty">{EMPTY[bucket]}</p>
+    <p class="empty">nothing yet...</p>
   {/if}
 </section>
 
 <style>
   section {
-    border-radius: 14px;
-    transition: background-color 0.15s;
+    background: var(--surface);
+  }
+
+  /* Today is framed in the accent, drawn on top so the rows don't cover it */
+  section[data-bucket='today'] {
+    outline: 1px solid var(--accent);
+    outline-offset: -1px;
+  }
+
+  /* Below desktop width the buckets are tabs: only the selected one shows,
+     and the tab bar already names it. */
+  @media (max-width: 1099px) {
+    section.inactive {
+      display: none;
+    }
+
+    h2 {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
   }
 
   section.drop-target {
-    background: var(--accent-ring);
+    outline: 1px dashed var(--accent);
+    outline-offset: -1px;
   }
 
   h2 {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin: 0 0 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .today h2 {
-    color: var(--text);
-  }
-
-  .count {
-    font-weight: 500;
-    letter-spacing: 0;
+    margin: 0;
+    padding: 8px 12px;
+    background: var(--bucket-bg);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: lowercase;
+    color: var(--bucket-fg);
   }
 
   ul {
@@ -100,8 +105,8 @@
 
   .empty {
     margin: 0;
-    padding: 10px 0;
-    font-size: 0.9rem;
-    color: var(--muted);
+    padding: 11px 12px;
+    line-height: 1.4;
+    color: var(--border-strong);
   }
 </style>

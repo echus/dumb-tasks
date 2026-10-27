@@ -24,9 +24,20 @@ describe('guessIcon', () => {
     expect(guessIcon(text)?.icon).toBe(icon);
   });
 
-  it('returns null rather than guessing', () => {
-    expect(guessIcon('doctor who marathon')?.icon).toBe('stethoscope'); // known limitation
-    expect(guessIcon('think about stuff')).toBeNull();
+  it.each([
+    ['dentst appointment', 'stethoscope'],
+    ['plumbr', 'wrench'],
+    ['groc', 'shopping-cart'],
+    ['think about stuff', 'lightbulb'], // exact: "think"
+  ])('near misses: %s → %s', (text, icon) => {
+    expect(guessIcon(text)?.icon).toBe(icon);
+  });
+
+  it('returns null when nothing fits', () => {
+    expect(guessIcon('hello')).toBeNull();
+    expect(guessIcon('test')).toBeNull();
+    expect(guessIcon('the thing')).toBeNull(); // not a typo of "think"
+    expect(guessIcon('check')).toBeNull(); // not short for "checkup"
     expect(guessIcon('')).toBeNull();
   });
 });
