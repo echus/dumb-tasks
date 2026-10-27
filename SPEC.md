@@ -115,7 +115,7 @@ Calm and minimal, so the focus is on the tasks:
   pills, so they read as separate from the lists.
 - Every list is white on the light grey page. Bucket names are plain text above each list
   on desktop; on phones the tabs are the same plain text, and the selected one has a 2px ink
-  line under it.
+  line under it; the others are grey.
 - Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
 - Deadline badges are traffic lights, drawn as outlines so they don't compete with the icon
   circles: green (more than a week) → yellow (this week) → red (≤ 2 days). Overdue is the

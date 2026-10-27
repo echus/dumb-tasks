@@ -131,7 +131,7 @@
   }
 
   /* Phone layout: the tabs are plain text like the desktop bucket names; the selected one
-     is underlined in ink */
+     is in ink and underlined, the rest grey */
   .tabs {
     display: flex;
     gap: 2px;
@@ -144,7 +144,7 @@
     border: none;
     border-bottom: 2px solid transparent;
     background: none;
-    color: var(--text);
+    color: var(--muted);
     font-family: var(--font-title);
     font-variation-settings: var(--title-opsz);
     font-size: 0.95rem;
@@ -155,6 +155,7 @@
 
   .tabs button[aria-selected='true'] {
     border-bottom-color: var(--accent);
+    color: var(--text);
   }
 
   /* Dragging a task onto a tab: the same thin line as the insertion line, under its name */
