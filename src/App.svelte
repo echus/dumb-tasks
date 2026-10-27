@@ -140,7 +140,8 @@
 
   /* Side padding shrinks on narrow phones so all four tabs, icons included, fit */
   .tabs button {
-    padding: 8px clamp(6px, (100vw - 300px) / 8, 12px);
+    padding: 8px clamp(6px, (100vw - 300px) / 8, 12px) 4px;
+    margin-bottom: 4px; /* the underline sits close under the name; this keeps the gap below */
     border: none;
     border-bottom: 2px solid transparent;
     background: none;
