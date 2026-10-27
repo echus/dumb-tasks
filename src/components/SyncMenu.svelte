@@ -185,8 +185,8 @@
     width: min(300px, calc(100vw - 2 * var(--gutter)));
     margin-top: 4px;
     border-radius: var(--radius);
-    /* The page colour, so it doesn't read as another list */
-    background: var(--bg);
+    /* Halfway between the page and the lists, so it doesn't read as another list */
+    background: color-mix(in srgb, var(--bg), var(--surface));
     /* The same faint edge as the lists, and a small, fairly tight shadow */
     box-shadow:
       inset 0 0 0 1px var(--glow-ring),
