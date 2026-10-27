@@ -186,7 +186,7 @@
     margin-top: 4px;
     border-radius: var(--radius);
     /* Grey, a shade off the page, so it doesn't read as another list */
-    background: color-mix(in srgb, var(--bg) 92%, var(--text));
+    background: color-mix(in srgb, var(--bg) 95%, var(--text));
     box-shadow: inset 0 0 0 1px var(--glow-ring); /* the same faint edge as the lists */
   }
 
