@@ -100,7 +100,7 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
 
   function onStart(e: TouchEvent) {
     if (e.touches.length !== 1) return;
-    if ((e.target as Element).closest('button.icon, button.delete, input')) return;
+    if ((e.target as Element).closest('button.delete, input')) return; // the icon can start a drag too; a quick tap still ticks it
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     timer = setTimeout(() => {
