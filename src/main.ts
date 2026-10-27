@@ -5,9 +5,11 @@ import '@fontsource/stack-sans-headline/latin-700.css';
 import './app.css';
 import App from './App.svelte';
 import { handleShareTarget, requestPersistentStorage } from './lib/startup';
+import { startSync } from './lib/sync-state.svelte';
 
 handleShareTarget();
 requestPersistentStorage();
+startSync();
 
 // The service worker only belongs to production builds. Remove any left over from an
 // earlier dev setup, which would keep serving stale pages.

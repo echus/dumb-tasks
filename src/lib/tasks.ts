@@ -5,6 +5,7 @@ import { parseDeadline } from './deadline';
 import { guessIcon } from './guess-icon';
 import { pickCircleColour } from './task-icons';
 import { MERGED_FIELDS, type MergedField } from './merge';
+import { localChanged } from './sync';
 import { makeDeadline, type Bucket, type Task } from './types';
 
 export function isActive(t: Task): boolean {
@@ -34,6 +35,7 @@ async function updateTask(id: string, patch: Partial<Pick<Task, MergedField>>, n
         : task.bucketHistory;
     await db.tasks.put({ ...task, ...patch, fieldUpdatedAt, bucketHistory });
   });
+  localChanged();
 }
 
 /** Fields derived from the text: re-run whenever the user writes or edits it. */
@@ -80,6 +82,7 @@ export async function addTask(
       ...fields,
     });
   });
+  localChanged();
   return id;
 }
 

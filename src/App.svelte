@@ -3,6 +3,7 @@
   import BucketList from './components/BucketList.svelte';
   import BucketName from './components/BucketName.svelte';
   import HistoryButtons from './components/HistoryButtons.svelte';
+  import SyncMenu from './components/SyncMenu.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from './lib/db';
   import { byPosition, isActive } from './lib/tasks';
@@ -33,6 +34,7 @@
   </h1>
   <div class="header-actions">
     <HistoryButtons />
+    <SyncMenu />
     <ThemeToggle />
   </div>
 </header>

@@ -55,8 +55,9 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
 - **Undo / redo:** buttons in the header (and ⌘Z / ⇧⌘Z, Ctrl+Z / Ctrl+Y) step back and forward
   through adds, edits, completions, deletions and moves made this session. An undo is written
   as a fresh edit, so it syncs like any other change.
-- **Export / import:** full JSON backup. The code exists (`data-file.ts`) but has no UI yet;
-  it'll get one alongside Google Drive sync.
+- **Sync and backup:** a cloud button in the header opens a small menu: connect / disconnect
+  Google Drive, sync status, and "Save backup" / "Restore…" for a full JSON backup.
+  Restoring merges like sync does; it never deletes.
 
 ## Deadlines
 
@@ -163,7 +164,7 @@ interface Task {
 ```
 
 Device-only settings (never synced): sync credentials, locale override. They get their own
-`settings` table, which exists but is still empty.
+`settings` table; so far it holds just `drive` (account email, access token, last sync).
 
 ## Storage
 
@@ -177,13 +178,25 @@ Device-only settings (never synced): sync credentials, locale override. They get
 Optional and pluggable. The app pulls the data file, merges, and pushes back.
 
 - **Backends:** **Google Drive first** — it's what regular people already have, and the MCP
-  server depends on it. Use the app-specific folder or `drive.file` scope only, never full
-  Drive access. WebDAV / Nextcloud comes later as a bonus for self-hosters.
+  server depends on it. WebDAV / Nextcloud comes later as a bonus for self-hosters. A backend
+  is just `load()` and `save(json, version)` (`SyncBackend` in `sync.ts`).
+- **Drive:** one `dumb-tasks.json` in the hidden app folder (`drive.appdata` scope), never
+  full Drive access. Found by name each sync, so a deleted file is simply made again.
+  The app folder belongs to the OAuth client: check the MCP server can share it before
+  milestone 4.
+- **Sign-in:** Google Identity Services in the browser, no server. Tokens last an hour and
+  there are no refresh tokens without a server, so after that the menu asks you to "Sign in
+  again" (one tap; the popup closes itself). Edits made meanwhile wait locally. A token
+  exchange on the MCP server's host would remove this later.
 - **Merge:** last-write-wins **per field** using `fieldUpdatedAt`, so editing text on one
   device and moving the task on another both survive. Deletes are tombstones. (Built, and
   already used by backup import.)
-- **Concurrency:** conditional writes (ETag / If-Match); on conflict, re-pull, re-merge, retry.
-- **When:** on app open, on tab focus, debounced after edits, and every few minutes.
+- **Concurrency:** Drive has no conditional writes, so the file's `version` is checked just
+  before writing; if it moved, re-pull, re-merge, retry. A write that still races another is
+  harmless: the losing device keeps its changes locally and pushes them on its next sync.
+- **Push only when needed:** after merging, push only if the remote file lacks something.
+- **When:** on app open, when the app comes into view or is left, 3 s after edits, every
+  5 minutes, and on coming back online.
 - **Tombstone purge:** after a long retention window (e.g. 90 days). A device offline longer
   than that could resurrect deleted tasks — acceptable, but document it.
 - **Google verification** is required before public release of Drive sync.
@@ -259,8 +272,8 @@ Stack Sans Headline. Later: MCP TypeScript SDK.
 1. ~~**Local PWA**~~ — four buckets, add / move / reorder / complete / edit, deadline parsing,
    keyword icons, JSON export/import (UI removed for now), installable and offline. *Built.*
 2. ~~**Redesign**~~ — industrial look, light/dark theme switch. *Built.*
-3. **Sync** — Google Drive backend on top of the existing merge logic, plus a settings place
-   for sync and backup export / import.
+3. ~~**Sync**~~ — Google Drive backend on top of the existing merge logic, plus a settings place
+   for sync and backup export / import. *Built.*
 4. **MCP server** — hosted, Drive-backed; tools and morning-planning prompt.
 5. **Release** — Play Store wrapper, docs site, Docker image, WebDAV backend.
 6. **Decide on more AI** — after daily use of the MCP planner, revisit the later options above.
