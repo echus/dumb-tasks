@@ -2,12 +2,13 @@
   import { liveQuery } from 'dexie';
   import AddTask from './components/AddTask.svelte';
   import BucketList from './components/BucketList.svelte';
+  import BucketName from './components/BucketName.svelte';
   import HistoryButtons from './components/HistoryButtons.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from './lib/db';
   import { byPosition, isActive } from './lib/tasks';
   import { finishDrop } from './lib/dnd';
-  import { BUCKETS, BUCKET_LABELS, type Bucket, type Task } from './lib/types';
+  import { BUCKETS, type Bucket, type Task } from './lib/types';
   import { drag } from './lib/ui-state.svelte';
 
   // Re-runs whenever the tasks table changes, from any tab.
@@ -63,7 +64,7 @@
         ondrop={(e) => {
           e.preventDefault();
           finishDrop();
-        }}>{BUCKET_LABELS[bucket]}</button
+        }}><BucketName {bucket} /></button
       >
     {/each}
   </div>
@@ -142,8 +143,9 @@
     padding-top: 8px;
   }
 
+  /* Side padding shrinks on narrow phones so all four tabs, icons included, fit */
   .tabs button {
-    padding: 8px 12px;
+    padding: 8px clamp(6px, (100vw - 300px) / 8, 12px);
     border: none;
     border-radius: var(--radius);
     background: none;

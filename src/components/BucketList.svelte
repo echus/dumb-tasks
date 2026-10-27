@@ -1,8 +1,9 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import BucketName from './BucketName.svelte';
   import TaskRow from './TaskRow.svelte';
   import { finishDrop } from '../lib/dnd';
-  import { BUCKET_LABELS, type Bucket, type Task } from '../lib/types';
+  import type { Bucket, Task } from '../lib/types';
   import { drag } from '../lib/ui-state.svelte';
 
   interface Props {
@@ -44,7 +45,7 @@
   }}
   {ondrop}
 >
-  <h2 id="heading-{bucket}">{BUCKET_LABELS[bucket]}</h2>
+  <h2 id="heading-{bucket}"><BucketName {bucket} /></h2>
 
   {@render children?.()}
 
