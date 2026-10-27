@@ -43,10 +43,12 @@
   --on-tint: #1b1c1f;
   --circle-tint: 75%;
 
-  /* Header icon buttons: muted on the black page (anything darker gets lost), and a
-     dimmer grey when they can't be used */
-  --icon-quiet: var(--muted);
+  /* Faded ink for the unselected tabs and the header icon buttons, and a dimmer grey for
+     buttons that can't be used */
+  --ink-faded: color-mix(in srgb, var(--text) 80%, var(--bg));
   --icon-disabled: #5c5e64;
+  /* Placeholder text: muted on the black page (anything darker gets lost) */
+  --icon-quiet: var(--muted);
 
   /* Corners are only just softened */
   --radius: 4px;

@@ -145,7 +145,7 @@
     border: none;
     border-bottom: 2px solid transparent;
     background: none;
-    color: color-mix(in srgb, var(--text) 80%, var(--bg));
+    color: var(--ink-faded);
     font-family: var(--font-title);
     font-variation-settings: var(--title-opsz);
     font-size: 0.95rem;

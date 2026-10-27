@@ -20,7 +20,7 @@
     height: 36px;
     border: none;
     background: none;
-    color: var(--icon-quiet);
+    color: var(--ink-faded);
     cursor: pointer;
   }
 
