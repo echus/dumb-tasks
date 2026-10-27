@@ -255,21 +255,33 @@
     display: none;
   }
 
-  /* Hover keeps the circle as it is and swaps the emoji for a tick. None of the hover
-     states apply to a task while it's being dragged. */
-  li:not(.dragging) .icon:hover,
+  /* Hovering or focusing the icon keeps the circle and swaps the emoji for a tick. Hover
+     only counts where there's a real mouse: phones keep the last-tapped spot "hovered",
+     which left ticks showing. None of it applies to a task while it's being dragged. */
   li:not(.dragging) .icon:focus-visible {
     color: var(--text);
   }
 
-  li:not(.dragging) .icon:hover .task-glyph,
   li:not(.dragging) .icon:focus-visible .task-glyph {
     display: none;
   }
 
-  li:not(.dragging) .icon:hover .done-glyph,
   li:not(.dragging) .icon:focus-visible .done-glyph {
     display: contents;
+  }
+
+  @media (hover: hover) {
+    li:not(.dragging) .icon:hover {
+      color: var(--text);
+    }
+
+    li:not(.dragging) .icon:hover .task-glyph {
+      display: none;
+    }
+
+    li:not(.dragging) .icon:hover .done-glyph {
+      display: contents;
+    }
   }
 
   .text {

@@ -45,7 +45,8 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
   thin underline. On phones, dropping on
   a tab sends the task to the end of that list without switching tabs.
 - **Reorder:** drag within a bucket.
-- **Complete:** click the task's icon; hovering it turns it into a tick. Task leaves the list.
+- **Complete:** click or tap the task's icon. With a mouse, hovering it first turns it into a
+  tick. Task leaves the list.
 - **Edit:** click into the text; it becomes a text field with the cursor where you clicked.
   Enter or clicking away saves, Escape cancels. Editing re-parses the deadline.
 - **Delete:** a small × at the far right (where the deadline badge is), shown on hover (on touch screens, while the task is
