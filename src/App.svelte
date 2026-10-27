@@ -82,9 +82,6 @@
   {/each}
 </main>
 
-{#if drag.touch && drag.id}
-  <div class="drag-preview" style:left="{drag.x}px" style:top="{drag.y}px">{drag.label}</div>
-{/if}
 
 <style>
   header {
@@ -166,23 +163,6 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 5px;
-  }
-
-  /* Follows the finger during a touch drag */
-  .drag-preview {
-    position: fixed;
-    z-index: 10;
-    max-width: 70vw;
-    padding: 8px 12px;
-    border-radius: var(--radius);
-    background: var(--surface);
-    box-shadow: inset 0 0 0 1px var(--border-strong);
-    font-size: 0.9rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    pointer-events: none;
-    transform: translate(-50%, -130%);
   }
 
   .bar {

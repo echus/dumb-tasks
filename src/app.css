@@ -117,6 +117,19 @@ input:focus-visible {
   outline-offset: 1px;
 }
 
+/* Touch drag: a copy of the task row that follows the finger (see dnd.ts) */
+.drag-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--border-strong);
+  pointer-events: none;
+  will-change: transform;
+}
+
 ::selection {
   background: var(--accent);
   color: var(--on-accent);

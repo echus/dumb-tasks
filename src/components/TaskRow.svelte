@@ -129,7 +129,8 @@
 <li
   data-task-id={task.id}
   draggable={!editing && finePointer}
-  use:touchDrag={{ id: task.id, text: task.text }}
+  use:touchDrag={{ id: task.id }}
+  class:dragging={drag.id === task.id}
   ondragstart={(e) => {
     drag.id = task.id;
     e.dataTransfer?.setData('text/plain', task.text);
@@ -198,6 +199,11 @@
   /* Barely-there dividers: the page background colour, against the white list */
   li:not(:first-child) {
     border-top: 1px solid var(--bg);
+  }
+
+  /* The task being dragged fades in place, so it's clear what's moving */
+  li.dragging {
+    opacity: 0.3;
   }
 
   li.drop-before {

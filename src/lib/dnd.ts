@@ -28,10 +28,19 @@ export function finishDrop() {
   track([id], () => moveTask(id, bucket, beforeId));
 }
 
+/** A plain copy of a task row, styled like a lifted task, for drag previews. */
+function rowCopy(node: HTMLElement): HTMLElement {
+  const copy = node.cloneNode(true) as HTMLElement;
+  copy.style.listStyle = 'none';
+  const wrap = document.createElement('div');
+  wrap.className = 'drag-preview';
+  wrap.style.width = `${node.getBoundingClientRect().width}px`;
+  wrap.append(copy);
+  return wrap;
+}
+
 /** Updates the drag state for whatever is under a point (used by touch drags). */
 export function dragOver(x: number, y: number) {
-  drag.x = x;
-  drag.y = y;
   const el = document.elementFromPoint(x, y);
   const tab = el?.closest<HTMLElement>('[data-tab]');
   const row = el?.closest<HTMLElement>('li[data-task-id]');
@@ -60,12 +69,34 @@ const SLOP = 8; // moving further than this first means scrolling, not dragging
  * Touch dragging: long-press a task to pick it up, move, and release over a list or tab.
  * Browsers' built-in drag-and-drop doesn't work reliably with touch.
  */
-export function touchDrag(node: HTMLElement, task: { id: string; text: string }) {
+export function touchDrag(node: HTMLElement, task: { id: string }) {
   let current = task;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let startX = 0;
   let startY = 0;
   let active = false;
+  let preview: HTMLElement | null = null;
+  let grabX = 0; // where in the row the finger is, so the copy stays under it
+  let grabY = 0;
+
+  /** A copy of the row (icon, text, badge) that follows the finger. */
+  function lift() {
+    const box = node.getBoundingClientRect();
+    grabX = startX - box.left;
+    grabY = startY - box.top;
+    preview = rowCopy(node);
+    document.body.append(preview);
+    follow(startX, startY);
+  }
+
+  function follow(x: number, y: number) {
+    if (preview) preview.style.transform = `translate(${x - grabX}px, ${y - grabY}px)`;
+  }
+
+  function drop() {
+    preview?.remove();
+    preview = null;
+  }
 
   function onStart(e: TouchEvent) {
     if (e.touches.length !== 1) return;
@@ -75,9 +106,8 @@ export function touchDrag(node: HTMLElement, task: { id: string; text: string })
     timer = setTimeout(() => {
       active = true;
       drag.id = current.id;
-      drag.label = current.text;
-      drag.touch = true;
       navigator.vibrate?.(10);
+      lift();
       dragOver(startX, startY);
     }, HOLD_MS);
   }
@@ -89,6 +119,7 @@ export function touchDrag(node: HTMLElement, task: { id: string; text: string })
       return;
     }
     e.preventDefault(); // keep the page from scrolling while dragging
+    follow(t.clientX, t.clientY);
     dragOver(t.clientX, t.clientY);
   }
 
@@ -97,11 +128,13 @@ export function touchDrag(node: HTMLElement, task: { id: string; text: string })
     if (!active) return;
     active = false;
     e.preventDefault(); // no click afterwards, so the task doesn't open for editing
+    drop();
     finishDrop();
   }
 
   function onCancel() {
     clearTimeout(timer);
+    drop();
     if (active) endDrag();
     active = false;
   }
@@ -111,11 +144,12 @@ export function touchDrag(node: HTMLElement, task: { id: string; text: string })
   node.addEventListener('touchend', onEnd);
   node.addEventListener('touchcancel', onCancel);
   return {
-    update(next: { id: string; text: string }) {
+    update(next: { id: string }) {
       current = next;
     },
     destroy() {
       clearTimeout(timer);
+      drop();
       node.removeEventListener('touchstart', onStart);
       node.removeEventListener('touchmove', onMove);
       node.removeEventListener('touchend', onEnd);

@@ -18,20 +18,15 @@ if (typeof document !== 'undefined') {
  */
 export const drag = $state<{
   id: string | null; // task being dragged
-  label: string; // its text, for the touch drag preview
   bucket: Bucket | null; // list (or tab) under the pointer
   overTask: string | null; // task under the pointer, if any
   after: boolean; // pointer is in the lower half of that task
   overTab: Bucket | null; // phone tab under the pointer: drops go to the end of that list
-  touch: boolean; // a touch drag, which draws its own preview
-  x: number;
-  y: number;
-}>({ id: null, label: '', bucket: null, overTask: null, after: false, overTab: null, touch: false, x: 0, y: 0 });
+}>({ id: null, bucket: null, overTask: null, after: false, overTab: null });
 
 export function endDrag() {
   drag.id = null;
   drag.bucket = null;
   drag.overTask = null;
   drag.overTab = null;
-  drag.touch = false;
 }

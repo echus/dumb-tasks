@@ -39,7 +39,7 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
   can be shared into it from any app.
 - **Add:** a single always-visible text input. Enter adds to the top of Today.
 - **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
-  long-press a task to pick it up (a small label follows your finger). Drop on a list to
+  long-press a task to pick it up (a copy of the task follows your finger and the original fades). Drop on a list to
   place it above or below the task under the pointer, or at the end. A thin line showing
   where it'll land is the only drag highlight; a phone tab being dropped on gets the same
   thin underline. On phones, dropping on
