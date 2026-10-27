@@ -25,12 +25,15 @@
   --on-accent: #121314;
   --danger: #ff4d4d;
   --on-danger: #121314;
-  /* Deadline badges run green (plenty of time) → orange (this week) → red (due/overdue) */
+  /* Deadline badges run green (plenty of time) → yellow (this week) → red (due/overdue).
+     They're outlines; --due-ink-mix is how much of the colour (vs black) the outline and text
+     use: all of it on the dark lists, darker on white so it stays readable. */
   --due-later: #39ff14;
-  /* Fluoro yellow; its text is darkened orange, since darkened yellow turns olive */
   --due-near: #ffd000;
-  --due-near-text: #7a3300;
   --due-soon: #ff2d55;
+  --due-ink-mix: 100%;
+  --due-soon-ink-mix: 100%;
+  --due-near-ink: var(--due-near);
 
   /* A faint light edge and haze around the panels */
   --glow-ring: rgb(255 255 255 / 0.14);
@@ -69,6 +72,11 @@
     --danger: #d42a2a;
     --on-danger: #ffffff;
     --on-accent: #ffffff;
+    /* Red needs less darkening than green to read on white; darkened yellow turns olive,
+       so on white it's amber instead */
+    --due-ink-mix: 70%;
+    --due-soon-ink-mix: 92%;
+    --due-near-ink: #d69e00;
     --glow-ring: rgb(0 0 0 / 0.1);
     --glow: rgb(0 0 0 / 0.07);
     --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
@@ -91,6 +99,9 @@
   --danger: #d42a2a;
   --on-danger: #ffffff;
   --on-accent: #ffffff;
+  --due-ink-mix: 70%;
+  --due-soon-ink-mix: 92%;
+  --due-near-ink: #d69e00;
   --glow-ring: rgb(0 0 0 / 0.1);
   --glow: rgb(0 0 0 / 0.07);
   --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));

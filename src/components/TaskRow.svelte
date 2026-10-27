@@ -300,34 +300,35 @@
     text-underline-offset: 4px;
   }
 
-  /* Traffic lights: green with plenty of time, orange this week, red when it's nearly
-     due. Upcoming ones are a pale tint with dark text; overdue flips to a dark red with
-     light text. */
+  /* Traffic lights: green with plenty of time, yellow this week, red when it's nearly
+     due. Upcoming ones are just an outline, so they don't compete with the icon circles;
+     overdue is filled dark red with light text, the one that should catch the eye. */
   .badge {
     --due: var(--due-later);
-    padding: 1px 6px;
+    --ink: color-mix(in srgb, var(--due) var(--due-ink-mix), black);
+    padding: 0 6px;
+    border: 1px solid var(--ink);
     border-radius: 2px;
-    /* As strong as the emoji circles, so neither outshouts the other */
-    background: color-mix(in srgb, var(--due) var(--cat-tint), var(--tint-base));
     font-family: var(--font-display);
     font-size: 0.75rem;
     font-weight: 700;
     line-height: 1.6;
     text-transform: lowercase;
     white-space: nowrap;
-    color: var(--due-text, color-mix(in srgb, var(--due) 40%, black));
+    color: var(--ink);
   }
 
   .badge[data-urgency='near'] {
-    --due: var(--due-near);
-    --due-text: var(--due-near-text);
+    --ink: var(--due-near-ink);
   }
 
   .badge[data-urgency='soon'] {
     --due: var(--due-soon);
+    --due-ink-mix: var(--due-soon-ink-mix);
   }
 
   .badge[data-urgency='overdue'] {
+    border-color: transparent;
     background: color-mix(in srgb, var(--due-soon) 85%, black);
     color: #ffffff;
   }
