@@ -19,7 +19,7 @@ export { default as redo } from '@phosphor-icons/core/assets/bold/arrow-u-up-rig
 const longArrow =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 256" fill="currentColor"><path d="M352.49,136.49l-72,72a12,12,0,0,1-17-17L315,140H40a12,12,0,0,1,0-24H315L263.51,64.48a12,12,0,0,1,17-17l72,72A12,12,0,0,1,352.49,136.49Z"/></svg>';
 
-// Today is an arrow down (here, now); Week and Month point onwards, Month's longer; Someday is "..."
+// Today is an arrow down (here, now); Week and Month point onwards, Month's longer; Later is "..."
 export const bucketIcons: Record<Bucket, { svg: string; widthRatio?: number }> = {
   today: { svg: arrowDown },
   week: { svg: arrow },

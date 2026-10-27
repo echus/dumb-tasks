@@ -5,7 +5,7 @@ export const BUCKET_LABELS: Record<Bucket, string> = {
   today: 'Today',
   week: 'Week',
   month: 'Month',
-  icebox: 'Someday', // stored as 'icebox', so synced tasks keep their bucket
+  icebox: 'Later', // stored as 'icebox', so synced tasks keep their bucket
 };
 
 // One object so date and phrase merge as a unit: a deadline the AI set can never end up
