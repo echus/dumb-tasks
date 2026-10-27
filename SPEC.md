@@ -78,19 +78,20 @@ Parsed from the task text — there is no deadline field in the UI.
 ## Icons
 
 Chosen automatically; never asked of the user. Each task shows an **emoji** in a circle tinted
-with a fluorescent colour taken from the emoji; the circle is also the checkbox (hovering shows a tick).
+with a fluoro colour of its own; the circle is also the checkbox (hovering shows a tick).
 
 - `guessIcon(text) → { icon, category }` picks one of ~45 icons; each maps to an emoji.
 - **Keyword matching:** a hand-written table of keywords and word stems, with nouns ranked
   above verbs ("buy birthday present" → 🎂, not 🛒).
 - **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
   exact keyword matches.
-- **No match → a 📄 page** in a light-grey circle, paler than the colour tints; a tick
-  appears in it on hover.
+- **No match → a 📄 page.**
 - Icons are guessed fresh from the text when shown, so keyword improvements reach older
   tasks too; an icon the AI set is kept.
-- Each icon has its own circle colour, matching the emoji (green 🌱, yellow ✏️). Pure red is
-  never used (it means overdue), nor orange (it looks dull beside the fluoro colours).
+- **Circle colour:** each task gets a fluoro colour picked from its id, so it looks random but
+  never changes, whatever the emoji. Hue and lightness vary continuously, so no two tasks
+  quite match. Any hue but straight orange and red (they look dull beside the rest): the
+  warm end runs from golden yellow round to pinky red.
 - Each icon also has a broad **category** (home, errands, health, people, money, work,
   creative), kept on the task for sorting and the AI; it doesn't show in the UI.
 - Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.

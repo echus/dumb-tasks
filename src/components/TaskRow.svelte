@@ -2,7 +2,7 @@
   import Icon from './Icon.svelte';
   import { deadlineUrgency, describeDeadline } from '../lib/deadline';
   import { guessIcon } from '../lib/guess-icon';
-  import { TASK_ICONS } from '../lib/task-icons';
+  import { PLAIN_ICON, TASK_ICONS, circleColour } from '../lib/task-icons';
   import * as ui from '../lib/ui-icons';
   import {
     completeTask,
@@ -27,13 +27,14 @@
   let words = $state<HTMLElement>();
 
   // Guessed fresh from the text, so older tasks pick up keyword improvements too; an icon
-  // the AI chose is kept. Anything unmatched gets a plain page on a pale grey circle.
+  // the AI chose is kept. Anything unmatched gets a plain page.
   const guess = $derived(
     task.iconSource === 'ai' && task.icon
       ? { icon: task.icon, category: task.category }
       : guessIcon(task.text),
   );
-  const [emoji, colour] = $derived((guess && TASK_ICONS[guess.icon]) ?? ['📄', null]);
+  const emoji = $derived((guess && TASK_ICONS[guess.icon]) ?? PLAIN_ICON);
+  const colour = $derived(circleColour(task.id));
 
   // Split the text around the parsed deadline phrase so it can be underlined.
   const parts = $derived.by(() => {
@@ -145,7 +146,6 @@
     <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
     <button
       class="icon"
-      class:blank={!colour}
       style:--cat={colour}
       aria-label="Mark done"
       onclick={complete}
@@ -225,7 +225,7 @@
     padding: 0 12px;
   }
 
-  /* A circle tinted with the emoji's colour (grey when nothing matched). On hover
+  /* A circle tinted with the task's fluoro colour. On hover
      the emoji turns into a tick. */
   .icon {
     flex: none;
@@ -241,11 +241,6 @@
     font-size: 15px;
     line-height: 1;
     cursor: pointer;
-  }
-
-  /* Paler than the colour tints, so an unmatched task reads as a plain page */
-  .icon.blank {
-    background: color-mix(in srgb, var(--muted) var(--blank-tint), var(--tint-base));
   }
 
   .task-glyph {

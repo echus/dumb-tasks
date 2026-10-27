@@ -41,7 +41,6 @@
   --tint-base: #f0f0f2;
   --on-tint: #1b1c1f;
   --cat-tint: 55%;
-  --blank-tint: 14%;
 
   /* Header icon buttons: muted on the black page (anything darker gets lost), and a
      dimmer grey when they can't be used */
@@ -77,7 +76,6 @@
     --tint-base: var(--surface);
     --on-tint: var(--text);
     --cat-tint: 50%;
-    --blank-tint: 12%;
 
     color-scheme: light;
   }
@@ -100,7 +98,6 @@
   --tint-base: var(--surface);
   --on-tint: var(--text);
   --cat-tint: 50%;
-  --blank-tint: 12%;
 
   color-scheme: light;
 }
