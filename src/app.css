@@ -25,6 +25,9 @@
   --on-accent: #121314;
   --danger: #ff4d4d;
   --on-danger: #121314;
+  /* Deadline badges run green (plenty of time) → orange (this week) → red (due/overdue) */
+  --due-later: #3ddc84;
+  --due-near: #ffa040;
 
   /* A faint light edge and haze around the panels */
   --glow-ring: rgb(255 255 255 / 0.14);
@@ -63,6 +66,8 @@
     --border-strong: #a9abb1;
     --danger: #d42a2a;
     --on-danger: #ffffff;
+    --due-later: #178a43;
+    --due-near: #d46200;
     --on-accent: #ffffff;
     --glow-ring: rgb(0 0 0 / 0.1);
     --glow: rgb(0 0 0 / 0.07);
@@ -86,6 +91,8 @@
   --border-strong: #a9abb1;
   --danger: #d42a2a;
   --on-danger: #ffffff;
+  --due-later: #178a43;
+  --due-near: #d46200;
   --on-accent: #ffffff;
   --glow-ring: rgb(0 0 0 / 0.1);
   --glow: rgb(0 0 0 / 0.07);

@@ -111,8 +111,8 @@ Calm and minimal, so the focus is on the tasks:
   on desktop; on phones the tabs are the same plain text, and the selected one sits on a
   small white panel of its own, apart from the list.
 - Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
-- Deadline badges escalate by weight, not hue: outlined grey (later) → outlined (this week) →
-  inverted (≤ 2 days) → red (overdue).
+- Deadline badges are traffic lights: green (more than a week) → orange (this week) →
+  red outline (≤ 2 days) → solid red (overdue).
 - Dark by default and follows the system, until the user flips the sun/moon toggle in the
   header; that choice is stored per device and applied before first paint.
 

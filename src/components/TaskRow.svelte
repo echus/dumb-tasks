@@ -304,32 +304,33 @@
     text-underline-offset: 4px;
   }
 
+  /* Traffic lights: green with plenty of time, orange this week, red when it's nearly
+     due, solid red once it's overdue */
   .badge {
+    --due: var(--due-later);
     padding: 0 6px;
     border-radius: 2px;
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--due);
+    background: color-mix(in srgb, var(--due) 12%, transparent);
     font-family: var(--font-display);
     font-size: 0.75rem;
     font-weight: 700;
     line-height: 1.6;
     text-transform: lowercase;
     white-space: nowrap;
-    color: var(--muted);
+    color: var(--due);
   }
 
   .badge[data-urgency='near'] {
-    border-color: var(--text);
-    color: var(--text);
+    --due: var(--due-near);
   }
 
   .badge[data-urgency='soon'] {
-    border-color: var(--text);
-    background: var(--text);
-    color: var(--bg);
+    --due: var(--danger);
   }
 
   .badge[data-urgency='overdue'] {
-    border-color: var(--danger);
+    --due: var(--danger);
     background: var(--danger);
     color: var(--on-danger);
   }
