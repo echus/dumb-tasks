@@ -3,14 +3,15 @@
   import { addTask } from '../lib/tasks';
   import { BUCKET_LABELS, type Bucket } from '../lib/types';
 
-  // Only Today's box takes focus on open, so one tap captures a thought
-  let { bucket, autofocus = false }: { bucket: Bucket; autofocus?: boolean } = $props();
+  // Shown by the header's + button, ready to type in. It stays open for the next task, and
+  // closes on Escape or when left empty.
+  let { bucket, onclose }: { bucket: Bucket; onclose: () => void } = $props();
 
   let text = $state('');
   let input: HTMLInputElement;
 
   $effect(() => {
-    if (autofocus) input.focus();
+    input.focus();
   });
 
   async function submit(e: SubmitEvent) {
@@ -30,22 +31,27 @@
     aria-label="New task in {BUCKET_LABELS[bucket]}"
     autocomplete="off"
     enterkeyhint="done"
+    onkeydown={(e) => {
+      if (e.key === 'Escape') onclose();
+    }}
+    onblur={() => {
+      if (!text.trim()) onclose();
+    }}
   />
 </form>
 
 <style>
   form {
     display: flex;
-    padding: 0 0 8px;
   }
 
   /* An ink border (black, or white in dark mode), so the box stands out from the list */
   input {
     flex: 1;
     min-width: 0;
-    padding: 13px 15px;
+    padding: 7px 12px;
     border: none;
-    border-radius: var(--radius);
+    border-radius: var(--panel-radius);
     background: var(--surface);
     box-shadow:
       inset 0 0 0 1px var(--text),

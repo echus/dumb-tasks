@@ -35,10 +35,12 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
 ## User interactions
 
 - **Fast capture is the top UX goal:** open app → type → saved in a couple of seconds.
-  Today's input is focused on launch; on Android the PWA registers as a share target so text
+  The header's + opens the add box, focused and ready to type; on Android the PWA registers as a share target so text
   can be shared into it from any app.
-- **Add:** every list has its own "add a task" box just above it. Enter adds to the top of
-  that list.
+- **Add:** a + button in the header (before undo/redo) opens one "add a task" box in the
+  middle of the header. Enter adds to the top of the selected tab's list (Today on desktop,
+  where there are no tabs) and leaves the box open for the next task; Escape, the + again,
+  or leaving the box empty closes it.
 - **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
   long-press a task to pick it up (a copy of the task follows your finger and the original fades). Drop on a list to
   place it above or below the task under the pointer, or at the end. A thin line showing
@@ -109,14 +111,16 @@ Calm and minimal, so the focus is on the tasks:
 - **Ink accent:** the accent is the text colour itself (near-black in light mode, near-white
   in dark). The fluoro emoji circles and the deadline badges are the only colour in the app.
 - Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
-  (follows light/dark) and app icon are the same circle on its own.
-- Greyscale surfaces, corners only just rounded (4px), 1px hairlines. The lists have a
-  faint glow edge instead of borders; the "add a task" boxes have an ink border. The lists are well
-  rounded (half a row's height), so they read as separate from the "add a task" boxes.
+  (follows light/dark) and app icon are the same circle on its own. On narrow phones, while
+  the add box is open, only the circle shows so the box has room.
+- Greyscale surfaces, corners only just rounded (4px; 8px for the lists and the add box),
+  1px hairlines. The lists have a faint glow edge instead of borders; the add box has an
+  ink border. An empty list has no panel, just its "nothing yet..." text.
 - Every list is white on the light grey page. Bucket names are plain text above each list
   on desktop; on phones the tabs are the same plain text, and the selected one has a 2px ink
   line under it; the others are grey.
-- Header icon buttons are the same faded ink as the unselected tabs.
+- Header icon buttons are the same faded ink as the unselected tabs; the + is ink while its
+  box is open.
 - Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
 - Deadline badges are traffic lights, drawn as outlines so they don't compete with the icon
   circles: green (more than a week) → yellow (this week) → red (≤ 2 days). Overdue is the

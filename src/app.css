@@ -50,8 +50,9 @@
   /* Placeholder text: muted on the black page (anything darker gets lost) */
   --icon-quiet: var(--muted);
 
-  /* Corners are only just softened */
+  /* Corners are only just softened; the task lists and add box are rounder */
   --radius: 4px;
+  --panel-radius: 8px;
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Stack Sans Headline', var(--font-body); /* badges */

@@ -6,6 +6,7 @@ import type { Bucket } from './types';
 
 // Bold, not fill: Phosphor's filled check is a solid box with the tick cut out
 export { default as check } from '@phosphor-icons/core/assets/bold/check-bold.svg?raw';
+export { default as plus } from '@phosphor-icons/core/assets/bold/plus-bold.svg?raw';
 export { default as x } from '@phosphor-icons/core/assets/bold/x-bold.svg?raw';
 export { default as sun } from '@phosphor-icons/core/assets/fill/sun-fill.svg?raw';
 export { default as moon } from '@phosphor-icons/core/assets/fill/moon-fill.svg?raw';

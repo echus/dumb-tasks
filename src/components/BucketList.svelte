@@ -49,7 +49,7 @@
 
   {@render children?.()}
 
-  <div class="list" class:drop-end={dropAtEnd}>
+  <div class="list" class:drop-end={dropAtEnd} class:bare={!tasks.length}>
     {#if tasks.length}
       <ul>
         {#each tasks as task (task.id)}
@@ -74,12 +74,10 @@
     text-transform: lowercase;
   }
 
-  /* Well rounded, so the list reads as separate from the square-cornered "add a task" box
-     above it. Half a row's height, so the corners curve round the first and last icons. */
   .list {
     position: relative;
     overflow: hidden;
-    border-radius: 23px;
+    border-radius: var(--panel-radius);
     background: var(--surface);
     box-shadow: 0 0 10px var(--glow);
   }
@@ -93,6 +91,16 @@
     border-radius: inherit;
     box-shadow: inset 0 0 0 1px var(--glow-ring);
     pointer-events: none;
+  }
+
+  /* An empty list is just its "nothing yet" text on the page, with no panel */
+  .list.bare {
+    background: none;
+    box-shadow: none;
+  }
+
+  .list.bare::before {
+    content: none;
   }
 
   /* A straight line along the bottom (an inset shadow would follow the rounded corners) */
