@@ -21,8 +21,25 @@
     return out;
   });
 
-  // Which bucket shows when they're tabs (below desktop width)
-  let activeTab = $state<Bucket>('today');
+  // Which bucket shows when they're tabs (below desktop width). Kept for this session only,
+  // so a refresh stays put but a fresh visit opens on today.
+  function savedTab(): Bucket {
+    try {
+      const saved = sessionStorage.getItem('tab');
+      if (BUCKETS.includes(saved as Bucket)) return saved as Bucket;
+    } catch {
+      // Storage blocked: start on today.
+    }
+    return 'today';
+  }
+  let activeTab = $state<Bucket>(savedTab());
+  $effect(() => {
+    try {
+      sessionStorage.setItem('tab', activeTab);
+    } catch {
+      // Not persisted; the tab still switches.
+    }
+  });
 
   // The phone tab bar sticks to the top, so each list's add row sticks just below it.
   let barHeight = $state(0);
