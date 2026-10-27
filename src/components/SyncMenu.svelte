@@ -186,9 +186,7 @@
     margin-top: 4px;
     border-radius: var(--radius);
     background: var(--surface);
-    box-shadow:
-      inset 0 0 0 1px var(--glow-ring),
-      0 4px 16px rgb(0 0 0 / 0.15);
+    box-shadow: inset 0 0 0 1px var(--glow-ring); /* the same faint edge as the lists */
   }
 
   section {
