@@ -1,0 +1,7 @@
+// Cloudflare Worker serving the built app as static files (no server code).
+// Workers Builds runs `npm run build`; set VITE_GOOGLE_CLIENT_ID as a build variable there.
+{
+  "name": "dumb-tasks",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./dist" }
+}

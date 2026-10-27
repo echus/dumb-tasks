@@ -28,3 +28,6 @@ dev-dist
 
 # Throwaway design mockups
 mockups
+
+# Wrangler local state
+.wrangler

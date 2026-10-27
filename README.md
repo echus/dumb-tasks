@@ -29,6 +29,13 @@ not set up.
    any origin you deploy to, under *Authorized JavaScript origins*. No redirect URIs needed.
 4. Copy `.env.example` to `.env.local` and set `VITE_GOOGLE_CLIENT_ID`.
 
+### Deploying
+
+The app is plain static files, served by a Cloudflare Worker (`wrangler.jsonc`). In
+Cloudflare: Workers & Pages → Create → Import a repository, build command `npm run build`,
+and `VITE_GOOGLE_CLIENT_ID` as a **build** variable. Add the Worker's address (or custom
+domain) to the OAuth client's Authorized JavaScript origins. Every push to `main` deploys.
+
 The service worker only runs in production builds; use `npm run build && npm run preview`
 to test offline behaviour.
 

@@ -1,0 +1,9 @@
+# Always check for a new service worker and app shell, so deploys reach installed apps
+/sw.js
+  Cache-Control: no-cache
+/registerSW.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
