@@ -10,6 +10,7 @@ export const MERGED_FIELDS = [
   'completedAt',
   'deletedAt',
   'deadline',
+  'dismissedPhrases',
   'icon',
   'colour',
   'aiNote',

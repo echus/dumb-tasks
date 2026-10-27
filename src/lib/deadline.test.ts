@@ -23,6 +23,23 @@ describe('parseDeadline', () => {
     },
   );
 
+  it.each(['3d printing', 'buy 3d printer', 'call mum 2h'])('ignores shorthand in %s', (text) => {
+    expect(parseDeadline(text, ref, 'dmy')).toBeNull();
+    expect(parseDeadline(text, ref, 'mdy')).toBeNull();
+  });
+
+  it('still reads shorthand after a trigger word', () => {
+    expect(parseDeadline('report due 3d', ref, 'mdy')?.date).toBe('2026-10-29');
+  });
+
+  it('skips phrases the user dismissed, and looks further on', () => {
+    expect(parseDeadline('dentist 14 nov', ref, 'dmy', ['14 Nov'])).toBeNull();
+    expect(parseDeadline('bins tomorrow, not friday', ref, 'dmy', ['tomorrow'])).toEqual({
+      date: '2026-10-30',
+      phrase: 'friday',
+    });
+  });
+
   it('never resolves a weekday into the past', () => {
     expect(parseDeadline('email Sam monday', ref, 'dmy')?.date).not.toBe('2026-10-19');
   });

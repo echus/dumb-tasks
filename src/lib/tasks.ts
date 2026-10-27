@@ -39,8 +39,8 @@ async function updateTask(id: string, patch: Partial<Pick<Task, MergedField>>, n
 }
 
 /** Fields derived from the text: re-run whenever the user writes or edits it. */
-function derive(text: string, now: Date): Pick<Task, 'deadline' | 'icon'> {
-  const deadline = parseDeadline(text, now);
+function derive(text: string, now: Date, dismissed: string[] = []): Pick<Task, 'deadline' | 'icon'> {
+  const deadline = parseDeadline(text, now, undefined, dismissed);
   return {
     deadline: deadline && makeDeadline(deadline.date, deadline.phrase),
     icon: guessIcon(text),
@@ -71,6 +71,7 @@ export async function addTask(
       completedAt: null,
       deletedAt: null,
       aiNote: '',
+      dismissedPhrases: [],
       ...derived,
       colour: pickCircleColour(derived.icon),
     };
@@ -92,10 +93,25 @@ export async function editText(id: string, text: string, now = new Date()) {
   await db.transaction('rw', db.tasks, async () => {
     const task = await db.tasks.get(id);
     if (!task) return;
-    const derived = derive(text, now);
+    const derived = derive(text, now, task.dismissedPhrases);
     // A new icon gets a new colour, so the change is easy to spot.
     const colour = derived.icon === task.icon ? {} : { colour: pickCircleColour(derived.icon) };
     await updateTask(id, { text, ...derived, ...colour }, now);
+  });
+}
+
+/** Drops a deadline that was read wrongly; it stays gone when the text is edited. */
+export async function dismissDeadline(id: string, now = new Date()) {
+  await db.transaction('rw', db.tasks, async () => {
+    const task = await db.tasks.get(id);
+    if (!task?.deadline) return;
+    const phrase = task.deadline.phrase;
+    const dismissed = task.dismissedPhrases ?? [];
+    await updateTask(
+      id,
+      { deadline: null, ...(phrase && { dismissedPhrases: [...dismissed, phrase] }) },
+      now,
+    );
   });
 }
 

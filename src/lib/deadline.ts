@@ -11,6 +11,10 @@ interface ParsedDeadline {
 // Words that, placed right before a date, make it clearly a deadline.
 const TRIGGER = /\b(by|due|on|before|until|till|for)\s*$/i;
 
+// Shorthand durations ("3d", "2h") that chrono reads as "from now". On their own they're
+// far more often part of something else, like "3d printing".
+const SHORTHAND = /^\d+(?!st|nd|rd|th)[a-z]{1,3}$/i;
+
 // "on the 14th" — chrono doesn't pick up a bare ordinal day.
 const ordinalDay: chrono.Parser = {
   pattern: () => /\bthe\s+(\d{1,2})(?:st|nd|rd|th)\b/i,
@@ -44,11 +48,13 @@ function defaultDateOrder(): DateOrder {
 /**
  * Finds a deadline in task text. Prefers missing a deadline over inventing one:
  * a bare month ("march for climate") only counts after a trigger word ("by march").
+ * `ignore` holds phrases the user has said aren't dates.
  */
 export function parseDeadline(
   text: string,
   ref: Date = new Date(),
   order: DateOrder = defaultDateOrder(),
+  ignore: readonly string[] = [],
 ): ParsedDeadline | null {
   const results = parsers[order].parse(text, ref, { forwardDate: true });
 
@@ -57,7 +63,10 @@ export function parseDeadline(
     const hasDay = s.isCertain('day') || s.isCertain('weekday');
     const hasMonth = s.isCertain('month');
     if (!hasDay && !hasMonth) continue; // time-only, year-only
-    if (!hasDay && !TRIGGER.test(text.slice(0, r.index))) continue;
+    const triggered = TRIGGER.test(text.slice(0, r.index));
+    if (!hasDay && !triggered) continue;
+    if (SHORTHAND.test(r.text) && !triggered) continue;
+    if (ignore.some((p) => p.toLowerCase() === r.text.toLowerCase())) continue;
 
     return { date: toISODate(s.date()), phrase: r.text };
   }

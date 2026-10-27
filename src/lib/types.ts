@@ -33,6 +33,9 @@ export interface Task {
 
   // Derived from the text or set by the AI; never edited directly
   deadline: Deadline | null;
+  // Phrases the user said aren't dates ("3d" in "3d printing"), so re-parsing skips them.
+  // Optional: older tasks don't have it.
+  dismissedPhrases?: string[];
   icon: string | null; // an emoji; null: no keyword matched
   // Both are re-derived whenever the text is edited, replacing anything the AI set.
   colour: string; // icon circle's CSS colour: random, re-picked when the icon changes

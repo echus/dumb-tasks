@@ -3,7 +3,7 @@
   import { deadlineUrgency, describeDeadline } from '../lib/deadline';
   import { PLAIN_ICON } from '../lib/task-icons';
   import * as ui from '../lib/ui-icons';
-  import { completeTask, deleteTask, editText } from '../lib/tasks';
+  import { completeTask, deleteTask, dismissDeadline, editText } from '../lib/tasks';
   import { track } from '../lib/history.svelte';
   import type { Task } from '../lib/types';
   import { setDragImage, touchDrag } from '../lib/dnd';
@@ -86,6 +86,11 @@
     await track([task.id], () => completeTask(task.id));
   }
 
+  async function removeDeadline() {
+    editing = false;
+    await track([task.id], () => dismissDeadline(task.id));
+  }
+
   async function remove() {
     editing = false;
     await track([task.id], () => deleteTask(task.id));
@@ -162,17 +167,30 @@
       </button>
     {/if}
 
-    <!-- One fixed spot at the right: the deadline badge, swapped for the delete x on hover.
-         Badges line up down a list and long text wraps before them. -->
+    <!-- One fixed spot at the right: the deadline badge, swapped on hover for the delete x
+         (and a button to drop the date, if it was read wrongly). Badges line up down a list
+         and long text wraps before them. -->
     <span class="end">
       {#if task.deadline}
         <span class="badge" data-urgency={deadlineUrgency(task.deadline.date, clock.now)}>
           {describeDeadline(task.deadline.date, clock.now)}
         </span>
       {/if}
-      <button class="delete" aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
-        <Icon svg={ui.x} size={14} />
-      </button>
+      <span class="actions">
+        {#if task.deadline}
+          <button
+            aria-label="Remove date"
+            title="Remove date"
+            onpointerdown={keepFocus}
+            onclick={removeDeadline}
+          >
+            <Icon svg={ui.calendarX} size={14} />
+          </button>
+        {/if}
+        <button aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
+          <Icon svg={ui.x} size={14} />
+        </button>
+      </span>
     </span>
   </div>
 </li>
@@ -348,8 +366,18 @@
     visibility: hidden;
   }
 
-  /* A small x, shown on hover (or while the task is open on touch screens) */
-  .delete {
+  /* Small buttons, shown on hover (or while the task is open on touch screens) */
+  .actions {
+    display: flex;
+    visibility: hidden;
+  }
+
+  li:not(.dragging):hover .actions,
+  li:not(.dragging):focus-within .actions {
+    visibility: visible;
+  }
+
+  .actions button {
     display: grid;
     place-items: center;
     width: 24px;
@@ -360,15 +388,9 @@
     background: none;
     color: var(--muted);
     cursor: pointer;
-    visibility: hidden;
   }
 
-  li:not(.dragging):hover .delete,
-  li:not(.dragging):focus-within .delete {
-    visibility: visible;
-  }
-
-  .delete:hover {
+  .actions button:hover {
     color: var(--accent);
   }
 </style>

@@ -8,6 +8,7 @@ import {
   byPosition,
   completeTask,
   deleteTask,
+  dismissDeadline,
   editText,
   isActive,
   moveTask,
@@ -99,6 +100,17 @@ describe('tasks', () => {
       deadline: { date: '2026-11-14' },
       icon: '🩺',
     });
+  });
+
+  it('keeps a dismissed deadline away through edits', async () => {
+    const id = (await addTask('dentist 14 nov', t0))!;
+    await dismissDeadline(id, later(1));
+    expect(await db.tasks.get(id)).toMatchObject({ deadline: null, dismissedPhrases: ['14 nov'] });
+
+    await editText(id, 'dentist 14 nov, bring card', later(2));
+    expect((await db.tasks.get(id))!.deadline).toBeNull();
+    await editText(id, 'dentist 14 nov, bring card by friday', later(3));
+    expect((await db.tasks.get(id))!.deadline).toEqual({ date: '2026-10-30', phrase: 'friday' });
   });
 
   it('keeps the circle colour until an edit changes the icon', async () => {
