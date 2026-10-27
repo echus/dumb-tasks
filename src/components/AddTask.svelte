@@ -39,13 +39,12 @@
     padding: 0 0 8px;
   }
 
-  /* Pill-shaped, so the box reads as separate from the square-cornered list below it */
   input {
     flex: 1;
     min-width: 0;
-    padding: 13px 20px;
+    padding: 13px 15px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius);
     background: var(--surface);
     box-shadow:
       inset 0 0 0 1px var(--glow-ring),

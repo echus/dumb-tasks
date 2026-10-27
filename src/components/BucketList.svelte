@@ -74,10 +74,12 @@
     text-transform: lowercase;
   }
 
+  /* Well rounded, so the list reads as separate from the square-cornered "add a task" box
+     above it. Half a row's height, so the corners curve round the first and last icons. */
   .list {
     position: relative;
     overflow: hidden;
-    border-radius: var(--radius);
+    border-radius: 23px;
     background: var(--surface);
     box-shadow: 0 0 10px var(--glow);
   }
