@@ -12,10 +12,10 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+# Editor and tool directories
+.vscode
 .idea
+.claude
 .DS_Store
 *.suo
 *.ntvs*
@@ -23,4 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
+# Build output
 dev-dist
