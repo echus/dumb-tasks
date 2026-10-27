@@ -47,13 +47,16 @@
   <h2 id="heading-{bucket}"><BucketName {bucket} /></h2>
 
   <div class="list" class:drop-end={dropAtEnd}>
-    <!-- New tasks land at the top of a list, so the row to write one sits there -->
-    <AddTask {bucket} autofocus={bucket === 'today'} />
-    <ul>
-      {#each tasks as task (task.id)}
-        <TaskRow {task} />
-      {/each}
-    </ul>
+    <!-- Scrolls on desktop, under the list's edge (.list::before) so that stays put -->
+    <div class="scroll">
+      <!-- New tasks land at the top of a list, so the row to write one sits there -->
+      <AddTask {bucket} autofocus={bucket === 'today'} />
+      <ul>
+        {#each tasks as task (task.id)}
+          <TaskRow {task} />
+        {/each}
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -69,8 +72,8 @@
     text-transform: lowercase;
   }
 
-  /* clip, not hidden: hidden would make the list a scroll box, and the sticky add row
-     would stick inside it instead of to the page */
+  /* clip, not hidden: hidden would make the list a scroll box, and on phones the sticky add
+     row would stick inside it instead of to the page */
   .list {
     position: relative;
     overflow: clip;
@@ -114,6 +117,27 @@
       height: 1px;
       overflow: hidden;
       clip-path: inset(50%);
+    }
+  }
+
+  /* Desktop: a list no taller than the window, scrolling within itself, add row stuck on top */
+  @media (min-width: 1100px) {
+    section {
+      display: flex;
+      flex-direction: column;
+      max-height: 100%;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .scroll {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
     }
   }
 

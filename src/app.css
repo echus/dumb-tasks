@@ -133,10 +133,14 @@ body {
   padding: env(safe-area-inset-top) var(--gutter) 0;
 }
 
+/* Desktop: the page fills the window and each list scrolls on its own (see BucketList) */
 @media (min-width: 1100px) {
   #app {
     --gutter: 32px;
     max-width: 1400px;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
 }
 

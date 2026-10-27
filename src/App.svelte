@@ -180,11 +180,15 @@
       display: none;
     }
 
+    /* Takes the rest of the window; lists taller than that scroll inside it */
     main {
+      flex: 1;
+      min-height: 0;
       grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-rows: minmax(0, 1fr);
       gap: 16px;
       align-items: start;
-      padding-top: 8px;
+      padding: 8px 0 24px;
     }
   }
 </style>

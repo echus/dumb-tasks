@@ -122,6 +122,8 @@ Calm and minimal, so the focus is on the tasks:
 - Every list is white on the light grey page. Bucket names are plain text above each list
   on desktop; on phones the tabs are the same plain text, and the selected one has a 1px ink
   line under it; the others are grey.
+- On desktop the page fits the window: a list taller than that scrolls inside its own panel,
+  with its "add a task" row stuck on top. Phones scroll the whole page.
 - Header icon buttons are the same faded ink as the unselected tabs.
 - Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
 - Deadline badges are traffic lights, drawn as outlines so they don't compete with the icon
