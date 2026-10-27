@@ -98,7 +98,9 @@
     white-space: nowrap;
   }
 
+  /* Positioned so the sync menu's panel lines up with the header's right edge */
   .header-actions {
+    position: relative;
     display: flex;
     gap: 4px;
   }

@@ -73,7 +73,8 @@ export async function addTask(
       aiNote: '',
       dismissedPhrases: [],
       ...derived,
-      colour: pickCircleColour(derived.icon),
+      // Clearly different from the task it lands above
+      colour: pickCircleColour(derived.icon, first ? [first.colour] : []),
     };
     await db.tasks.add({
       id,

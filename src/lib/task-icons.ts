@@ -70,19 +70,66 @@ function allowedArcs(icon: string): [number, number][] {
   return arcs.length ? arcs : [[HUE_FROM, HUE_TO]];
 }
 
+// How far a new circle's hue keeps from its neighbours', so they're clearly different
+const NEIGHBOUR_GAP = 60;
+
+const hueDistance = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+
+/** Cuts the hues within `gap` of `hue` (either way round the wheel) out of some arcs. */
+function cutAround(arcs: [number, number][], hue: number, gap: number): [number, number][] {
+  return arcs.flatMap(([a, b]) => {
+    const out: [number, number][] = [];
+    // Walk the arc, keeping the stretches far enough from the hue
+    let from = a;
+    for (const centre of [hue - 360, hue, hue + 360]) {
+      const [lo, hi] = [centre - gap, centre + gap];
+      if (hi <= from || lo >= b) continue;
+      if (lo > from) out.push([from, lo]);
+      from = Math.max(from, hi);
+    }
+    if (from < b) out.push([from, b]);
+    return out;
+  });
+}
+
+function parseHsl(colour: string): { hue: number; lightness: number } | null {
+  const m = /^hsl\(([\d.]+) [\d.]+% ([\d.]+)%\)$/.exec(colour);
+  return m && { hue: +m[1], lightness: +m[2] };
+}
+
 /** A random circle colour for a task's icon, stored on the task. Hue and lightness vary
  *  continuously, so no two tasks are quite the same; hues the icon would vanish on are
- *  skipped. */
-export function pickCircleColour(icon: string | null, random = Math.random): string {
-  // Spread the random pick over the allowed arcs laid end to end
+ *  skipped, and so are hues close to the `near` colours (the tasks it sits beside). */
+export function pickCircleColour(
+  icon: string | null,
+  near: readonly string[] = [],
+  random = Math.random,
+): string {
   const arcs = allowedArcs(icon ?? PLAIN_ICON);
-  let along = random() * arcs.reduce((sum, [a, b]) => sum + b - a, 0);
-  let hue = arcs[0][0];
-  for (const [a, b] of arcs) {
-    hue = a + along;
-    if (along < b - a) break;
-    along -= b - a;
+  const neighbours = near.map(parseHsl).filter((c) => c !== null);
+  const free = neighbours.reduce((left, n) => cutAround(left, n.hue, NEIGHBOUR_GAP), arcs);
+
+  let hue: number;
+  if (free.length) {
+    // Spread the random pick over the free arcs laid end to end
+    let along = random() * free.reduce((sum, [a, b]) => sum + b - a, 0);
+    hue = free[0][0];
+    for (const [a, b] of free) {
+      hue = a + along;
+      if (along < b - a) break;
+      along -= b - a;
+    }
+  } else {
+    // The icon's arcs are too narrow to keep the gap: go as far from the neighbours as they allow
+    const nearest = (h: number) => Math.min(...neighbours.map((n) => hueDistance(h, n.hue)));
+    hue = arcs[0][0];
+    for (const [a, b] of arcs) {
+      for (let h = a; h <= b; h++) if (nearest(h) > nearest(hue)) hue = h;
+    }
   }
-  const lightness = 50 + Math.floor(random() * 13); // 50–62%
+
+  // Lightness on the other side of the range from the first neighbour's, for a bit more contrast
+  const side = neighbours.length ? (neighbours[0].lightness >= 56 ? 0 : 1) : Math.floor(random() * 2);
+  const lightness = 50 + side * 7 + Math.floor(random() * 6); // 50–55% or 57–62%
   return `hsl(${hue.toFixed(1)} 100% ${lightness}%)`;
 }

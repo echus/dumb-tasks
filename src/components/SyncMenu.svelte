@@ -12,15 +12,6 @@
   let backupMessage = $state('');
 
   const attention = $derived(sync.connected && (sync.needsSignIn || Boolean(sync.error)));
-  const icon = $derived(
-    !sync.connected
-      ? ui.cloud
-      : attention
-        ? ui.cloudWarning
-        : sync.syncing
-          ? ui.cloudSyncing
-          : ui.cloudCheck,
-  );
   const label = $derived(
     !sync.connected ? 'Sync and backup' : attention ? 'Sync needs attention' : 'Synced with Google Drive',
   );
@@ -76,8 +67,16 @@
 <svelte:window onclick={onwindowclick} {onkeydown} />
 
 <div class="menu" bind:this={menu}>
-  <button class="icon-button" aria-label={label} title={label} aria-expanded={open} onclick={toggle}>
-    <Icon svg={icon} size={18} />
+  <button
+    class="icon-button"
+    class:syncing={sync.syncing}
+    class:attention
+    aria-label={label}
+    title={label}
+    aria-expanded={open}
+    onclick={toggle}
+  >
+    <Icon svg={ui.sync} size={18} />
   </button>
 
   {#if open}
@@ -87,7 +86,7 @@
         {#if !sync.available}
           <p>Sync isn't set up on this copy of the app.</p>
         {:else if !sync.connected}
-          <p>See and edit your tasks on all your devices. They're kept in a hidden folder in your Google Drive.</p>
+          <p>Sync your tasks to Google Drive to access them on all your devices.</p>
           <button class="action" onclick={connect}>Connect Google Drive</button>
         {:else}
           <p class="account">{sync.email}</p>
@@ -104,7 +103,7 @@
             {:else}
               <button class="action" disabled={sync.syncing} onclick={syncNow}>Sync now</button>
             {/if}
-            <button class="action quiet" onclick={disconnect}>Disconnect</button>
+            <button class="action" onclick={disconnect}>Disconnect</button>
           </div>
         {/if}
         {#if sync.error}
@@ -114,14 +113,13 @@
 
       <section>
         <h2>Backup</h2>
-        <p>Save all your tasks to a file, or restore from one. Restoring merges; it never deletes.</p>
         <div class="actions">
           <button class="action" onclick={download}>Save backup</button>
           <button class="action" onclick={() => fileInput?.click()}>Restore…</button>
         </div>
         <input type="file" accept=".json,application/json" hidden bind:this={fileInput} onchange={upload} />
         {#if backupMessage}
-          <p>{backupMessage}</p>
+          <p class="result">{backupMessage}</p>
         {/if}
       </section>
     </div>
@@ -129,9 +127,8 @@
 </div>
 
 <style>
-  .menu {
-    position: relative;
-  }
+  /* No position here: the panel is placed against the header's button row (see App), so
+     its right edge lines up with the header's, not with this button's */
 
   .icon-button {
     display: grid;
@@ -146,6 +143,38 @@
 
   .icon-button:hover {
     color: var(--accent);
+  }
+
+  .icon-button.syncing :global(svg) {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .icon-button.syncing :global(svg) {
+      animation: none;
+    }
+  }
+
+  /* Signed out or failing: a small red dot on the icon */
+  .icon-button.attention {
+    position: relative;
+  }
+
+  .icon-button.attention::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--due-soon);
   }
 
   .panel {
@@ -171,7 +200,7 @@
   }
 
   h2 {
-    margin: 0 0 4px;
+    margin: 0 0 8px;
     font-family: var(--font-title);
     font-variation-settings: var(--title-opsz);
     font-size: 0.95rem;
@@ -191,8 +220,12 @@
     overflow-wrap: anywhere;
   }
 
-  .error {
+  .error,
+  .result {
     margin: 10px 0 0;
+  }
+
+  .error {
     color: color-mix(in srgb, var(--due-soon) var(--due-soon-ink-mix), black);
   }
 
@@ -202,21 +235,21 @@
     gap: 8px;
   }
 
+  /* Outlined: a solid ink button would outweigh everything else in the app */
   .action {
     padding: 6px 12px;
     border: none;
     border-radius: var(--radius);
-    background: var(--accent);
-    color: var(--on-accent);
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    color: var(--text);
     font-size: 0.9em;
     font-weight: 600;
     cursor: pointer;
   }
 
-  .action.quiet {
-    background: none;
-    color: var(--text);
-    box-shadow: inset 0 0 0 1px var(--border-strong);
+  .action:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 1px var(--accent);
   }
 
   .action:disabled {

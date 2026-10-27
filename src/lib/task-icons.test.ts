@@ -6,12 +6,12 @@ const hue = (colour: string) => parseFloat(colour.slice(4));
 
 /** Hues spread evenly over the whole random range */
 const sweep = (icon: string | null) =>
-  Array.from({ length: 1000 }, (_, i) => hue(pickCircleColour(icon, () => i / 1000)));
+  Array.from({ length: 1000 }, (_, i) => hue(pickCircleColour(icon, [], () => i / 1000)));
 
 describe('pickCircleColour', () => {
   it('never picks straight red or orange', () => {
     for (const r of [0, 0.25, 0.5, 0.75, 0.9999]) {
-      const h = hue(pickCircleColour('🐕', () => r));
+      const h = hue(pickCircleColour('🐕', [], () => r));
       expect(h).toBeGreaterThanOrEqual(44);
       expect(h).toBeLessThanOrEqual(346);
     }
@@ -37,6 +37,31 @@ describe('pickCircleColour', () => {
     expect(Math.min(...hues)).toBeLessThan(50);
     expect(Math.max(...hues)).toBeGreaterThan(340);
     expect(hues.some((h) => h > 256 && h < 300)).toBe(true);
+  });
+
+  it('keeps well away from the hue beside it', () => {
+    for (const [icon, beside] of [['🐕', 200], ['🛒', 60], ['🦄', 340]] as const) {
+      for (let i = 0; i < 100; i++) {
+        const h = hue(pickCircleColour(icon, [`hsl(${beside} 100% 55%)`], () => i / 100));
+        expect(Math.min(Math.abs(h - beside), 360 - Math.abs(h - beside))).toBeGreaterThanOrEqual(60);
+      }
+    }
+  });
+
+  it('goes as far as it can when the icon has few hues', () => {
+    // The plain page only has 220–290
+    expect(hue(pickCircleColour(null, ['hsl(230 100% 55%)']))).toBe(290);
+    expect(hue(pickCircleColour(null, ['hsl(280 100% 55%)']))).toBe(220);
+    const h = hue(pickCircleColour(null, ['hsl(255 100% 55%)']));
+    expect([220, 290]).toContain(h);
+  });
+
+  it('flips lightness from the colour beside it', () => {
+    const lightness = (c: string) => parseFloat(c.split(' ')[2]);
+    for (let i = 0; i < 20; i++) {
+      expect(lightness(pickCircleColour('🐕', ['hsl(100 100% 60%)']))).toBeLessThanOrEqual(55);
+      expect(lightness(pickCircleColour('🐕', ['hsl(100 100% 51%)']))).toBeGreaterThanOrEqual(57);
+    }
   });
 
   it('treats no icon as the plain page', () => {
