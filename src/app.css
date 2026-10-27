@@ -32,9 +32,9 @@
 
   /* Emoji circles: category colour mixed into a pale base, so they stay light, almost
      as in light mode, on the grey lists. --on-tint colours the hover tick. */
-  --tint-base: #dcdde0;
+  --tint-base: #f0f0f2;
   --on-tint: #1b1c1f;
-  --cat-tint: 30%;
+  --cat-tint: 36%;
   --blank-tint: 14%;
 
   /* Header icon buttons: muted on the black page (anything darker gets lost), and a
@@ -70,7 +70,7 @@
     --icon-disabled: color-mix(in srgb, var(--icon-quiet) 30%, var(--bg));
     --tint-base: var(--surface);
     --on-tint: var(--text);
-    --cat-tint: 26%;
+    --cat-tint: 32%;
     --blank-tint: 12%;
 
     color-scheme: light;
@@ -93,7 +93,7 @@
   --icon-disabled: color-mix(in srgb, var(--icon-quiet) 30%, var(--bg));
   --tint-base: var(--surface);
   --on-tint: var(--text);
-  --cat-tint: 26%;
+  --cat-tint: 32%;
   --blank-tint: 12%;
 
   color-scheme: light;
@@ -102,13 +102,13 @@
 /* Category colours for the task icon circles. Red is left out: it means "overdue".
    The circle is a tint of the colour, so emoji stay readable. */
 [data-category] { --cat: var(--muted); } /* default: tasks with no category */
-[data-category='home'] { --cat: #2bb3c0; }
-[data-category='errands'] { --cat: #4a8cf0; }
-[data-category='health'] { --cat: #36b27a; }
-[data-category='people'] { --cat: #d65fc9; }
-[data-category='money'] { --cat: #d9b62a; }
-[data-category='work'] { --cat: #8f7bf0; }
-[data-category='creative'] { --cat: #8cc63a; }
+[data-category='home'] { --cat: #ff7a2f; } /* warm hearth orange */
+[data-category='errands'] { --cat: #1e9bff; } /* out-and-about sky blue */
+[data-category='health'] { --cat: #1fcf6a; } /* fresh green */
+[data-category='people'] { --cat: #ff4f9a; } /* warm pink */
+[data-category='money'] { --cat: #ffbf00; } /* gold */
+[data-category='work'] { --cat: #5b5bff; } /* focused indigo */
+[data-category='creative'] { --cat: #b44dff; } /* imaginative violet */
 
 *,
 *::before,
