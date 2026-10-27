@@ -54,7 +54,6 @@
   --radius: 4px;
 
   --font-body: 'Inter', system-ui, sans-serif;
-  --font-display: 'Stack Sans Headline', var(--font-body); /* badges */
   --font-title: 'Inter Display', var(--font-body); /* logo, bucket names, tabs */
   --title-opsz: 'opsz' 32;
 

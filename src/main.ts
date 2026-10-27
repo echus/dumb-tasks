@@ -1,7 +1,6 @@
 import { mount } from 'svelte';
 import '@fontsource/inter/latin-400.css';
 import '@fontsource/inter/latin-600.css';
-import '@fontsource/stack-sans-headline/latin-700.css';
 import './app.css';
 import App from './App.svelte';
 import { handleShareTarget, requestPersistentStorage } from './lib/startup';

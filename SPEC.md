@@ -110,8 +110,8 @@ with a fluoro colour of its own; the circle is also the checkbox (hovering shows
 
 Calm and minimal, so the focus is on the tasks:
 
-- Inter for text; Inter Display bold, lowercase, for the logo and bucket names (tabs on
-  phones); Stack Sans Headline for deadline badges.
+- Inter for text and deadline badges (semibold); Inter Display bold, lowercase, for the logo
+  and bucket names (tabs on phones).
   No monospace. (Latin subsets, bundled, work offline.)
 - **Ink accent:** the accent is the text colour itself (near-black in light mode, near-white
   in dark). The fluoro emoji circles and the deadline badges are the only colour in the app.
@@ -273,8 +273,8 @@ Both would reuse the MCP tool definitions.
 ## Stack
 
 TypeScript · Vite · Svelte 5 · Dexie · chrono-node · Phosphor icons (app controls; tasks use
-emoji) · fractional-indexing · ulid · vite-plugin-pwa · Vitest · Inter / Inter Display ·
-Stack Sans Headline. Later: MCP TypeScript SDK.
+emoji) · fractional-indexing · ulid · vite-plugin-pwa · Vitest · Inter / Inter Display.
+Later: MCP TypeScript SDK.
 
 ## Milestones
 

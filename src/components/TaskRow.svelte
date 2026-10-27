@@ -313,9 +313,8 @@
     padding: 0 6px;
     border: 1px solid var(--ink);
     border-radius: 2px;
-    font-family: var(--font-display);
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.6;
     text-transform: lowercase;
     white-space: nowrap;
