@@ -49,10 +49,10 @@ describe('pickCircleColour', () => {
   });
 
   it('goes as far as it can when the icon has few hues', () => {
-    // The plain page only has 220–290
-    expect(hue(pickCircleColour(null, ['hsl(230 100% 55%)']))).toBe(290);
-    expect(hue(pickCircleColour(null, ['hsl(280 100% 55%)']))).toBe(220);
-    const h = hue(pickCircleColour(null, ['hsl(255 100% 55%)']));
+    // The page only has 220–290
+    expect(hue(pickCircleColour('📄', ['hsl(230 100% 55%)']))).toBe(290);
+    expect(hue(pickCircleColour('📄', ['hsl(280 100% 55%)']))).toBe(220);
+    const h = hue(pickCircleColour('📄', ['hsl(255 100% 55%)']));
     expect([220, 290]).toContain(h);
   });
 
@@ -64,7 +64,7 @@ describe('pickCircleColour', () => {
     }
   });
 
-  it('treats no icon as the plain page', () => {
+  it('treats no icon as the plain pen', () => {
     expect(sweep(null)).toEqual(sweep(PLAIN_ICON));
   });
 
