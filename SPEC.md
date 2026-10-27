@@ -89,7 +89,7 @@ with a fluoro colour of its own; the circle is also the checkbox (hovering shows
   above verbs ("buy birthday present" → 🎂, not 🛒).
 - **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
   exact keyword matches.
-- **No match → a ⭐ star** (on the hues it shows up on, like any other icon).
+- **No match → a ⭐ star**, on any hue (faint on greens, but the colours stay varied).
 - **Guessed once, then stored:** the icon is picked when a task is added and re-picked
   whenever its text is edited; otherwise the stored pick is shown. The AI can replace the
   pick with its own; that holds until the user next edits the text (like deadlines).

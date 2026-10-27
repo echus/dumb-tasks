@@ -26,7 +26,7 @@ export async function requestPersistentStorage(): Promise<void> {
 }
 
 // Bump to recolour existing tasks again after the colour or icon rules change.
-const COLOURS_VERSION = '2'; // ⭐ for unmatched tasks
+const COLOURS_VERSION = '3'; // ⭐ for unmatched tasks, on any hue
 
 /** Once per device, after the first sync: brings older tasks up to the current colour rules. */
 export async function refreshColoursOnce(): Promise<void> {

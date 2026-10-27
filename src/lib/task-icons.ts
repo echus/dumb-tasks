@@ -1,4 +1,4 @@
-/** Shown when no keyword matched. Too pale for green and cyan circles, so it skips them. */
+/** Shown when no keyword matched. Allowed on every hue, though it's pale on greens. */
 export const PLAIN_ICON = '⭐';
 
 // Icon circles are fluoro: full saturation, any hue except straight orange and red, which
@@ -56,7 +56,7 @@ export const CLASHING_HUES: Record<string, [from: number, to: number][]> = {
   '✉️': [[44, 222], [284, 346]],
   '💳': [[44, 56], [72, 226], [322, 346]],
   '🛒': [[214, 256]],
-  '⭐': [[44, 56], [76, 170], [186, 214], [314, 346]],
+  '⭐': [], // measured to clash on greens and cyans, but kept for variety
 };
 
 /** The parts of the fluoro range the icon stays visible on, in hue order. */
