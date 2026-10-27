@@ -1,6 +1,6 @@
 type Theme = 'system' | 'light' | 'dark';
 
-const BG = { dark: '#121314', light: '#f5f5f5' };
+const BG = { dark: '#000000', light: '#f5f5f5' };
 
 function read(): Theme {
   try {

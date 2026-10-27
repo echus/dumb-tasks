@@ -235,7 +235,7 @@
     padding: 0;
     border: none;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--cat) 26%, var(--surface));
+    background: color-mix(in srgb, var(--cat) var(--cat-tint), var(--tint-base));
     color: var(--muted);
     font-size: 15px;
     line-height: 1;
@@ -244,7 +244,7 @@
 
   /* Lighter than the category tints, so a task with no icon reads as "blank" */
   .icon[data-category='none'] {
-    background: color-mix(in srgb, var(--muted) 12%, var(--surface));
+    background: color-mix(in srgb, var(--muted) var(--blank-tint), var(--tint-base));
   }
 
   .task-glyph {
@@ -259,7 +259,7 @@
      only counts where there's a real mouse: phones keep the last-tapped spot "hovered",
      which left ticks showing. None of it applies to a task while it's being dragged. */
   li:not(.dragging) .icon:focus-visible {
-    color: var(--text);
+    color: var(--on-tint);
   }
 
   li:not(.dragging) .icon:focus-visible .task-glyph {
@@ -272,7 +272,7 @@
 
   @media (hover: hover) {
     li:not(.dragging) .icon:hover {
-      color: var(--text);
+      color: var(--on-tint);
     }
 
     li:not(.dragging) .icon:hover .task-glyph {

@@ -1,17 +1,25 @@
 /* Dark is the default. Light applies when the system prefers it, unless the
    theme switch has set data-theme="dark", or whenever it sets "light". */
 :root {
-  --bg: #121314;
-  --surface: #1a1b1e;
+  /* Grey lists on a black page */
+  --bg: #000000;
+  --surface: #2c2c2e;
   --text: #e3e4e6;
   --muted: #888b92;
-  --border: #2a2b2f;
+  --border: #34353a;
   --border-strong: #45474d;
   /* Ink: the accent is the text colour itself, so the emoji circles are the only colour */
   --accent: var(--text);
   --on-accent: #121314;
   --danger: #ff4d4d;
   --on-danger: #121314;
+
+  /* Emoji circles: category colour mixed into a pale base, so they stay light, almost
+     as in light mode, on the grey lists. --on-tint colours the hover tick. */
+  --tint-base: #dcdde0;
+  --on-tint: #1b1c1f;
+  --cat-tint: 30%;
+  --blank-tint: 14%;
 
   /* Header icon buttons: a step quieter than muted text */
   --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
@@ -36,6 +44,10 @@
     --danger: #d42a2a;
     --on-danger: #ffffff;
     --on-accent: #ffffff;
+    --tint-base: var(--surface);
+    --on-tint: var(--text);
+    --cat-tint: 26%;
+    --blank-tint: 12%;
 
     color-scheme: light;
   }
@@ -51,6 +63,10 @@
   --danger: #d42a2a;
   --on-danger: #ffffff;
   --on-accent: #ffffff;
+  --tint-base: var(--surface);
+  --on-tint: var(--text);
+  --cat-tint: 26%;
+  --blank-tint: 12%;
 
   color-scheme: light;
 }
