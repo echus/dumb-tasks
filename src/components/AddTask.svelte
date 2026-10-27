@@ -1,21 +1,24 @@
 <script lang="ts">
   import { track } from '../lib/history.svelte';
   import { addTask } from '../lib/tasks';
+  import { BUCKET_LABELS, type Bucket } from '../lib/types';
 
-  let { onadd }: { onadd?: () => void } = $props();
+  // Only Today's box takes focus on open, so one tap captures a thought
+  let { bucket, autofocus = false }: { bucket: Bucket; autofocus?: boolean } = $props();
 
   let text = $state('');
   let input: HTMLInputElement;
 
-  // Fast capture: ready to type the moment the app opens.
-  $effect(() => input.focus());
+  $effect(() => {
+    if (autofocus) input.focus();
+  });
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
     const value = text;
     text = '';
     input.focus();
-    if (await track(null, () => addTask(value))) onadd?.();
+    await track(null, () => addTask(value, new Date(), bucket));
   }
 </script>
 
@@ -24,7 +27,7 @@
     bind:this={input}
     bind:value={text}
     placeholder="add a task"
-    aria-label="New task"
+    aria-label="New task in {BUCKET_LABELS[bucket]}"
     autocomplete="off"
     enterkeyhint="done"
   />
@@ -33,7 +36,7 @@
 <style>
   form {
     display: flex;
-    padding: 8px 0;
+    padding: 0 0 8px;
   }
 
   input {
@@ -43,6 +46,9 @@
     border: none;
     border-radius: var(--radius);
     background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--glow-ring),
+      0 0 10px var(--glow);
     caret-color: var(--accent);
   }
 

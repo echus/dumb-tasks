@@ -49,8 +49,12 @@ function derive(text: string, now: Date) {
   };
 }
 
-/** New tasks land at the top of Today. */
-export async function addTask(text: string, now = new Date()): Promise<string | null> {
+/** New tasks land at the top of their bucket (Today unless given). */
+export async function addTask(
+  text: string,
+  now = new Date(),
+  bucket: Bucket = 'today',
+): Promise<string | null> {
   text = text.trim();
   if (!text) return null;
 
@@ -60,10 +64,10 @@ export async function addTask(text: string, now = new Date()): Promise<string | 
 
   // In a transaction so rapid adds don't read the same "first" and collide on position.
   await db.transaction('rw', db.tasks, async () => {
-    const first = (await activeIn('today'))[0];
+    const first = (await activeIn(bucket))[0];
     const fields = {
       text,
-      bucket: 'today' as const,
+      bucket,
       position: generateKeyBetween(null, first?.position ?? null),
       sorted: false,
       completedAt: null,
@@ -74,7 +78,7 @@ export async function addTask(text: string, now = new Date()): Promise<string | 
     await db.tasks.add({
       id,
       createdAt: at,
-      bucketHistory: [{ bucket: 'today', at }],
+      bucketHistory: [{ bucket, at }],
       fieldUpdatedAt: Object.fromEntries(Object.keys(fields).map((k) => [k, at])),
       ...fields,
     });

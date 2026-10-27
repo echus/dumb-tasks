@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import TaskRow from './TaskRow.svelte';
   import { finishDrop } from '../lib/dnd';
   import { BUCKET_LABELS, type Bucket, type Task } from '../lib/types';
@@ -8,9 +9,10 @@
     bucket: Bucket;
     active: boolean; // the selected tab, when buckets are shown as tabs
     tasks: Task[];
+    children?: Snippet; // shown between the bucket name and the list
   }
 
-  let { bucket, active, tasks }: Props = $props();
+  let { bucket, active, tasks, children }: Props = $props();
 
   // Over the list but not over a task: the task will go at the end, so the line sits there
   const dropAtEnd = $derived(!!drag.id && drag.bucket === bucket && !drag.overTask);
@@ -44,6 +46,8 @@
 >
   <h2 id="heading-{bucket}">{BUCKET_LABELS[bucket]}</h2>
 
+  {@render children?.()}
+
   <div class="list" class:drop-end={dropAtEnd}>
     {#if tasks.length}
       <ul>
@@ -73,6 +77,18 @@
     overflow: hidden;
     border-radius: var(--radius);
     background: var(--surface);
+    box-shadow: 0 0 10px var(--glow);
+  }
+
+  /* The glow's thin edge, drawn on top so rows and dividers don't cover it */
+  .list::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--glow-ring);
+    pointer-events: none;
   }
 
   /* A straight line along the bottom (an inset shadow would follow the rounded corners) */
@@ -91,11 +107,6 @@
   @media (max-width: 1099px) {
     section.inactive {
       display: none;
-    }
-
-    /* Square where the selected tab joins on */
-    .list {
-      border-top-left-radius: 0;
     }
 
     h2 {

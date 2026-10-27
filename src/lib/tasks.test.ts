@@ -47,6 +47,16 @@ describe('tasks', () => {
     expect(task.fieldUpdatedAt.text).toBe(later(1).toISOString());
   });
 
+  it('adds to the top of another bucket when given one', async () => {
+    await addTask('a', t0, 'week');
+    const id = (await addTask('b', later(1), 'week'))!;
+    expect(await texts('week')).toEqual(['b', 'a']);
+    expect(await texts('today')).toEqual([]);
+    expect((await db.tasks.get(id))!.bucketHistory).toEqual([
+      { bucket: 'week', at: later(1).toISOString() },
+    ]);
+  });
+
   it('keeps rapid adds in order', async () => {
     await Promise.all(['a', 'b', 'c', 'd'].map((t, i) => addTask(t, later(i))));
     const positions = (await db.tasks.toArray()).map((t) => t.position);

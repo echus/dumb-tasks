@@ -35,9 +35,10 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
 ## User interactions
 
 - **Fast capture is the top UX goal:** open app → type → saved in a couple of seconds.
-  The input is focused on launch; on Android the PWA registers as a share target so text
+  Today's input is focused on launch; on Android the PWA registers as a share target so text
   can be shared into it from any app.
-- **Add:** a single always-visible text input. Enter adds to the top of Today.
+- **Add:** every list has its own "add a task" box just above it. Enter adds to the top of
+  that list.
 - **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
   long-press a task to pick it up (a copy of the task follows your finger and the original fades). Drop on a list to
   place it above or below the task under the pointer, or at the end. A thin line showing
@@ -103,12 +104,11 @@ Calm and minimal, so the focus is on the tasks:
   overdue.
 - Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
   (follows light/dark) and app icon are the same circle on its own.
-- Greyscale surfaces, corners only just rounded (4px), 1px hairlines, no borders around the
-  lists.
+- Greyscale surfaces, corners only just rounded (4px), 1px hairlines. Panels (lists, the
+  "add a task" boxes, the selected phone tab) have a faint glow edge instead of borders.
 - Every list is white on the light grey page. Bucket names are plain text above each list
-  on desktop; on phones the tabs are the same plain text, and the selected one is a white tab joined to
-  the list.
-  No borders on the lists or the "add a task" box.
+  on desktop; on phones the tabs are the same plain text, and the selected one sits on a
+  small white panel of its own, apart from the list.
 - Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
 - Deadline badges escalate by weight, not hue: outlined grey (later) → outlined (this week) →
   inverted (≤ 2 days) → red (overdue).

@@ -16,6 +16,10 @@
 
   /* Emoji circles: category colour mixed into a pale base, so they stay light, almost
      as in light mode, on the grey lists. --on-tint colours the hover tick. */
+  /* A faint light edge and haze around the panels */
+  --glow-ring: rgb(255 255 255 / 0.08);
+  --glow: rgb(255 255 255 / 0.05);
+
   --tint-base: #dcdde0;
   --on-tint: #1b1c1f;
   --cat-tint: 30%;
@@ -44,6 +48,8 @@
     --danger: #d42a2a;
     --on-danger: #ffffff;
     --on-accent: #ffffff;
+    --glow-ring: rgb(0 0 0 / 0.06);
+    --glow: rgb(0 0 0 / 0.05);
     --tint-base: var(--surface);
     --on-tint: var(--text);
     --cat-tint: 26%;
@@ -63,6 +69,8 @@
   --danger: #d42a2a;
   --on-danger: #ffffff;
   --on-accent: #ffffff;
+  --glow-ring: rgb(0 0 0 / 0.06);
+  --glow: rgb(0 0 0 / 0.05);
   --tint-base: var(--surface);
   --on-tint: var(--text);
   --cat-tint: 26%;

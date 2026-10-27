@@ -20,8 +20,7 @@
     return out;
   });
 
-  // Which bucket shows when they're tabs (below desktop width). New tasks land in Today,
-  // so adding one switches back there to show it.
+  // Which bucket shows when they're tabs (below desktop width)
   let activeTab = $state<Bucket>('today');
 </script>
 
@@ -39,8 +38,6 @@
 </header>
 
 <div class="bar">
-  <AddTask onadd={() => (activeTab = 'today')} />
-
   <!-- Dropping a task on a tab sends it to the end of that list, without switching tabs -->
   <div class="tabs" role="tablist" aria-label="Buckets">
     {#each BUCKETS as bucket (bucket)}
@@ -78,7 +75,10 @@
       {bucket}
       active={activeTab === bucket}
       tasks={grouped[bucket]}
-    />
+    >
+      <!-- New tasks land at the top of a list, so each list's input sits just above it -->
+      <AddTask {bucket} autofocus={bucket === 'today'} />
+    </BucketList>
   {/each}
 </main>
 
@@ -123,7 +123,7 @@
     stroke-width: 2;
   }
 
-  /* Input and tabs stay reachable while scrolling a long list */
+  /* Tabs stay reachable while scrolling a long list */
   .bar {
     position: sticky;
     top: 0;
@@ -134,17 +134,17 @@
   }
 
   /* Phone layout: the tabs are plain text like the desktop bucket names; the selected one
-     gets a white tab that sits directly on top of the white list below it */
+     sits on a small panel of its own */
   .tabs {
     display: flex;
     gap: 2px;
-    margin-top: 8px;
+    padding-top: 8px;
   }
 
   .tabs button {
     padding: 8px 12px;
     border: none;
-    border-radius: var(--radius) var(--radius) 0 0;
+    border-radius: var(--radius);
     background: none;
     color: var(--text);
     font-family: var(--font-display);
@@ -156,6 +156,9 @@
 
   .tabs button[aria-selected='true'] {
     background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--glow-ring),
+      0 0 10px var(--glow);
   }
 
   /* Dragging a task onto a tab: the same thin line as the insertion line, under its name */
@@ -163,10 +166,6 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 5px;
-  }
-
-  .bar {
-    padding-bottom: 0;
   }
 
   main {
@@ -181,7 +180,7 @@
     }
 
     .bar {
-      padding-bottom: 8px;
+      display: none;
     }
 
     main {
