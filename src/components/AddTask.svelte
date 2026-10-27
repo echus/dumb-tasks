@@ -39,6 +39,7 @@
     padding: 0 0 8px;
   }
 
+  /* An ink border (black, or white in dark mode), so the box stands out from the list */
   input {
     flex: 1;
     min-width: 0;
@@ -47,7 +48,7 @@
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow:
-      inset 0 0 0 1px var(--glow-ring),
+      inset 0 0 0 1px var(--text),
       0 0 10px var(--glow);
     caret-color: var(--accent);
   }

@@ -110,8 +110,8 @@ Calm and minimal, so the focus is on the tasks:
   in dark). The fluoro emoji circles and the deadline badges are the only colour in the app.
 - Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
   (follows light/dark) and app icon are the same circle on its own.
-- Greyscale surfaces, corners only just rounded (4px), 1px hairlines. Panels (lists, the
-  "add a task" boxes) have a faint glow edge instead of borders. The lists are well
+- Greyscale surfaces, corners only just rounded (4px), 1px hairlines. The lists have a
+  faint glow edge instead of borders; the "add a task" boxes have an ink border. The lists are well
   rounded (half a row's height), so they read as separate from the "add a task" boxes.
 - Every list is white on the light grey page. Bucket names are plain text above each list
   on desktop; on phones the tabs are the same plain text, and the selected one has a 2px ink
