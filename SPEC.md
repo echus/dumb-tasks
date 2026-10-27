@@ -85,8 +85,8 @@ with its category colour; the circle is also the checkbox (hovering shows a tick
   above verbs ("buy birthday present" → 🎂, not 🛒).
 - **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
   exact keyword matches.
-- **No match → a plain light-grey circle**, paler than the category tints; a tick appears in
-  it on hover.
+- **No match → a 📄 page** in a light-grey circle, paler than the category tints; a tick
+  appears in it on hover.
 - Icons are guessed fresh from the text when shown, so keyword improvements reach older
   tasks too; an icon the AI set is kept.
 - Each icon also has a broad **category** (home, errands, health, people, money, work,

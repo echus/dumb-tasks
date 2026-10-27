@@ -21,11 +21,11 @@
     gap: 6px;
   }
 
-  /* Lowercase names: centre on the x-height rather than the line box, which sits a
-     little higher */
+  /* Nudged a touch below the line box's centre: the names are lowercase, but every one
+     has a tall letter, so the eye centres between the x-height and the ascenders */
   .icon {
     display: inline-grid;
     color: var(--muted);
-    transform: translateY(0.09em);
+    transform: translateY(0.05em);
   }
 </style>

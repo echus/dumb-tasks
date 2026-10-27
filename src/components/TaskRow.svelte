@@ -27,13 +27,13 @@
   let words = $state<HTMLElement>();
 
   // Guessed fresh from the text, so older tasks pick up keyword improvements too; an icon
-  // the AI chose is kept. Anything unmatched is an empty box, like a plain checkbox.
+  // the AI chose is kept. Anything unmatched gets a plain page.
   const guess = $derived(
     task.iconSource === 'ai' && task.icon
       ? { icon: task.icon, category: task.category }
       : guessIcon(task.text),
   );
-  const emoji = $derived(guess ? TASK_ICONS[guess.icon] : undefined);
+  const emoji = $derived(guess ? TASK_ICONS[guess.icon] : '📄');
 
   // Split the text around the parsed deadline phrase so it can be underlined.
   const parts = $derived.by(() => {
@@ -149,7 +149,7 @@
       aria-label="Mark done"
       onclick={complete}
     >
-      {#if emoji}<span class="task-glyph">{emoji}</span>{/if}
+      <span class="task-glyph">{emoji}</span>
       <span class="done-glyph"><Icon svg={ui.check} size={16} /></span>
     </button>
 
@@ -242,7 +242,7 @@
     cursor: pointer;
   }
 
-  /* Lighter than the category tints, so a task with no icon reads as "blank" */
+  /* Lighter than the category tints, so a task with no emoji reads as a plain note */
   .icon[data-category='none'] {
     background: color-mix(in srgb, var(--muted) var(--blank-tint), var(--tint-base));
   }
