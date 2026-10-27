@@ -117,7 +117,7 @@ Calm and minimal, so the focus is on the tasks:
   1px hairlines. The lists have a faint glow edge instead of borders; the add box has an
   ink border. An empty list has no panel, just its "nothing yet..." text.
 - Every list is white on the light grey page. Bucket names are plain text above each list
-  on desktop; on phones the tabs are the same plain text, and the selected one has a 2px ink
+  on desktop; on phones the tabs are the same plain text, and the selected one has a 1px ink
   line under it; the others are grey.
 - Header icon buttons are the same faded ink as the unselected tabs; the + is ink while its
   box is open.
