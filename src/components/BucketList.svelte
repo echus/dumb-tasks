@@ -18,7 +18,7 @@
   // Over the list but not over a task: the task will go at the end, so the line sits there
   const dropAtEnd = $derived(!!drag.id && drag.bucket === bucket && !drag.overTask);
 
-  // Over a task: land above or below it. Anywhere else in the list: at the end.
+  // Over a task: TaskRow tracks above/below. Anywhere else in the list: at the end.
   function ondrop(e: DragEvent) {
     e.preventDefault();
     finishDrop();

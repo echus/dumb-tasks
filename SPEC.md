@@ -80,20 +80,20 @@ Parsed from the task text — there is no deadline field in the UI.
 Chosen automatically; never asked of the user. Each task shows an **emoji** in a circle tinted
 with a fluoro colour of its own; the circle is also the checkbox (hovering shows a tick).
 
-- `guessIcon(text) → { icon, category }` picks one of ~45 icons; each maps to an emoji.
+- `guessIcon(text) → emoji` picks one of 44 emoji. The AI can pick any emoji.
 - **Keyword matching:** a hand-written table of keywords and word stems, with nouns ranked
   above verbs ("buy birthday present" → 🎂, not 🛒).
 - **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
   exact keyword matches.
 - **No match → a 📄 page.**
-- Icons are guessed fresh from the text when shown, so keyword improvements reach older
-  tasks too; an icon the AI set is kept.
-- **Circle colour:** each task gets a fluoro colour picked from its id, so it looks random but
-  never changes, whatever the emoji. Hue and lightness vary continuously, so no two tasks
+- **Guessed once, then stored:** the icon is picked when a task is added and re-picked
+  whenever its text is edited; otherwise the stored pick is shown. The AI can replace the
+  pick with its own; that holds until the user next edits the text (like deadlines).
+- **Circle colour:** each task gets a random fluoro colour, stored on the task. It's picked
+  again only when the icon changes (an edit or the AI picking a different icon), so a
+  new icon is easy to spot. Hue and lightness vary continuously, so no two tasks
   quite match. Any hue but straight orange and red (they look dull beside the rest): the
   warm end runs from golden yellow round to pinky red.
-- Each icon also has a broad **category** (home, errands, health, people, money, work,
-  creative), kept on the task for sorting and the AI; it doesn't show in the UI.
 - Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.
 
 ## Visual design
@@ -104,8 +104,7 @@ Calm and minimal, so the focus is on the tasks:
   phones); Stack Sans Headline for deadline badges.
   No monospace. (Latin subsets, bundled, work offline.)
 - **Ink accent:** the accent is the text colour itself (near-black in light mode, near-white
-  in dark). The category-tinted emoji circles are the only colour in the app. Red only means
-  overdue.
+  in dark). The fluoro emoji circles and the deadline badges are the only colour in the app.
 - Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
   (follows light/dark) and app icon are the same circle on its own.
 - Greyscale surfaces, corners only just rounded (4px), 1px hairlines. Panels (lists, the
@@ -126,7 +125,8 @@ Single document, versioned. Draft shape:
 
 ```ts
 interface DataFile {
-  schemaVersion: number;
+  schemaVersion: 1;
+  exportedAt: string;
   tasks: Task[];
   memory: string;          // user-level preferences the AI has learned
   memoryUpdatedAt: string; // for merging
@@ -144,24 +144,27 @@ interface Task {
   completedAt: string | null;
   deletedAt: string | null;   // tombstone
 
-  // hidden — never shown as editable fields
-  deadline: string | null;    // YYYY-MM-DD
-  deadlineSource: 'parsed' | 'ai' | null;
-  deadlineText: string | null; // phrase the deadline came from, for underlining
-  icon: string | null;
-  category: string | null;
-  iconSource: 'auto' | 'ai';
+  // Derived from the text or set by the AI; never edited directly. Re-derived
+  // whenever the text is edited, replacing anything the AI set.
+  deadline: {                 // one object, so date and phrase merge as a unit
+    date: string;             // YYYY-MM-DD
+    phrase: string | null;    // phrase it was parsed from, for underlining; null if AI-set
+  } | null;
+  icon: string | null;        // an emoji; null: no keyword matched (shows 📄)
+  colour: string;             // icon circle's CSS colour: random, re-picked when the icon changes
   aiNote: string;             // context the AI keeps about this task
 
   fieldUpdatedAt: Record<string, string>; // per-field timestamps for merging
 }
 ```
 
-Device-only settings (never synced): sync credentials, locale override.
+Device-only settings (never synced): sync credentials, locale override. They get their own
+`settings` table, which exists but is still empty.
 
 ## Storage
 
-- IndexedDB (via Dexie) in the browser/PWA.
+- IndexedDB (via Dexie) in the browser/PWA. Tables: `tasks` (indexed by bucket), `meta`
+  (synced key/values; just `memory` for now) and `settings` (device-only).
 - Request `navigator.storage.persist()` on first run; Android may otherwise evict data.
 - Once backups have a UI, nudge users without sync to export one now and then.
 
@@ -210,7 +213,7 @@ itself has no chat and needs no API key.
 | `move_task(id, bucket, before_id?)` | Sort and prioritise |
 | `complete_task(id)` / `delete_task(id)` | |
 | `set_deadline(id, date \| null)` | Correct parsing |
-| `set_icon(id, icon, category)` | Override the guess |
+| `set_icon(id, emoji)` | Override the guess with any emoji (a new icon gets a new colour) |
 | `set_task_note(id, note)` | Hidden per-task context |
 | `get_memory()` / `update_memory(text)` | User preferences |
 
@@ -243,8 +246,9 @@ Both would reuse the MCP tool definitions.
 
 ## Stack
 
-TypeScript · Vite · Svelte 5 · Dexie · chrono-node · Lucide · fractional-indexing ·
-vite-plugin-pwa · Vitest · Inter / Inter Display · Stack Sans. Later: MCP TypeScript SDK.
+TypeScript · Vite · Svelte 5 · Dexie · chrono-node · Phosphor icons (app controls; tasks use
+emoji) · fractional-indexing · ulid · vite-plugin-pwa · Vitest · Inter / Inter Display ·
+Stack Sans Headline. Later: MCP TypeScript SDK.
 
 ## Milestones
 

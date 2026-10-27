@@ -39,10 +39,8 @@ describe('tasks', () => {
     const task = (await db.tasks.get(id))!;
     expect(task).toMatchObject({
       sorted: false,
-      deadline: '2026-10-30',
-      deadlineText: 'friday',
-      icon: 'house',
-      category: 'home',
+      deadline: { date: '2026-10-30', phrase: 'friday' },
+      icon: '🏠',
     });
     expect(task.fieldUpdatedAt.text).toBe(later(1).toISOString());
   });
@@ -97,7 +95,31 @@ describe('tasks', () => {
   it('re-derives deadline and icon on edit', async () => {
     const id = (await addTask('call mum', t0))!;
     await editText(id, 'dentist 14 nov', later(1));
-    expect(await db.tasks.get(id)).toMatchObject({ deadline: '2026-11-14', icon: 'stethoscope' });
+    expect(await db.tasks.get(id)).toMatchObject({
+      deadline: { date: '2026-11-14' },
+      icon: '🩺',
+    });
+  });
+
+  it('keeps the circle colour until an edit changes the icon', async () => {
+    const id = (await addTask('call mum', t0))!;
+    const colour = (await db.tasks.get(id))!.colour;
+    expect(colour).toMatch(/^hsl\(/);
+
+    await editText(id, 'call mum tonight', later(1)); // still a phone
+    expect((await db.tasks.get(id))!.colour).toBe(colour);
+
+    await editText(id, 'buy mum flowers', later(2)); // now a gift
+    const task = (await db.tasks.get(id))!;
+    expect(task.icon).toBe('🎁');
+    expect(task.colour).not.toBe(colour);
+  });
+
+  it('replaces an icon the AI picked when the text is edited', async () => {
+    const id = (await addTask('call mum', t0))!;
+    await db.tasks.update(id, { icon: '🎁' });
+    await editText(id, 'call mum about the boiler', later(1));
+    expect((await db.tasks.get(id))!.icon).toBe('🔧');
   });
 
   it('keeps completed and deleted tasks as history/tombstones', async () => {
@@ -145,7 +167,8 @@ describe('export / import', () => {
     expect((await db.tasks.get(id))!.bucket).toBe('week');
   });
 
-  it('rejects files that are not backups', () => {
+  it('rejects files that are not backups, or from a newer version', () => {
     expect(() => parseDataFile('{"hello": 1}')).toThrow(/backup/);
+    expect(() => parseDataFile('{"schemaVersion": 2, "tasks": []}')).toThrow(/newer/);
   });
 });

@@ -10,11 +10,8 @@ export const MERGED_FIELDS = [
   'completedAt',
   'deletedAt',
   'deadline',
-  'deadlineSource',
-  'deadlineText',
   'icon',
-  'category',
-  'iconSource',
+  'colour',
   'aiNote',
 ] as const satisfies readonly (keyof Task)[];
 

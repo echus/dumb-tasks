@@ -1,12 +1,11 @@
 import type * as chrono from 'chrono-node';
 import * as en from 'chrono-node/en'; // English only, keeps other locales out of the bundle
 
-export type DateOrder = 'dmy' | 'mdy';
+type DateOrder = 'dmy' | 'mdy';
 
-export interface ParsedDeadline {
+interface ParsedDeadline {
   date: string; // YYYY-MM-DD
-  text: string; // matched phrase, as it appears in the task
-  index: number;
+  phrase: string; // as it appears in the task
 }
 
 // Words that, placed right before a date, make it clearly a deadline.
@@ -60,12 +59,12 @@ export function parseDeadline(
     if (!hasDay && !hasMonth) continue; // time-only, year-only
     if (!hasDay && !TRIGGER.test(text.slice(0, r.index))) continue;
 
-    return { date: toISODate(s.date()), text: r.text, index: r.index };
+    return { date: toISODate(s.date()), phrase: r.text };
   }
   return null;
 }
 
-export function toISODate(d: Date): string {
+function toISODate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -89,7 +88,7 @@ export function describeDeadline(deadline: string, today: Date = new Date()): st
   return `${-n} days overdue`;
 }
 
-export type Urgency = 'overdue' | 'soon' | 'near' | 'later';
+type Urgency = 'overdue' | 'soon' | 'near' | 'later';
 
 export function deadlineUrgency(deadline: string, today: Date = new Date()): Urgency {
   const n = daysUntil(deadline, today);

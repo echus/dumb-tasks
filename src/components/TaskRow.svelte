@@ -1,14 +1,9 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
   import { deadlineUrgency, describeDeadline } from '../lib/deadline';
-  import { guessIcon } from '../lib/guess-icon';
-  import { PLAIN_ICON, TASK_ICONS, circleColour } from '../lib/task-icons';
+  import { PLAIN_ICON } from '../lib/task-icons';
   import * as ui from '../lib/ui-icons';
-  import {
-    completeTask,
-    deleteTask,
-    editText,
-  } from '../lib/tasks';
+  import { completeTask, deleteTask, editText } from '../lib/tasks';
   import { track } from '../lib/history.svelte';
   import type { Task } from '../lib/types';
   import { setDragImage, touchDrag } from '../lib/dnd';
@@ -26,24 +21,16 @@
   let caret = 0;
   let words = $state<HTMLElement>();
 
-  // Guessed fresh from the text, so older tasks pick up keyword improvements too; an icon
-  // the AI chose is kept. Anything unmatched gets a plain page.
-  const guess = $derived(
-    task.iconSource === 'ai' && task.icon
-      ? { icon: task.icon, category: task.category }
-      : guessIcon(task.text),
-  );
-  const emoji = $derived((guess && TASK_ICONS[guess.icon]) ?? PLAIN_ICON);
-  const colour = $derived(circleColour(task.id));
 
   // Split the text around the parsed deadline phrase so it can be underlined.
   const parts = $derived.by(() => {
-    const i = task.deadlineText ? task.text.indexOf(task.deadlineText) : -1;
-    if (i < 0) return { before: task.text, phrase: '', after: '' };
+    const phrase = task.deadline?.phrase;
+    const i = phrase ? task.text.indexOf(phrase) : -1;
+    if (!phrase || i < 0) return { before: task.text, phrase: '', after: '' };
     return {
       before: task.text.slice(0, i),
-      phrase: task.deadlineText!,
-      after: task.text.slice(i + task.deadlineText!.length),
+      phrase,
+      after: task.text.slice(i + phrase.length),
     };
   });
 
@@ -146,11 +133,11 @@
     <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
     <button
       class="icon"
-      style:--cat={colour}
+      style:--circle={task.colour}
       aria-label="Mark done"
       onclick={complete}
     >
-      <span class="task-glyph">{emoji}</span>
+      <span class="task-glyph">{task.icon ?? PLAIN_ICON}</span>
       <span class="done-glyph"><Icon svg={ui.check} size={16} /></span>
     </button>
 
@@ -179,8 +166,8 @@
          Badges line up down a list and long text wraps before them. -->
     <span class="end">
       {#if task.deadline}
-        <span class="badge" data-urgency={deadlineUrgency(task.deadline, clock.now)}>
-          {describeDeadline(task.deadline, clock.now)}
+        <span class="badge" data-urgency={deadlineUrgency(task.deadline.date, clock.now)}>
+          {describeDeadline(task.deadline.date, clock.now)}
         </span>
       {/if}
       <button class="delete" aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
@@ -188,7 +175,6 @@
       </button>
     </span>
   </div>
-
 </li>
 
 <style>
@@ -236,7 +222,7 @@
     padding: 0;
     border: none;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--cat) var(--cat-tint), var(--tint-base));
+    background: color-mix(in srgb, var(--circle) var(--circle-tint), var(--tint-base));
     color: var(--muted);
     font-size: 15px;
     line-height: 1;

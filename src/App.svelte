@@ -72,17 +72,12 @@
 
 <main>
   {#each BUCKETS as bucket (bucket)}
-    <BucketList
-      {bucket}
-      active={activeTab === bucket}
-      tasks={grouped[bucket]}
-    >
+    <BucketList {bucket} active={activeTab === bucket} tasks={grouped[bucket]}>
       <!-- New tasks land at the top of a list, so each list's input sits just above it -->
       <AddTask {bucket} autofocus={bucket === 'today'} />
     </BucketList>
   {/each}
 </main>
-
 
 <style>
   header {
@@ -179,10 +174,6 @@
   }
 
   @media (min-width: 1100px) {
-    .tabs {
-      display: none;
-    }
-
     .bar {
       display: none;
     }

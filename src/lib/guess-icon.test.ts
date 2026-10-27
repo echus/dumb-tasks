@@ -1,36 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { GUESSABLE_ICONS, guessIcon } from './guess-icon';
-import { TASK_ICONS } from './task-icons';
+import { guessIcon } from './guess-icon';
 
 describe('guessIcon', () => {
-  it('only picks icons that are bundled', () => {
-    expect(GUESSABLE_ICONS.sort()).toEqual(Object.keys(TASK_ICONS).sort());
+  it.each([
+    ['call mum', '📞'],
+    ['calling the bank', '🏦'],
+    ['buy milk', '🛒'],
+    ['buy birthday present for Sam', '🎂'],
+    ['dentist 14 nov', '🩺'],
+    ['email Sarah about the invoice', '🧾'],
+    ['sort out the boiler', '🔧'],
+    ['pay rent by friday', '🏠'],
+    ['renew passport', '📄'],
+    ['take the bins out', '🗑️'],
+    ['groceries', '🛒'],
+    ['learn guitar', '🎵'],
+  ])('%s → %s', (text, emoji) => {
+    expect(guessIcon(text)).toBe(emoji);
   });
 
   it.each([
-    ['call mum', 'phone'],
-    ['calling the bank', 'landmark'],
-    ['buy milk', 'shopping-cart'],
-    ['buy birthday present for Sam', 'cake'],
-    ['dentist 14 nov', 'stethoscope'],
-    ['email Sarah about the invoice', 'receipt'],
-    ['sort out the boiler', 'wrench'],
-    ['pay rent by friday', 'house'],
-    ['renew passport', 'file-text'],
-    ['take the bins out', 'trash'],
-    ['groceries', 'shopping-cart'],
-    ['learn guitar', 'keyboard-music'],
-  ])('%s → %s', (text, icon) => {
-    expect(guessIcon(text)?.icon).toBe(icon);
-  });
-
-  it.each([
-    ['dentst appointment', 'stethoscope'],
-    ['plumbr', 'wrench'],
-    ['groc', 'shopping-cart'],
-    ['think about stuff', 'lightbulb'], // exact: "think"
-  ])('near misses: %s → %s', (text, icon) => {
-    expect(guessIcon(text)?.icon).toBe(icon);
+    ['dentst appointment', '🩺'],
+    ['plumbr', '🔧'],
+    ['groc', '🛒'],
+    ['think about stuff', '💡'], // exact: "think"
+  ])('near misses: %s → %s', (text, emoji) => {
+    expect(guessIcon(text)).toBe(emoji);
   });
 
   it('returns null when nothing fits', () => {

@@ -3,8 +3,9 @@ import { ulid } from 'ulid';
 import { db } from './db';
 import { parseDeadline } from './deadline';
 import { guessIcon } from './guess-icon';
+import { pickCircleColour } from './task-icons';
 import { MERGED_FIELDS, type MergedField } from './merge';
-import type { Bucket, Task } from './types';
+import { makeDeadline, type Bucket, type Task } from './types';
 
 export function isActive(t: Task): boolean {
   return t.deletedAt === null && t.completedAt === null;
@@ -36,16 +37,11 @@ async function updateTask(id: string, patch: Partial<Pick<Task, MergedField>>, n
 }
 
 /** Fields derived from the text: re-run whenever the user writes or edits it. */
-function derive(text: string, now: Date) {
+function derive(text: string, now: Date): Pick<Task, 'deadline' | 'icon'> {
   const deadline = parseDeadline(text, now);
-  const icon = guessIcon(text);
   return {
-    deadline: deadline?.date ?? null,
-    deadlineText: deadline?.text ?? null,
-    deadlineSource: deadline ? ('parsed' as const) : null,
-    icon: icon?.icon ?? null,
-    category: icon?.category ?? null,
-    iconSource: 'auto' as const,
+    deadline: deadline && makeDeadline(deadline.date, deadline.phrase),
+    icon: guessIcon(text),
   };
 }
 
@@ -74,6 +70,7 @@ export async function addTask(
       deletedAt: null,
       aiNote: '',
       ...derived,
+      colour: pickCircleColour(),
     };
     await db.tasks.add({
       id,
@@ -89,7 +86,14 @@ export async function addTask(
 export async function editText(id: string, text: string, now = new Date()) {
   text = text.trim();
   if (!text) return;
-  await updateTask(id, { text, ...derive(text, now) }, now);
+  await db.transaction('rw', db.tasks, async () => {
+    const task = await db.tasks.get(id);
+    if (!task) return;
+    const derived = derive(text, now);
+    // A new icon gets a new colour, so the change is easy to spot.
+    const colour = derived.icon === task.icon ? {} : { colour: pickCircleColour() };
+    await updateTask(id, { text, ...derived, ...colour }, now);
+  });
 }
 
 /**

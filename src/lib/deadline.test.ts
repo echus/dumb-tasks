@@ -13,7 +13,7 @@ describe('parseDeadline', () => {
     ['bins on the 14th', '2026-11-14', 'the 14th'],
     ['tax return by march', '2027-03-01', 'march'],
   ])('%s → %s', (text, date, phrase) => {
-    expect(parseDeadline(text, ref, 'dmy')).toMatchObject({ date, text: phrase });
+    expect(parseDeadline(text, ref, 'dmy')).toEqual({ date, phrase });
   });
 
   it.each(['read 1984', 'call May', 'march for climate', 'buy milk', 'fix bike at 5pm'])(

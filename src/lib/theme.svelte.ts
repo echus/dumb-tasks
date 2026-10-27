@@ -15,7 +15,7 @@ function read(): Theme {
 const systemQuery = typeof window !== 'undefined' ? matchMedia('(prefers-color-scheme: light)') : null;
 
 // Follows the system until the user flips the toggle; after that their choice sticks.
-export const theme = $state({ current: read(), systemLight: systemQuery?.matches ?? false });
+const theme = $state({ current: read(), systemLight: systemQuery?.matches ?? false });
 
 export function effectiveTheme(): 'light' | 'dark' {
   if (theme.current !== 'system') return theme.current;

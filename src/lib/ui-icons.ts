@@ -4,7 +4,7 @@ import dots from '@phosphor-icons/core/assets/bold/dots-three-bold.svg?raw';
 import triangle from '@phosphor-icons/core/assets/bold/triangle-bold.svg?raw';
 import type { Bucket } from './types';
 
-// The "fill" tick is a solid box with the tick cut out; this is a plain tick
+// Bold, not fill: Phosphor's filled check is a solid box with the tick cut out
 export { default as check } from '@phosphor-icons/core/assets/bold/check-bold.svg?raw';
 export { default as x } from '@phosphor-icons/core/assets/bold/x-bold.svg?raw';
 export { default as sun } from '@phosphor-icons/core/assets/fill/sun-fill.svg?raw';

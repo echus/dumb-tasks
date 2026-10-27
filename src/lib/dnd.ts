@@ -53,8 +53,12 @@ export function setDragImage(e: DragEvent, node: HTMLElement) {
   setTimeout(() => copy.remove());
 }
 
+function bucketOf(list: HTMLElement | null | undefined): Bucket | null {
+  return list ? (list.id.replace('panel-', '') as Bucket) : null;
+}
+
 /** Updates the drag state for whatever is under a point (used by touch drags). */
-export function dragOver(x: number, y: number) {
+function dragOver(x: number, y: number) {
   const el = document.elementFromPoint(x, y);
   const tab = el?.closest<HTMLElement>('[data-tab]');
   const row = el?.closest<HTMLElement>('li[data-task-id]');
@@ -68,11 +72,11 @@ export function dragOver(x: number, y: number) {
     drag.bucket = null; // over itself: nowhere to drop
   } else if (row) {
     const box = row.getBoundingClientRect();
-    drag.bucket = list?.id.replace('panel-', '') as Bucket;
+    drag.bucket = bucketOf(list);
     drag.overTask = row.dataset.taskId!;
     drag.after = y > box.top + box.height / 2;
   } else {
-    drag.bucket = list ? (list.id.replace('panel-', '') as Bucket) : null;
+    drag.bucket = bucketOf(list);
   }
 }
 
