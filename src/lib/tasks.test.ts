@@ -12,6 +12,7 @@ import {
   editText,
   isActive,
   moveTask,
+  refreshColours,
 } from './tasks';
 import type { Bucket } from './types';
 
@@ -111,6 +112,26 @@ describe('tasks', () => {
     expect((await db.tasks.get(id))!.deadline).toBeNull();
     await editText(id, 'dentist 14 nov, bring card by friday', later(3));
     expect((await db.tasks.get(id))!.deadline).toEqual({ date: '2026-10-30', phrase: 'friday' });
+  });
+
+  it('recolours older tasks so neighbours differ, the same way every time', async () => {
+    for (const [i, text] of ['one thing', 'another thing', 'walk the dog', 'last thing'].entries()) {
+      const id = (await addTask(text, later(i)))!;
+      await db.tasks.update(id, { colour: 'hsl(250.0 100% 55%)', icon: '📄' }); // the old way
+    }
+    await refreshColours(later(10));
+    const tasks = (await db.tasks.toArray()).sort(byPosition);
+    expect(tasks.map((t) => t.icon)).toEqual([null, '🐕', null, null]); // newest first
+    const hues = tasks.map((t) => parseFloat(t.colour.slice(4)));
+    for (let i = 1; i < hues.length; i++) {
+      const gap = Math.abs(hues[i] - hues[i - 1]);
+      expect(Math.min(gap, 360 - gap)).toBeGreaterThanOrEqual(60);
+    }
+
+    // Another device, or a second run, works out the same colours and writes nothing
+    const before = await db.tasks.toArray();
+    await refreshColours(later(20));
+    expect(await db.tasks.toArray()).toEqual(before);
   });
 
   it('keeps the circle colour until an edit changes the icon', async () => {

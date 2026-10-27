@@ -6,7 +6,7 @@ import { guessIcon } from './guess-icon';
 import { pickCircleColour } from './task-icons';
 import { MERGED_FIELDS, type MergedField } from './merge';
 import { localChanged } from './sync';
-import { makeDeadline, type Bucket, type Task } from './types';
+import { BUCKETS, makeDeadline, type Bucket, type Task } from './types';
 
 export function isActive(t: Task): boolean {
   return t.deletedAt === null && t.completedAt === null;
@@ -113,6 +113,37 @@ export async function dismissDeadline(id: string, now = new Date()) {
       { deadline: null, ...(phrase && { dismissedPhrases: [...dismissed, phrase] }) },
       now,
     );
+  });
+}
+
+/** The same numbers from the same seed every time (mulberry32, seeded by a string hash). */
+function seededRandom(seed: string): () => number {
+  let a = 0;
+  for (const ch of seed) a = Math.imul(a ^ ch.charCodeAt(0), 2654435761);
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Re-guesses every open task's icon and re-picks its colour under the current rules, top
+ * to bottom so neighbours differ. Seeded by task id, so every device that runs it on the
+ * same lists gets the same colours, and running it again changes nothing.
+ */
+export async function refreshColours(now = new Date()) {
+  await db.transaction('rw', db.tasks, async () => {
+    for (const bucket of BUCKETS) {
+      let above: string | null = null;
+      for (const task of await activeIn(bucket)) {
+        const icon = guessIcon(task.text);
+        const colour = pickCircleColour(icon, above ? [above] : [], seededRandom(task.id));
+        above = colour;
+        if (icon !== task.icon || colour !== task.colour) await updateTask(task.id, { icon, colour }, now);
+      }
+    }
   });
 }
 

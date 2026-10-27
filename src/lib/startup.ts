@@ -1,4 +1,4 @@
-import { addTask } from './tasks';
+import { addTask, refreshColours } from './tasks';
 
 /** Text shared from another Android app arrives as query params; add it to Today once. */
 export async function handleShareTarget(): Promise<void> {
@@ -22,5 +22,19 @@ export async function requestPersistentStorage(): Promise<void> {
     }
   } catch {
     // Not supported or denied: the app still works, it's just less protected.
+  }
+}
+
+// Bump to recolour existing tasks again after the colour or icon rules change.
+const COLOURS_VERSION = '1'; // neighbours kept apart; 🖊️ for unmatched tasks
+
+/** Once per device, after the first sync: brings older tasks up to the current colour rules. */
+export async function refreshColoursOnce(): Promise<void> {
+  try {
+    if (localStorage.getItem('colours') === COLOURS_VERSION) return;
+    await refreshColours();
+    localStorage.setItem('colours', COLOURS_VERSION);
+  } catch {
+    // Storage blocked: skip it rather than recolour on every load.
   }
 }
