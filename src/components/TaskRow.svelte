@@ -168,12 +168,14 @@
         <span bind:this={words}
           >{parts.before}{#if parts.phrase}<span class="phrase">{parts.phrase}</span>{/if}{parts.after}</span
         >
-        {#if task.deadline}
-          <span class="badge" data-urgency={deadlineUrgency(task.deadline, clock.now)}>
-            {describeDeadline(task.deadline, clock.now)}
-          </span>
-        {/if}
       </button>
+    {/if}
+
+    <!-- Fixed spot at the right, so badges line up down a list and long text wraps before them -->
+    {#if task.deadline}
+      <span class="badge" data-urgency={deadlineUrgency(task.deadline, clock.now)}>
+        {describeDeadline(task.deadline, clock.now)}
+      </span>
     {/if}
 
     <button class="delete" aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
@@ -280,8 +282,7 @@
   }
 
   .badge {
-    display: inline-block;
-    margin-left: 8px;
+    flex: none;
     padding: 0 6px;
     border-radius: 2px;
     border: 1px solid var(--border-strong);
@@ -291,7 +292,6 @@
     line-height: 1.6;
     text-transform: lowercase;
     white-space: nowrap;
-    vertical-align: 1px;
     color: var(--muted);
   }
 

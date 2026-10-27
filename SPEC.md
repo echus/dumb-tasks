@@ -65,9 +65,9 @@ Parsed from the task text — there is no deadline field in the UI.
 - Only accept clear date signals: "by …", "due …", "on the 14th", weekday names, explicit dates.
   Prefer missing a deadline over inventing one ("read 1984", "call May", "march for climate").
 - Day/month order follows device locale, with a setting to override.
-- Display: subtly underline the parsed phrase and show a badge, e.g.
-  `pay rent by friday · 3 days left`. Badge colour escalates as the date approaches;
-  past dates show `2 days overdue`.
+- Display: subtly underline the parsed phrase and show a badge (e.g. `3 days left`) at a
+  fixed spot on the right of the task, so badges line up and long text wraps before them.
+  The badge gets bolder as the date approaches; past dates show `2 days overdue`.
 - The AI can set or correct a task's deadline; that overrides the parsed value until the
   user next edits the text.
 
