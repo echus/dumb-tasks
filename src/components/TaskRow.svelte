@@ -310,9 +310,9 @@
   .badge {
     --due: var(--due-later);
     --ink: color-mix(in srgb, var(--due) var(--due-ink-mix), black);
-    padding: 0 6px;
+    padding: 0 8px;
     border: 1px solid var(--ink);
-    border-radius: 2px;
+    border-radius: 999px; /* a pill, round like the icon circles */
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.6;

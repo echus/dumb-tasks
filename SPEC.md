@@ -126,9 +126,9 @@ Calm and minimal, so the focus is on the tasks:
   with its "add a task" row stuck on top. Phones scroll the whole page.
 - Header icon buttons are the same faded ink as the unselected tabs.
 - Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
-- Deadline badges are traffic lights, drawn as outlines so they don't compete with the icon
-  circles: green (more than a week) → yellow (this week) → red (≤ 2 days). Overdue is the
-  one filled badge: dark red with white text.
+- Deadline badges are traffic lights: rounded pills like the icon circles, drawn as outlines
+  so they don't compete with them: green (more than a week) → yellow (this week) → red
+  (≤ 2 days). Overdue is the one filled badge: dark red with white text.
 - Dark by default and follows the system, until the user flips the sun/moon toggle in the
   header; that choice is stored per device and applied before first paint.
 
