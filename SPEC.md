@@ -38,9 +38,10 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
   The input is focused on launch; on Android the PWA registers as a share target so text
   can be shared into it from any app.
 - **Add:** a single always-visible text input. Enter adds to the top of Today.
-- **Move:** drag between buckets. **Not yet possible on phones**, where buckets are tabs and
-  browser drag-and-drop doesn't work with touch; needs touch dragging (e.g. onto a tab) or
-  another gesture.
+- **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
+  long-press a task to pick it up (a small label follows your finger). Drop on a list to
+  place it above or below the task under the pointer, or at the end. On phones, dropping on
+  a tab sends the task to the end of that list without switching tabs.
 - **Reorder:** drag within a bucket.
 - **Complete:** click the task's icon; hovering it turns it into a tick. Task leaves the list.
 - **Edit:** click into the text; it becomes a text field with the cursor where you clicked.

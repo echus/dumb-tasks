@@ -11,9 +11,14 @@
   } from '../lib/tasks';
   import { track } from '../lib/history.svelte';
   import type { Task } from '../lib/types';
+  import { touchDrag } from '../lib/dnd';
   import { clock, drag, endDrag } from '../lib/ui-state.svelte';
 
   let { task }: { task: Task } = $props();
+
+  // Mouse drags use the browser's drag-and-drop; touch drags use touchDrag (long-press),
+  // since built-in dragging on phones is unreliable and fights with scrolling.
+  const finePointer = typeof matchMedia !== 'undefined' && matchMedia('(pointer: fine)').matches;
 
   // Clicking a task turns it into a text field. Moving between buckets is by dragging.
   let editing = $state(false);
@@ -104,6 +109,7 @@
     if (!drag.id) return;
     e.stopPropagation();
     drag.bucket = task.bucket;
+    drag.overTab = null;
     if (drag.id === task.id) {
       drag.overTask = null;
       return;
@@ -116,7 +122,9 @@
 </script>
 
 <li
-  draggable={!editing}
+  data-task-id={task.id}
+  draggable={!editing && finePointer}
+  use:touchDrag={{ id: task.id, text: task.text }}
   ondragstart={(e) => {
     drag.id = task.id;
     e.dataTransfer?.setData('text/plain', task.text);
@@ -170,6 +178,12 @@
 </li>
 
 <style>
+  /* Long-pressing picks a task up, so don't let the phone select text or show a menu */
+  li {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
   /* Barely-there dividers: the page background colour, against the white list */
   li:not(:first-child) {
     border-top: 1px solid var(--bg);

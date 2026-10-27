@@ -1,9 +1,8 @@
 <script lang="ts">
   import TaskRow from './TaskRow.svelte';
-  import { track } from '../lib/history.svelte';
-  import { moveTask } from '../lib/tasks';
+  import { finishDrop } from '../lib/dnd';
   import { BUCKET_LABELS, type Bucket, type Task } from '../lib/types';
-  import { drag, endDrag } from '../lib/ui-state.svelte';
+  import { drag } from '../lib/ui-state.svelte';
 
   interface Props {
     bucket: Bucket;
@@ -18,15 +17,7 @@
   // Over a task: land above or below it. Anywhere else in the list: at the end.
   function ondrop(e: DragEvent) {
     e.preventDefault();
-    const id = drag.id;
-    let beforeId: string | null = null;
-    if (drag.overTask) {
-      const i = tasks.findIndex((t) => t.id === drag.overTask);
-      beforeId = drag.after ? (tasks[i + 1]?.id ?? null) : drag.overTask;
-      if (beforeId === id) beforeId = tasks[i + 2]?.id ?? null; // dropping just below itself
-    }
-    endDrag();
-    if (id) track([id], () => moveTask(id, bucket, beforeId));
+    finishDrop();
   }
 </script>
 
@@ -40,6 +31,7 @@
     e.preventDefault();
     drag.bucket = bucket;
     drag.overTask = null;
+    drag.overTab = null;
   }}
   ondragleave={(e) => {
     const into = e.relatedTarget as Node | null;

@@ -6,7 +6,9 @@
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from './lib/db';
   import { byPosition, isActive } from './lib/tasks';
+  import { finishDrop } from './lib/dnd';
   import { BUCKETS, BUCKET_LABELS, type Bucket, type Task } from './lib/types';
+  import { drag } from './lib/ui-state.svelte';
 
   // Re-runs whenever the tasks table changes, from any tab.
   const tasks = liveQuery(() => db.tasks.toArray());
@@ -39,13 +41,29 @@
 <div class="bar">
   <AddTask onadd={() => (activeTab = 'today')} />
 
+  <!-- Dropping a task on a tab sends it to the end of that list, without switching tabs -->
   <div class="tabs" role="tablist" aria-label="Buckets">
     {#each BUCKETS as bucket (bucket)}
       <button
         role="tab"
         aria-selected={activeTab === bucket}
         aria-controls="panel-{bucket}"
-        onclick={() => (activeTab = bucket)}>{BUCKET_LABELS[bucket]}</button
+        data-tab={bucket}
+        class:drop-target={drag.id && drag.overTab === bucket}
+        onclick={() => (activeTab = bucket)}
+        ondragover={(e) => {
+          if (!drag.id) return;
+          e.preventDefault();
+          drag.bucket = drag.overTab = bucket;
+          drag.overTask = null;
+        }}
+        ondragleave={() => {
+          if (drag.overTab === bucket) drag.bucket = drag.overTab = null;
+        }}
+        ondrop={(e) => {
+          e.preventDefault();
+          finishDrop();
+        }}>{BUCKET_LABELS[bucket]}</button
       >
     {/each}
   </div>
@@ -60,6 +78,10 @@
     />
   {/each}
 </main>
+
+{#if drag.touch && drag.id}
+  <div class="drag-preview" style:left="{drag.x}px" style:top="{drag.y}px">{drag.label}</div>
+{/if}
 
 <style>
   header {
@@ -134,6 +156,27 @@
 
   .tabs button[aria-selected='true'] {
     background: var(--surface);
+  }
+
+  .tabs button.drop-target {
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+  }
+
+  /* Follows the finger during a touch drag */
+  .drag-preview {
+    position: fixed;
+    z-index: 10;
+    max-width: 70vw;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    transform: translate(-50%, -130%);
   }
 
   .bar {
