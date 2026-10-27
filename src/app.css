@@ -7,19 +7,19 @@
   --muted: #888b92;
   --border: #2a2b2f;
   --border-strong: #45474d;
-  --accent: #ff8138; /* light red-orange; wider-gamut version below */
-  /* Thin orange outline for open / hover boxes, drawn as an inset shadow so it doesn't
-     shift layout */
+  /* Ink: the accent is the text colour itself, so the emoji circles are the only colour */
+  --accent: var(--text);
+  /* Thin accent outline for hover boxes, drawn as an inset shadow so it doesn't shift layout */
   --ring: inset 0 0 0 1px var(--accent);
   --on-accent: #121314;
   --danger: #ff4d4d;
   --on-danger: #121314;
 
-  /* Month and Icebox headers: barely off the background */
-  --bucket-grey: #202125;
-
   /* Header icon buttons: a step quieter than muted text */
   --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
+
+  /* Corners are only just softened */
+  --radius: 4px;
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Stack Sans Headline', var(--font-body); /* logo, labels, buttons */
@@ -39,8 +39,6 @@
     --on-danger: #ffffff;
     --on-accent: #ffffff;
 
-    --bucket-grey: #eeeeee;
-
     color-scheme: light;
   }
 }
@@ -56,28 +54,24 @@
   --on-danger: #ffffff;
   --on-accent: #ffffff;
 
-  --bucket-grey: #eeeeee;
-
   color-scheme: light;
 }
 
-/* On wide-gamut screens (most Macs and phones) use an orange beyond sRGB, for a
-   properly fluorescent look. Everything mixed from the accent follows. */
-@supports (color: color(display-p3 1 0 0)) {
-  :root {
-    --accent: color(display-p3 1 0.5 0.18);
-  }
-}
-
-/* Today is solid orange; Week, Month and Icebox share a grey just off the background. */
-[data-bucket] { --bucket-bg: var(--bucket-grey); --bucket-fg: var(--text); }
-[data-bucket='today'] { --bucket-bg: var(--accent); --bucket-fg: var(--on-accent); }
+/* Category colours for the task icon circles. Red is left out: it means "overdue".
+   The circle is a tint of the colour, so emoji stay readable. */
+[data-category] { --cat: var(--muted); } /* default: tasks with no category */
+[data-category='home'] { --cat: #2bb3c0; }
+[data-category='errands'] { --cat: #4a8cf0; }
+[data-category='health'] { --cat: #36b27a; }
+[data-category='people'] { --cat: #d65fc9; }
+[data-category='money'] { --cat: #d9b62a; }
+[data-category='work'] { --cat: #8f7bf0; }
+[data-category='creative'] { --cat: #8cc63a; }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-  border-radius: 0;
 }
 
 html {

@@ -39,8 +39,9 @@
   input {
     flex: 1;
     min-width: 0;
-    padding: 12px 14px;
-    border: 1px solid var(--accent);
+    padding: 13px 15px;
+    border: none;
+    border-radius: var(--radius);
     background: var(--surface);
     caret-color: var(--accent);
   }

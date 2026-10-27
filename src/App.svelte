@@ -26,8 +26,8 @@
 <header>
   <h1>
     <svg class="mark" viewBox="0 0 16 16" aria-hidden="true">
-      <rect width="16" height="16" />
-      <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
+      <circle cx="8" cy="8" r="8" />
+      <path d="M4.5 8.3 7 10.8 11.5 5.5" />
     </svg>dumb tasks
   </h1>
   <div class="header-actions">
@@ -45,8 +45,6 @@
         role="tab"
         aria-selected={activeTab === bucket}
         aria-controls="panel-{bucket}"
-        class:active={activeTab === bucket}
-        data-bucket={bucket}
         onclick={() => (activeTab = bucket)}>{BUCKET_LABELS[bucket]}</button
       >
     {/each}
@@ -85,7 +83,7 @@
     gap: 4px;
   }
 
-  /* A ticked checkbox */
+  /* A ticked circle, matching the task icons */
   .mark {
     width: 0.8em;
     height: 0.8em;
@@ -93,14 +91,14 @@
     vertical-align: -0.05em;
   }
 
-  .mark rect {
+  .mark circle {
     fill: var(--accent);
   }
 
   .mark path {
     fill: none;
     stroke: var(--on-accent);
-    stroke-width: 2.25;
+    stroke-width: 2;
   }
 
   /* Input and tabs stay reachable while scrolling a long list */
@@ -113,17 +111,20 @@
     background: var(--bg);
   }
 
+  /* Phone layout: the tabs are plain text like the desktop bucket names; the selected one
+     gets a white tab that sits directly on top of the white list below it */
   .tabs {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
     gap: 2px;
+    margin-top: 8px;
   }
 
   .tabs button {
-    padding: 9px 0;
+    padding: 8px 12px;
     border: none;
-    background: var(--bucket-bg);
-    color: var(--bucket-fg);
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: none;
+    color: var(--text);
     font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 700;
@@ -131,14 +132,18 @@
     cursor: pointer;
   }
 
-  .tabs button.active {
-    box-shadow: inset 0 -3px 0 var(--bucket-fg);
+  .tabs button[aria-selected='true'] {
+    background: var(--surface);
+  }
+
+  .bar {
+    padding-bottom: 0;
   }
 
   main {
     display: grid;
     gap: 20px;
-    padding: 8px 0 96px;
+    padding: 0 0 96px;
   }
 
   @media (min-width: 1100px) {
@@ -146,10 +151,15 @@
       display: none;
     }
 
+    .bar {
+      padding-bottom: 8px;
+    }
+
     main {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
       align-items: start;
+      padding-top: 8px;
     }
   }
 </style>

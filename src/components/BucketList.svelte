@@ -3,7 +3,7 @@
   import { track } from '../lib/history.svelte';
   import { moveTask } from '../lib/tasks';
   import { BUCKET_LABELS, type Bucket, type Task } from '../lib/types';
-  import { drag } from '../lib/ui-state.svelte';
+  import { drag, endDrag } from '../lib/ui-state.svelte';
 
   interface Props {
     bucket: Bucket;
@@ -13,63 +13,91 @@
 
   let { bucket, active, tasks }: Props = $props();
 
-  let dropTarget = $state(false);
+  const dropTarget = $derived(!!drag.id && drag.bucket === bucket);
 
-  // Dropping on the list itself (not on a task) puts the task at the end.
+  // Over a task: land above or below it. Anywhere else in the list: at the end.
   function ondrop(e: DragEvent) {
     e.preventDefault();
-    dropTarget = false;
     const id = drag.id;
-    if (id) track([id], () => moveTask(id, bucket, null));
-    drag.id = null;
+    let beforeId: string | null = null;
+    if (drag.overTask) {
+      const i = tasks.findIndex((t) => t.id === drag.overTask);
+      beforeId = drag.after ? (tasks[i + 1]?.id ?? null) : drag.overTask;
+      if (beforeId === id) beforeId = tasks[i + 2]?.id ?? null; // dropping just below itself
+    }
+    endDrag();
+    if (id) track([id], () => moveTask(id, bucket, beforeId));
   }
 </script>
 
 <section
   id="panel-{bucket}"
   class:drop-target={dropTarget}
-  data-bucket={bucket}
   class:inactive={!active}
   aria-labelledby="heading-{bucket}"
   ondragover={(e) => {
     if (!drag.id) return;
     e.preventDefault();
-    dropTarget = true;
+    drag.bucket = bucket;
+    drag.overTask = null;
   }}
   ondragleave={(e) => {
-    if (!(e.currentTarget as Node).contains(e.relatedTarget as Node)) dropTarget = false;
+    const into = e.relatedTarget as Node | null;
+    if (into && !(e.currentTarget as Node).contains(into) && drag.bucket === bucket) {
+      drag.bucket = null;
+      drag.overTask = null;
+    }
   }}
   {ondrop}
 >
   <h2 id="heading-{bucket}">{BUCKET_LABELS[bucket]}</h2>
 
-  {#if tasks.length}
-    <ul>
-      {#each tasks as task (task.id)}
-        <TaskRow {task} />
-      {/each}
-    </ul>
-  {:else}
-    <p class="empty">nothing yet...</p>
-  {/if}
+  <div class="list">
+    {#if tasks.length}
+      <ul>
+        {#each tasks as task (task.id)}
+          <TaskRow {task} />
+        {/each}
+      </ul>
+    {:else}
+      <p class="empty">nothing yet...</p>
+    {/if}
+  </div>
 </section>
 
 <style>
-  section {
+  /* The bucket name is plain text above its white list */
+  h2 {
+    margin: 0;
+    padding: 0 2px 8px;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: lowercase;
+  }
+
+  .list {
+    overflow: hidden;
+    border-radius: var(--radius);
     background: var(--surface);
   }
 
-  /* Today is framed in the accent, drawn on top so the rows don't cover it */
-  section[data-bucket='today'] {
-    outline: 1px solid var(--accent);
+  /* Dragging a task over a list outlines it in a mid grey */
+  .drop-target .list {
+    outline: 1px solid var(--border-strong);
     outline-offset: -1px;
   }
 
-  /* Below desktop width the buckets are tabs: only the selected one shows,
-     and the tab bar already names it. */
+  /* Below desktop width the buckets are tabs: only the selected one shows, and the tab
+     already names it. */
   @media (max-width: 1099px) {
     section.inactive {
       display: none;
+    }
+
+    /* Square where the selected tab joins on */
+    .list {
+      border-top-left-radius: 0;
     }
 
     h2 {
@@ -79,22 +107,6 @@
       overflow: hidden;
       clip-path: inset(50%);
     }
-  }
-
-  section.drop-target {
-    outline: 1px dashed var(--accent);
-    outline-offset: -1px;
-  }
-
-  h2 {
-    margin: 0;
-    padding: 8px 12px;
-    background: var(--bucket-bg);
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 700;
-    text-transform: lowercase;
-    color: var(--bucket-fg);
   }
 
   ul {

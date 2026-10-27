@@ -8,11 +8,10 @@
     completeTask,
     deleteTask,
     editText,
-    moveTask,
   } from '../lib/tasks';
   import { track } from '../lib/history.svelte';
   import type { Task } from '../lib/types';
-  import { clock, drag } from '../lib/ui-state.svelte';
+  import { clock, drag, endDrag } from '../lib/ui-state.svelte';
 
   let { task }: { task: Task } = $props();
 
@@ -21,7 +20,6 @@
   let draft = $state('');
   let caret = 0;
   let words = $state<HTMLElement>();
-  let dropBefore = $state(false);
 
   // Guessed fresh from the text, so older tasks pick up keyword improvements too; an icon
   // the AI chose is kept. Anything unmatched is an empty box, like a plain checkbox.
@@ -100,36 +98,40 @@
     await track([task.id], () => deleteTask(task.id));
   }
 
-  function ondrop(e: DragEvent) {
-    e.preventDefault();
+  // Which half of this task the pointer is over decides whether a drop lands above or below
+  // it. The drop itself is handled by the list.
+  function ondragover(e: DragEvent) {
+    if (!drag.id) return;
     e.stopPropagation();
-    dropBefore = false;
-    const id = drag.id;
-    if (id && id !== task.id) track([id], () => moveTask(id, task.bucket, task.id));
-    drag.id = null;
+    drag.bucket = task.bucket;
+    if (drag.id === task.id) {
+      drag.overTask = null;
+      return;
+    }
+    e.preventDefault();
+    const box = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    drag.overTask = task.id;
+    drag.after = e.clientY > box.top + box.height / 2;
   }
 </script>
 
 <li
-  class:editing
-  class:drop-before={dropBefore}
   draggable={!editing}
   ondragstart={(e) => {
     drag.id = task.id;
     e.dataTransfer?.setData('text/plain', task.text);
   }}
-  ondragend={() => (drag.id = null)}
-  ondragover={(e) => {
-    if (!drag.id || drag.id === task.id) return;
-    e.preventDefault();
-    dropBefore = true;
-  }}
-  ondragleave={() => (dropBefore = false)}
-  {ondrop}
+  ondragend={endDrag}
+  {ondragover}
 >
   <div class="row">
     <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
-    <button class="icon" aria-label="Mark done" onclick={complete}>
+    <button
+      class="icon"
+      data-category={guess?.category ?? 'none'}
+      aria-label="Mark done"
+      onclick={complete}
+    >
       {#if emoji}<span class="task-glyph">{emoji}</span>{/if}
       <span class="done-glyph"><Icon svg={ui.check} size={16} /></span>
     </button>
@@ -173,15 +175,6 @@
     border-top: 1px solid var(--bg);
   }
 
-  /* An orange edge marks the task being edited */
-  li.editing {
-    box-shadow: inset 3px 0 0 var(--accent);
-  }
-
-  li.drop-before {
-    box-shadow: inset 0 2px 0 var(--accent);
-  }
-
   .row {
     position: relative;
     display: flex;
@@ -191,7 +184,8 @@
     padding: 0 12px;
   }
 
-  /* The thin box is the same shape the orange tick box takes on hover */
+  /* A circle tinted with the task's category colour (grey when there's none). On hover
+     the emoji turns into a tick. */
   .icon {
     flex: none;
     display: grid;
@@ -200,12 +194,17 @@
     height: 28px;
     padding: 0;
     border: none;
-    background: none;
-    box-shadow: inset 0 0 0 1px var(--border);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--cat) 26%, var(--surface));
     color: var(--muted);
     font-size: 15px;
     line-height: 1;
     cursor: pointer;
+  }
+
+  /* Lighter than the category tints, so a task with no icon reads as "blank" */
+  .icon[data-category='none'] {
+    background: color-mix(in srgb, var(--muted) 12%, var(--surface));
   }
 
   .task-glyph {
@@ -216,10 +215,10 @@
     display: none;
   }
 
+  /* Hover keeps the circle as it is and swaps the emoji for a tick */
   .icon:hover,
   .icon:focus-visible {
-    color: var(--accent);
-    box-shadow: var(--ring);
+    color: var(--text);
   }
 
   .icon:hover .task-glyph,
@@ -256,6 +255,7 @@
     display: inline-block;
     margin-left: 8px;
     padding: 0 6px;
+    border-radius: 2px;
     border: 1px solid var(--border-strong);
     font-family: var(--font-display);
     font-size: 0.75rem;
@@ -305,6 +305,7 @@
     height: 24px;
     margin-right: -6px;
     padding: 0;
+    border-radius: var(--radius);
     border: none;
     background: none;
     color: var(--muted);

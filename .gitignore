@@ -25,3 +25,6 @@ dist-ssr
 
 # Build output
 dev-dist
+
+# Throwaway design mockups
+mockups

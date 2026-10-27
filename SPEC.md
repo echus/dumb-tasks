@@ -71,35 +71,40 @@ Parsed from the task text — there is no deadline field in the UI.
 
 ## Icons
 
-Chosen automatically; never asked of the user. Each task shows an **emoji** in a thin box,
-which also works as its checkbox (hovering shows a tick).
+Chosen automatically; never asked of the user. Each task shows an **emoji** in a circle tinted
+with its category colour; the circle is also the checkbox (hovering shows a tick).
 
 - `guessIcon(text) → { icon, category }` picks one of ~45 icons; each maps to an emoji.
 - **Keyword matching:** a hand-written table of keywords and word stems, with nouns ranked
   above verbs ("buy birthday present" → 🎂, not 🛒).
 - **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
   exact keyword matches.
-- **No match → an empty box**, like a plain checkbox; the tick appears in it on hover.
+- **No match → a plain light-grey circle**, paler than the category tints; a tick appears in
+  it on hover.
 - Icons are guessed fresh from the text when shown, so keyword improvements reach older
   tasks too; an icon the AI set is kept.
 - Each icon also has a broad **category** (home, errands, health, people, money, work,
-  creative), stored on the task for the AI planner. It isn't shown.
+  creative) that sets the circle colour. Red is never a category colour (it means overdue).
 - Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.
 
 ## Visual design
 
-Industrial / terminal look, related to echus.co:
+Calm and minimal, so the focus is on the tasks:
 
 - Inter for text; Stack Sans Headline, lowercase, for the logo, bucket names, buttons and badges.
   No monospace. (Latin subsets, bundled, work offline.)
-- Logo: an orange ticked checkbox before "dumb tasks"; the favicon and app icon are the
-  same checkbox on its own.
-- Greyscale surfaces, square corners, 1px hairlines, no borders around the lists.
-- Today's header is solid orange and its list is framed in orange; Week, Month and Icebox share a grey just off the
-  background. Header text is dark throughout in light mode; in dark mode the grey headers
-  carry light text.
-- Hover: header buttons just turn orange; the task icon shows a tick in an orange outline.
-- One accent: light red-orange `#ff8138` (a wider-gamut P3 orange where screens support it), for focus, the Today bucket, and outlines on hover and open states. Red only means overdue. Category colours avoid both.
+- **Ink accent:** the accent is the text colour itself (near-black in light mode, near-white
+  in dark). The category-tinted emoji circles are the only colour in the app. Red only means
+  overdue.
+- Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
+  (follows light/dark) and app icon are the same circle on its own.
+- Greyscale surfaces, corners only just rounded (4px), 1px hairlines, no borders around the
+  lists.
+- Every list is white on the light grey page. Bucket names are plain text above each list
+  on desktop; on phones the tabs are the same plain text, and the selected one is a white tab joined to
+  the list.
+  No borders on the lists or the "add a task" box.
+- Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
 - Deadline badges escalate by weight, not hue: outlined grey (later) → outlined (this week) →
   inverted (≤ 2 days) → red (overdue).
 - Dark by default and follows the system, until the user flips the sun/moon toggle in the
