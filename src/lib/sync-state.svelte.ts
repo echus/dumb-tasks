@@ -33,6 +33,9 @@ let settings: DriveSettings | null = null;
 let running: Promise<void> | null = null;
 let again = false;
 let editTimer: ReturnType<typeof setTimeout> | undefined;
+// A quiet sign-in failed (e.g. signed out of Google in this browser): the next try shows
+// Google's full sign-in. It can't follow straight on, as the popup needs a fresh click.
+let fullSignIn = false;
 
 async function save() {
   if (settings) await db.settings.put({ key: 'drive', value: JSON.stringify(settings) });
@@ -103,11 +106,14 @@ export async function reconnect() {
   if (!settings) return;
   sync.error = '';
   try {
-    settings.token = await requestToken(settings.email);
+    settings.token = await requestToken(fullSignIn ? undefined : settings.email);
+    if (fullSignIn) settings.email = await fetchEmail(settings.token.value); // may have picked another account
+    fullSignIn = false;
     sync.needsSignIn = false;
     await save();
     await syncNow();
   } catch (e) {
+    fullSignIn = true;
     sync.error = (e as Error).message;
   }
 }

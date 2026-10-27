@@ -42,9 +42,15 @@ export async function importData(data: DataFile): Promise<{ added: number; merge
     const out: Task[] = [];
     for (const incoming of data.tasks) {
       const local = existing.get(incoming.id);
-      if (local) merged++;
-      else added++;
-      out.push(local ? mergeTask(local, incoming) : incoming);
+      if (!local) {
+        added++;
+        out.push(incoming);
+        continue;
+      }
+      merged++;
+      // Sync imports every task each time; only write the ones that changed.
+      const result = mergeTask(local, incoming);
+      if (JSON.stringify(result) !== JSON.stringify(local)) out.push(result);
     }
     await db.tasks.bulkPut(out);
 
