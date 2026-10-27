@@ -9,8 +9,6 @@
   --border-strong: #45474d;
   /* Ink: the accent is the text colour itself, so the emoji circles are the only colour */
   --accent: var(--text);
-  /* Thin accent outline for hover boxes, drawn as an inset shadow so it doesn't shift layout */
-  --ring: inset 0 0 0 1px var(--accent);
   --on-accent: #121314;
   --danger: #ff4d4d;
   --on-danger: #121314;

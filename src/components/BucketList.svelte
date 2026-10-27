@@ -31,6 +31,7 @@
     e.preventDefault();
     drag.bucket = bucket;
     drag.overTask = null;
+    drag.overTab = null;
   }}
   ondragleave={(e) => {
     const into = e.relatedTarget as Node | null;
@@ -68,13 +69,21 @@
   }
 
   .list {
+    position: relative;
     overflow: hidden;
     border-radius: var(--radius);
     background: var(--surface);
   }
 
-  .list.drop-end {
-    box-shadow: inset 0 -1px 0 var(--accent);
+  /* A straight line along the bottom (an inset shadow would follow the rounded corners) */
+  .list.drop-end::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--accent);
   }
 
   /* Below desktop width the buckets are tabs: only the selected one shows, and the tab

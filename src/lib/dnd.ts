@@ -38,8 +38,9 @@ export function dragOver(x: number, y: number) {
   const list = el?.closest<HTMLElement>('section[id^="panel-"]');
 
   drag.overTask = null;
+  drag.overTab = null;
   if (tab) {
-    drag.bucket = tab.dataset.tab as Bucket; // a phone tab: drop at the end of that list
+    drag.bucket = drag.overTab = tab.dataset.tab as Bucket; // a phone tab: drop at its list's end
   } else if (row && row.dataset.taskId === drag.id) {
     drag.bucket = null; // over itself: nowhere to drop
   } else if (row) {

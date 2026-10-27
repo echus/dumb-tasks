@@ -41,13 +41,14 @@ Completed tasks leave their bucket but are kept (with completion time) as histor
 - **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
   long-press a task to pick it up (a small label follows your finger). Drop on a list to
   place it above or below the task under the pointer, or at the end. A thin line showing
-  where it'll land is the only drag highlight. On phones, dropping on
+  where it'll land is the only drag highlight; a phone tab being dropped on gets the same
+  thin underline. On phones, dropping on
   a tab sends the task to the end of that list without switching tabs.
 - **Reorder:** drag within a bucket.
 - **Complete:** click the task's icon; hovering it turns it into a tick. Task leaves the list.
 - **Edit:** click into the text; it becomes a text field with the cursor where you clicked.
   Enter or clicking away saves, Escape cancels. Editing re-parses the deadline.
-- **Delete:** a small × at the far right, shown on hover (on touch screens, while the task is
+- **Delete:** a small × at the far right (where the deadline badge is), shown on hover (on touch screens, while the task is
   being edited; swipe-to-delete is an idea). Removes from view (kept as a tombstone for sync).
 - **Undo / redo:** buttons in the header (and ⌘Z / ⇧⌘Z, Ctrl+Z / Ctrl+Y) step back and forward
   through adds, edits, completions, deletions and moves made this session. An undo is written
@@ -67,6 +68,7 @@ Parsed from the task text — there is no deadline field in the UI.
 - Day/month order follows device locale, with a setting to override.
 - Display: subtly underline the parsed phrase and show a badge (e.g. `3 days left`) at a
   fixed spot on the right of the task, so badges line up and long text wraps before them.
+  Hovering a task swaps its badge for the delete ×, in the same spot.
   The badge gets bolder as the date approaches; past dates show `2 days overdue`.
 - The AI can set or correct a task's deadline; that overrides the parsed value until the
   user next edits the text.

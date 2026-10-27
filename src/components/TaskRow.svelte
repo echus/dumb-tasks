@@ -108,6 +108,7 @@
   function ondragover(e: DragEvent) {
     if (!drag.id) return;
     e.stopPropagation();
+    drag.overTab = null;
     if (drag.id === task.id) {
       // Over itself: nowhere to drop, so no insertion line
       drag.bucket = null;
@@ -171,16 +172,18 @@
       </button>
     {/if}
 
-    <!-- Fixed spot at the right, so badges line up down a list and long text wraps before them -->
-    {#if task.deadline}
-      <span class="badge" data-urgency={deadlineUrgency(task.deadline, clock.now)}>
-        {describeDeadline(task.deadline, clock.now)}
-      </span>
-    {/if}
-
-    <button class="delete" aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
-      <Icon svg={ui.x} size={14} />
-    </button>
+    <!-- One fixed spot at the right: the deadline badge, swapped for the delete x on hover.
+         Badges line up down a list and long text wraps before them. -->
+    <span class="end">
+      {#if task.deadline}
+        <span class="badge" data-urgency={deadlineUrgency(task.deadline, clock.now)}>
+          {describeDeadline(task.deadline, clock.now)}
+        </span>
+      {/if}
+      <button class="delete" aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
+        <Icon svg={ui.x} size={14} />
+      </button>
+    </span>
   </div>
 
 </li>
@@ -282,7 +285,6 @@
   }
 
   .badge {
-    flex: none;
     padding: 0 6px;
     border-radius: 2px;
     border: 1px solid var(--border-strong);
@@ -324,14 +326,29 @@
     outline: none;
   }
 
-  /* A small x at the far right, shown on hover (or while the task is open on touch screens) */
-  .delete {
+  /* Badge and x share one grid cell, so the spot keeps its size whichever is showing */
+  .end {
     flex: none;
+    display: grid;
+    align-items: center;
+    justify-items: end;
+  }
+
+  .end > * {
+    grid-area: 1 / 1;
+  }
+
+  li:hover .badge,
+  li:focus-within .badge {
+    visibility: hidden;
+  }
+
+  /* A small x, shown on hover (or while the task is open on touch screens) */
+  .delete {
     display: grid;
     place-items: center;
     width: 24px;
     height: 24px;
-    margin-right: -6px;
     padding: 0;
     border-radius: var(--radius);
     border: none;
@@ -347,8 +364,6 @@
   }
 
   .delete:hover {
-    background: var(--surface);
-    color: var(--text);
-    box-shadow: var(--ring);
+    color: var(--accent);
   }
 </style>
