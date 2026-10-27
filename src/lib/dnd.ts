@@ -39,6 +39,20 @@ function rowCopy(node: HTMLElement): HTMLElement {
   return wrap;
 }
 
+/**
+ * Mouse drags: the browser snapshots the row the instant a drag starts, hover tick and all.
+ * Give it a clean copy instead (the copy isn't hovered, so it shows the emoji).
+ */
+export function setDragImage(e: DragEvent, node: HTMLElement) {
+  if (!e.dataTransfer) return;
+  const copy = rowCopy(node);
+  copy.style.transform = 'translate(-10000px, 0)'; // must be in the page, but out of sight
+  document.body.append(copy);
+  const box = node.getBoundingClientRect();
+  e.dataTransfer.setDragImage(copy, e.clientX - box.left, e.clientY - box.top);
+  setTimeout(() => copy.remove());
+}
+
 /** Updates the drag state for whatever is under a point (used by touch drags). */
 export function dragOver(x: number, y: number) {
   const el = document.elementFromPoint(x, y);

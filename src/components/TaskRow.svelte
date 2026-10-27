@@ -11,7 +11,7 @@
   } from '../lib/tasks';
   import { track } from '../lib/history.svelte';
   import type { Task } from '../lib/types';
-  import { touchDrag } from '../lib/dnd';
+  import { setDragImage, touchDrag } from '../lib/dnd';
   import { clock, drag, endDrag } from '../lib/ui-state.svelte';
 
   let { task }: { task: Task } = $props();
@@ -134,6 +134,7 @@
   ondragstart={(e) => {
     drag.id = task.id;
     e.dataTransfer?.setData('text/plain', task.text);
+    setDragImage(e, e.currentTarget as HTMLElement);
   }}
   ondragend={endDrag}
   {ondragover}
@@ -254,19 +255,20 @@
     display: none;
   }
 
-  /* Hover keeps the circle as it is and swaps the emoji for a tick */
-  .icon:hover,
-  .icon:focus-visible {
+  /* Hover keeps the circle as it is and swaps the emoji for a tick. None of the hover
+     states apply to a task while it's being dragged. */
+  li:not(.dragging) .icon:hover,
+  li:not(.dragging) .icon:focus-visible {
     color: var(--text);
   }
 
-  .icon:hover .task-glyph,
-  .icon:focus-visible .task-glyph {
+  li:not(.dragging) .icon:hover .task-glyph,
+  li:not(.dragging) .icon:focus-visible .task-glyph {
     display: none;
   }
 
-  .icon:hover .done-glyph,
-  .icon:focus-visible .done-glyph {
+  li:not(.dragging) .icon:hover .done-glyph,
+  li:not(.dragging) .icon:focus-visible .done-glyph {
     display: contents;
   }
 
@@ -344,8 +346,8 @@
     grid-area: 1 / 1;
   }
 
-  li:hover .badge,
-  li:focus-within .badge {
+  li:not(.dragging):hover .badge,
+  li:not(.dragging):focus-within .badge {
     visibility: hidden;
   }
 
@@ -364,8 +366,8 @@
     visibility: hidden;
   }
 
-  li:hover .delete,
-  li:focus-within .delete {
+  li:not(.dragging):hover .delete,
+  li:not(.dragging):focus-within .delete {
     visibility: visible;
   }
 
