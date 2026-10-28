@@ -26,8 +26,10 @@
 </script>
 
 <form onsubmit={submit}>
-  <span class="icon" aria-hidden="true"><Icon svg={ui.plus} size={14} /></span>
+  <!-- A label, so clicking the + puts the cursor in the field -->
+  <label class="icon" for="add-{bucket}" aria-hidden="true"><Icon svg={ui.plus} size={14} /></label>
   <input
+    id="add-{bucket}"
     bind:this={input}
     bind:value={text}
     placeholder="add a task"
@@ -69,6 +71,7 @@
     border-radius: 50%;
     box-shadow: inset 0 0 0 1px var(--border-strong);
     color: var(--muted);
+    cursor: text;
   }
 
   input {
