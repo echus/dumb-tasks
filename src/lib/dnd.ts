@@ -1,69 +1,21 @@
 import { tick } from 'svelte';
 import { track } from './history.svelte';
 import { moveTask } from './tasks';
-import type { Bucket } from './types';
+import { BUCKET_LABELS, type Bucket } from './types';
 import { drag, endDrag } from './ui-state.svelte';
 
-// Where a dragged task lands. Mouse drags use the browser's drag-and-drop and show an
-// insertion line (finishDrop); touch drags pick the task up and open a gap where it will
-// land (touchDrag).
+// Dragging a task to a new spot, by mouse or touch: the task lifts off its list and the rows
+// part to show where it will land. The browser's own drag-and-drop isn't used: it doesn't
+// work reliably with touch, and it can't show the rows making room.
 
-/** The task ids shown in a bucket's list, top to bottom. */
-function idsIn(bucket: Bucket): string[] {
-  return [...document.querySelectorAll<HTMLElement>(`#panel-${bucket} li[data-task-id]`)].map(
-    (li) => li.dataset.taskId!,
-  );
-}
-
-/** Moves the dragged task to wherever the pointer is: above/below a task, or the list's end. */
-export function finishDrop() {
-  const { id, bucket, overTask, after } = drag;
-  endDrag();
-  if (!id || !bucket) return;
-
-  let beforeId: string | null = null;
-  if (overTask) {
-    const ids = idsIn(bucket);
-    const i = ids.indexOf(overTask);
-    beforeId = after ? (ids[i + 1] ?? null) : overTask;
-    if (beforeId === id) beforeId = ids[i + 2] ?? null; // dropped just below itself
-  }
-  track([id], () => moveTask(id, bucket, beforeId));
-}
-
-/** A plain copy of a task row, styled like a lifted task, for drag previews. */
-function rowCopy(node: HTMLElement): HTMLElement {
-  const copy = node.cloneNode(true) as HTMLElement;
-  copy.style.listStyle = 'none';
-  const wrap = document.createElement('div');
-  wrap.className = 'drag-preview';
-  wrap.style.width = `${node.getBoundingClientRect().width}px`;
-  wrap.append(copy);
-  return wrap;
-}
-
-/**
- * Mouse drags: the browser snapshots the row the instant a drag starts, hover tick and all.
- * Give it a clean copy instead (the copy isn't hovered, so it shows the emoji).
- */
-export function setDragImage(e: DragEvent, node: HTMLElement) {
-  if (!e.dataTransfer) return;
-  const copy = rowCopy(node);
-  copy.style.transform = 'translate(-10000px, 0)'; // must be in the page, but out of sight
-  document.body.append(copy);
-  const box = node.getBoundingClientRect();
-  e.dataTransfer.setDragImage(copy, e.clientX - box.left, e.clientY - box.top);
-  setTimeout(() => copy.remove());
-}
-
-const HOLD_MS = 200; // press this long to pick a task up
-const SLOP = 8; // moving further than this first means scrolling, not dragging
+const HOLD_MS = 200; // press this long to pick a task up by touch
+const SLOP = 8; // moving further than this first means scrolling (touch) or dragging (mouse)
 const SPRING_MS = 500; // hold a task over another tab this long to open it
 const EDGE = 56; // this close to the top or bottom of a list's view scrolls it
 const MAX_SPEED = 14; // scrolling right at the edge, in px per frame
 const SETTLE_MS = 180; // a dropped task gliding into place (as .drag-preview.settling)
 
-/** Where a touch-dragged task would land. */
+/** Where a dragged task would land. */
 interface Target {
   bucket: Bucket;
   ul: HTMLElement | null; // its list, or null for a tab whose list isn't showing (lands at the end)
@@ -138,7 +90,7 @@ function scrollerOf(ul: HTMLElement | null): HTMLElement | null {
   return box && getComputedStyle(box).overflowY !== 'visible' ? box : null;
 }
 
-/** Scroll speed for a finger at `y`: faster the closer it is to the top or bottom edge. */
+/** Scroll speed for a pointer at `y`: faster the closer it is to the top or bottom edge. */
 function edgeSpeed(scroller: HTMLElement | null, y: number): number {
   let top = 0;
   let bottom = window.innerHeight;
@@ -170,16 +122,39 @@ function landed(id: string, to: Target): Promise<void> {
   });
 }
 
-/** One touch drag at a time, until its task has settled into place. */
+/**
+ * The copy of a task row that follows the pointer: the row (icon, text, badge) on a card,
+ * with a label above it saying where it's headed when it's over a tab.
+ */
+function rowCopy(node: HTMLElement): HTMLElement {
+  const copy = node.cloneNode(true) as HTMLElement;
+  copy.style.listStyle = 'none';
+  const card = document.createElement('div');
+  card.className = 'drag-card';
+  card.append(copy);
+  const label = document.createElement('div');
+  label.className = 'drag-label';
+  const wrap = document.createElement('div');
+  wrap.className = 'drag-preview';
+  wrap.style.width = `${node.getBoundingClientRect().width}px`;
+  wrap.append(label, card);
+  return wrap;
+}
+
+function swallow(e: Event) {
+  e.stopPropagation();
+  e.preventDefault();
+}
+
+/** One drag at a time, until its task has settled into place. */
 let busy = false;
 
 /**
- * Touch dragging: long-press a task to pick it up, and the rows part to show where it will
- * land. Release over a list, or over a tab for the end of that list; hold it over a tab to
- * open that list instead. Near the top or bottom of the screen the list scrolls.
- * Browsers' built-in drag-and-drop doesn't work reliably with touch.
+ * Drag a task with a mouse, or long-press it with a finger, to pick it up; the rows part to
+ * show where it will land. Release over a list, or over a tab for the end of that list; hold
+ * it over a tab to open that list instead. Near the top or bottom of a list it scrolls.
  */
-export function touchDrag(node: HTMLElement, task: { id: string }) {
+export function dragTask(node: HTMLElement, task: { id: string }) {
   let current = task;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let springTimer: ReturnType<typeof setTimeout> | undefined;
@@ -189,14 +164,25 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
   let startY = 0;
   let lastX = 0;
   let lastY = 0;
+  let mouse = false; // this press is a mouse's (it picks up on moving, not holding)
+  let field: HTMLInputElement | null = null; // pressed in the task's text field, while editing
+  let selecting = false; // ...and moved sideways, so it's selecting text, not dragging
   let active = false;
   let preview: HTMLElement | null = null;
-  let grabX = 0; // where in the row the finger is, so the copy stays under it
+  let grabX = 0; // where in the row the pointer is, so the copy stays under it
   let grabY = 0;
   let height = 0; // the row's, measured on pickup: opening another tab hides its list
   let target: Target;
 
-  /** A copy of the row (icon, text, badge) lifts off the list and follows the finger. */
+  function pickUp() {
+    active = busy = true;
+    drag.id = current.id;
+    if (!mouse) navigator.vibrate?.(10);
+    lift();
+    frame = requestAnimationFrame(autoScroll);
+  }
+
+  /** A copy of the row lifts off the list and follows the pointer. */
   function lift() {
     node.classList.remove('pressing');
     const box = node.getBoundingClientRect();
@@ -204,6 +190,10 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
     grabY = startY - box.top;
     height = box.height;
     preview = rowCopy(node);
+    // The copy shrinks towards the pointer, and its label sits just above it (kept on screen)
+    preview.style.setProperty('--grab-x', `${grabX}px`);
+    preview.style.setProperty('--grab-y', `${grabY}px`);
+    preview.style.setProperty('--label-x', `${Math.min(Math.max(grabX, 70), box.width - 70)}px`);
     document.body.append(preview);
     follow(startX, startY);
     void preview.offsetWidth; // start from flat, so it grows into the lift
@@ -211,7 +201,7 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
 
     // The row itself stays behind, empty, as the gap
     node.classList.add('drag-source');
-    document.documentElement.classList.add('touch-dragging');
+    document.documentElement.classList.add('dragging-task');
     const ul = node.closest('ul')!;
     target = { bucket: bucketOf(ul), ul, slot: rowsIn(ul).indexOf(node) };
   }
@@ -220,7 +210,7 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
     if (preview) preview.style.transform = `translate(${x - grabX}px, ${y - grabY}px)`;
   }
 
-  /** Works out where the task would land with the finger at (x, y), and makes room there. */
+  /** Works out where the task would land with the pointer at (x, y), and makes room there. */
   function update(x: number, y: number) {
     const el = document.elementFromPoint(x, y);
     const tab = el?.closest<HTMLElement>('[data-tab]');
@@ -236,6 +226,11 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
       target = { bucket: bucketOf(section), ul, slot: slotAt(ul, node, y - grabY + height / 2) };
     } // anywhere else (the margins, the header): keep the last spot
     drag.overTab = tab ? target.bucket : null;
+    if (preview) {
+      // Over a tab, the copy fades back so the tab shows, and says where it's going
+      preview.classList.toggle('over-tab', !!tab);
+      if (tab) preview.firstElementChild!.textContent = `move to ${BUCKET_LABELS[target.bucket]}`;
+    }
     arrange(node, target, height);
     springLoad(tab);
   }
@@ -250,12 +245,12 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
     springTimer = setTimeout(() => {
       springTab = null;
       closed.click();
-      navigator.vibrate?.(10);
+      if (!mouse) navigator.vibrate?.(10);
       tick().then(() => active && update(lastX, lastY));
     }, SPRING_MS);
   }
 
-  /** Scrolls while the finger rests near the top or bottom, making room as rows pass under it. */
+  /** Scrolls while the pointer rests near the top or bottom, making room as rows pass under it. */
   function autoScroll() {
     const scroller = scrollerOf(target.ul);
     const speed = edgeSpeed(scroller, lastY);
@@ -274,6 +269,7 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
     p.classList.add('settling');
     p.classList.remove('lifted');
     if (to.ul) {
+      p.classList.remove('over-tab');
       p.style.transform = `translate(${to.ul.getBoundingClientRect().left}px, ${gapTop(node, to.ul, to.slot, height)}px)`;
     } else {
       const tab = document.querySelector(`[data-tab="${to.bucket}"]`)!.getBoundingClientRect();
@@ -297,7 +293,7 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
   /** Back to normal: rows unshifted, the task's own row showing, no copy. */
   function reset() {
     unarrange();
-    document.documentElement.classList.remove('touch-dragging');
+    document.documentElement.classList.remove('dragging-task');
     node.classList.remove('drag-source');
     preview?.remove();
     preview = null;
@@ -312,47 +308,65 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
     endDrag();
   }
 
-  function onStart(e: TouchEvent) {
-    if (busy || e.touches.length !== 1) return;
-    if ((e.target as Element).closest('button.delete, input')) return; // the icon can start a drag too; a quick tap still ticks it
-    startX = lastX = e.touches[0].clientX;
-    startY = lastY = e.touches[0].clientY;
-    node.classList.add('pressing');
-    timer = setTimeout(() => {
-      active = busy = true;
-      drag.id = current.id;
-      navigator.vibrate?.(10);
-      lift();
-      frame = requestAnimationFrame(autoScroll);
-    }, HOLD_MS);
-  }
-
-  function onMove(e: TouchEvent) {
-    const t = e.touches[0];
-    if (!active) {
-      if (Math.hypot(t.clientX - startX, t.clientY - startY) > SLOP) {
-        clearTimeout(timer);
-        node.classList.remove('pressing');
-      }
-      return;
+  /** A press on the row. A finger picks the task up by holding still; a mouse, by moving. */
+  function press(x: number, y: number, on: EventTarget | null, byMouse: boolean): boolean {
+    if (busy) return false;
+    if ((on as Element).closest('.actions')) return false; // the icon can start a drag too; a quick tap still ticks it
+    // While a task is being edited, a finger in its field is for the text (the caret, the
+    // magnifier); a mouse can still drag the task from it, by moving up or down
+    field = (on as Element).closest('input');
+    if (field && !byMouse) return false;
+    selecting = false;
+    mouse = byMouse;
+    startX = lastX = x;
+    startY = lastY = y;
+    if (!mouse) {
+      node.classList.add('pressing');
+      timer = setTimeout(pickUp, HOLD_MS);
     }
-    e.preventDefault(); // keep the page from scrolling while dragging
-    lastX = t.clientX;
-    lastY = t.clientY;
-    follow(lastX, lastY);
-    update(lastX, lastY);
+    return true;
   }
 
-  function onEnd(e: TouchEvent) {
+  /** Before pickup, moving a finger means scrolling, and moving a mouse means dragging. */
+  function moveTo(x: number, y: number): boolean {
+    if (!active) {
+      const dx = Math.abs(x - startX);
+      const dy = Math.abs(y - startY);
+      if (selecting) return false;
+      if (field) {
+        // In the text field, sideways is selecting text; only a clear move up or down drags
+        if (dx > SLOP) selecting = true;
+        if (selecting || dy <= 2 * SLOP) return false;
+        // Leaving the field saves the edit, as clicking away would. Pick the task up once it
+        // shows as saved: the row's height can change with it.
+        field.blur();
+        field = null;
+        tick().then(() => moveTo(x, y));
+        return true;
+      } else if (Math.hypot(dx, dy) <= SLOP) return false;
+      clearTimeout(timer);
+      node.classList.remove('pressing');
+      if (!mouse) return false;
+      pickUp();
+    }
+    lastX = x;
+    lastY = y;
+    follow(x, y);
+    update(x, y);
+    return true;
+  }
+
+  /** Letting go drops the task, if it was picked up. */
+  function release(): boolean {
     clearTimeout(timer);
     node.classList.remove('pressing');
-    if (!active) return;
-    e.preventDefault(); // no click afterwards, so the task doesn't open for editing
+    if (!active) return false;
     stop();
     settle();
+    return true;
   }
 
-  function onCancel() {
+  function cancel() {
     clearTimeout(timer);
     node.classList.remove('pressing');
     if (!active) return;
@@ -360,10 +374,58 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
     reset();
   }
 
-  node.addEventListener('touchstart', onStart, { passive: true });
-  node.addEventListener('touchmove', onMove, { passive: false });
-  node.addEventListener('touchend', onEnd);
-  node.addEventListener('touchcancel', onCancel);
+  function onTouchStart(e: TouchEvent) {
+    if (e.touches.length === 1) press(e.touches[0].clientX, e.touches[0].clientY, e.target, false);
+  }
+
+  function onTouchMove(e: TouchEvent) {
+    const t = e.touches[0];
+    if (moveTo(t.clientX, t.clientY)) e.preventDefault(); // keep the page from scrolling while dragging
+  }
+
+  function onTouchEnd(e: TouchEvent) {
+    if (release()) e.preventDefault(); // no click afterwards, so the task doesn't open for editing
+  }
+
+  // Mice go by pointer events. Touches do too, but those stay with the touch events above,
+  // which can stop the page scrolling once a drag starts.
+  function onPointerDown(e: PointerEvent) {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    if (!press(e.clientX, e.clientY, e.target, true)) return;
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerCancel);
+  }
+
+  function onPointerMove(e: PointerEvent) {
+    moveTo(e.clientX, e.clientY);
+  }
+
+  function onPointerUp() {
+    unlisten();
+    if (!release()) return;
+    // No click afterwards, so the task doesn't open for editing (or get ticked, from the icon).
+    // The click comes straight after this, so stop catching them once it's past.
+    window.addEventListener('click', swallow, true);
+    setTimeout(() => window.removeEventListener('click', swallow, true));
+  }
+
+  function onPointerCancel() {
+    unlisten();
+    cancel();
+  }
+
+  function unlisten() {
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerCancel);
+  }
+
+  node.addEventListener('touchstart', onTouchStart, { passive: true });
+  node.addEventListener('touchmove', onTouchMove, { passive: false });
+  node.addEventListener('touchend', onTouchEnd);
+  node.addEventListener('touchcancel', cancel);
+  node.addEventListener('pointerdown', onPointerDown);
   return {
     update(next: { id: string }) {
       current = next;
@@ -373,10 +435,12 @@ export function touchDrag(node: HTMLElement, task: { id: string }) {
       clearTimeout(timer);
       if (active) stop();
       if (preview) reset();
-      node.removeEventListener('touchstart', onStart);
-      node.removeEventListener('touchmove', onMove);
-      node.removeEventListener('touchend', onEnd);
-      node.removeEventListener('touchcancel', onCancel);
+      unlisten();
+      node.removeEventListener('touchstart', onTouchStart);
+      node.removeEventListener('touchmove', onTouchMove);
+      node.removeEventListener('touchend', onTouchEnd);
+      node.removeEventListener('touchcancel', cancel);
+      node.removeEventListener('pointerdown', onPointerDown);
     },
   };
 }

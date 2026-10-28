@@ -161,28 +161,68 @@ input:focus-visible {
   outline-offset: 1px;
 }
 
-/* Touch drag: a copy of the task row that follows the finger (see dnd.ts) */
+/* Dragging a task: a copy of its row follows the pointer (see dnd.ts) */
 .drag-preview {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 10;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.drag-card {
+  transform-origin: var(--grab-x) var(--grab-y);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: 0 0 0 1px var(--border-strong);
-  pointer-events: none;
-  will-change: transform;
   transition:
     scale 120ms ease,
-    box-shadow 120ms ease;
+    box-shadow 120ms ease,
+    opacity 120ms ease;
 }
 
-/* Picked up: a little bigger, casting a shadow on the list */
-.drag-preview.lifted {
+/* Picked up: a little bigger, casting a shadow on the list, and see-through enough to show
+   the rows it passes over */
+.drag-preview.lifted .drag-card {
+  opacity: 0.8;
   scale: 1.03;
   box-shadow:
     0 0 0 1px var(--border-strong),
     0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+/* Over a tab, it all but fades away so the filled-in tab and its neighbours show, and a
+   label above the pointer says where it's going */
+.drag-preview.over-tab .drag-card {
+  opacity: 0.15;
+  scale: 0.85;
+}
+
+.drag-label {
+  position: absolute;
+  bottom: calc(100% - var(--grab-y) + 28px); /* clear of a fingertip */
+  left: var(--label-x);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 14%, var(--bg)); /* as the tab it's over */
+  color: var(--text);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.6;
+  text-transform: lowercase;
+  white-space: nowrap;
+  opacity: 0;
+  translate: -50% 4px;
+  transition:
+    opacity 120ms ease,
+    translate 120ms ease;
+}
+
+.drag-preview.over-tab .drag-label {
+  opacity: 1;
+  translate: -50% 0;
 }
 
 /* Dropped: it glides into its gap, or shrinks away into a tab */
@@ -190,7 +230,6 @@ input:focus-visible {
   transition:
     transform 180ms ease,
     scale 180ms ease,
-    box-shadow 180ms ease,
     opacity 180ms ease;
 }
 
@@ -210,8 +249,14 @@ li.drag-source {
   visibility: hidden;
 }
 
-.touch-dragging li[data-task-id] {
+.dragging-task li[data-task-id] {
   transition: transform 150ms ease;
+}
+
+/* A mouse shows it's holding something, over the buttons and text it passes too */
+.dragging-task,
+.dragging-task * {
+  cursor: grabbing !important;
 }
 
 ::selection {

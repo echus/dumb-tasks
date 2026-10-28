@@ -6,14 +6,10 @@
   import { completeTask, deleteTask, dismissDeadline, editText } from '../lib/tasks';
   import { track } from '../lib/history.svelte';
   import type { Task } from '../lib/types';
-  import { setDragImage, touchDrag } from '../lib/dnd';
-  import { clock, drag, endDrag } from '../lib/ui-state.svelte';
+  import { dragTask } from '../lib/dnd';
+  import { clock, drag } from '../lib/ui-state.svelte';
 
   let { task }: { task: Task } = $props();
-
-  // Mouse drags use the browser's drag-and-drop; touch drags use touchDrag (long-press),
-  // since built-in dragging on phones is unreliable and fights with scrolling.
-  const finePointer = typeof matchMedia !== 'undefined' && matchMedia('(pointer: fine)').matches;
 
   // Clicking a task turns it into a text field. Moving between buckets is by dragging.
   let editing = $state(false);
@@ -95,44 +91,12 @@
     editing = false;
     await track([task.id], () => deleteTask(task.id));
   }
-
-  // Which half of this task the pointer is over decides whether a drop lands above or below
-  // it. The drop itself is handled by the list.
-  function ondragover(e: DragEvent) {
-    if (!drag.id) return;
-    e.stopPropagation();
-    drag.overTab = null;
-    if (drag.id === task.id) {
-      // Over itself: nowhere to drop, so no insertion line
-      drag.bucket = null;
-      drag.overTask = null;
-      return;
-    }
-    drag.bucket = task.bucket;
-    e.preventDefault();
-    const box = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    drag.overTask = task.id;
-    drag.after = e.clientY > box.top + box.height / 2;
-  }
-
-  // The insertion line is the only sign of where a dragged task will land
-  const dropLine = $derived(drag.id && drag.overTask === task.id ? (drag.after ? 'after' : 'before') : null);
 </script>
 
 <li
   data-task-id={task.id}
-  draggable={!editing && finePointer}
-  use:touchDrag={{ id: task.id }}
-  class:dragging={drag.id === task.id}
-  ondragstart={(e) => {
-    drag.id = task.id;
-    e.dataTransfer?.setData('text/plain', task.text);
-    setDragImage(e, e.currentTarget as HTMLElement);
-  }}
-  ondragend={endDrag}
-  {ondragover}
-  class:drop-before={dropLine === 'before'}
-  class:drop-after={dropLine === 'after'}
+  use:dragTask={{ id: task.id }}
+  class:dragging={drag.id !== null}
 >
   <div class="row">
     <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
@@ -200,7 +164,7 @@
 </li>
 
 <style>
-  /* Long-pressing picks a task up, so don't let the phone select text or show a menu */
+  /* Pressing and dragging picks a task up, so don't let it select text or show a menu */
   li {
     -webkit-touch-callout: none;
     user-select: none;
@@ -209,20 +173,6 @@
   /* Barely-there dividers: the page background colour, against the white list */
   li:not(:first-child) {
     border-top: 1px solid var(--bg);
-  }
-
-  /* A task dragged by mouse fades in place, so it's clear what's moving (by touch, its row
-     empties instead: see .drag-source) */
-  li.dragging {
-    opacity: 0.3;
-  }
-
-  li.drop-before {
-    box-shadow: inset 0 1px 0 var(--accent);
-  }
-
-  li.drop-after {
-    box-shadow: inset 0 -1px 0 var(--accent);
   }
 
   .row {
@@ -262,7 +212,8 @@
 
   /* Hovering or focusing the icon keeps the circle and swaps the emoji for a tick. Hover
      only counts where there's a real mouse: phones keep the last-tapped spot "hovered",
-     which left ticks showing. None of it applies to a task while it's being dragged. */
+     which left ticks showing. None of it applies while a task is being dragged (.dragging is
+     on every row then), so the rows it passes over don't light up. */
   li:not(.dragging) .icon:focus-visible {
     color: var(--on-tint);
   }
