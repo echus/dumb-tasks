@@ -5,5 +5,7 @@
   "name": "dumb-tasks",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/auth/*"] }
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/auth/*"] },
+  // Cloudflare makes the DNS record and certificate. www redirects here via a Redirect Rule.
+  "routes": [{ "pattern": "dumbtasks.app", "custom_domain": true }]
 }
