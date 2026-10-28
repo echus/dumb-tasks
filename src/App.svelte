@@ -6,7 +6,7 @@
   import SyncMenu from './components/SyncMenu.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from './lib/db';
-  import { byPosition, isActive } from './lib/tasks';
+  import { byPosition, isActive, isDemoTask } from './lib/tasks';
   import { finishDrop } from './lib/dnd';
   import { BUCKETS, type Bucket, type Task } from './lib/types';
   import { drag } from './lib/ui-state.svelte';
@@ -21,9 +21,9 @@
     return out;
   });
 
-  // Nothing to do yet (a first visit, or everything done): say what the app is. Waits for the
-  // first read so it doesn't flash up before the tasks load.
-  const empty = $derived($tasks !== undefined && BUCKETS.every((b) => grouped[b].length === 0));
+  // Only the demo tasks, or nothing to do (a first visit, or everything done): say what the
+  // app is. Waits for the first read so it doesn't flash up before the tasks load.
+  const showIntro = $derived($tasks !== undefined && $tasks.filter(isActive).every(isDemoTask));
 
   // Which bucket shows when they're tabs (below desktop width). Kept for this session only,
   // so a refresh stays put but a fresh visit opens on today.
@@ -63,9 +63,9 @@
   </div>
 </header>
 
-{#if empty}
+{#if showIntro}
   <p class="intro">
-    Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync to your own
+    Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync to your
     Google Drive. <a href="/privacy">Privacy</a>
   </p>
 {/if}

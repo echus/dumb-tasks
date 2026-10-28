@@ -5,7 +5,9 @@ import './app.css';
 import App from './App.svelte';
 import { handleShareTarget, refreshColoursOnce, requestPersistentStorage } from './lib/startup';
 import { startSync } from './lib/sync-state.svelte';
+import { addDemoTasks } from './lib/tasks';
 
+addDemoTasks(); // before the share target, so a task shared on a first visit doesn't stop it
 handleShareTarget();
 requestPersistentStorage();
 startSync().finally(refreshColoursOnce); // after the first sync, so it sees every device's tasks

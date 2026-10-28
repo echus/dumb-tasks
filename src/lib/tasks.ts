@@ -88,6 +88,67 @@ export async function addTask(
   return id;
 }
 
+// Shown on a first visit, to show off deadlines, icons and dragging. Fixed ids and
+// timestamps, so the copies two new devices add merge into one, and anything the user does
+// to them wins. All in Today, so phones show them without switching tabs. Icons and colours
+// are picked by hand: hues far apart, each far from its icon's own colours.
+const DEMO_AT = '2000-01-01T00:00:00.000Z';
+const DEMO_TASKS: { text: string; icon: string; colour: string }[] = [
+  { text: 'Drag me to another list', icon: '👉', colour: 'hsl(260 100% 60%)' },
+  { text: 'Sync me with Google Drive', icon: '🔄', colour: 'hsl(50 100% 52%)' },
+  { text: 'Add some tasks today', icon: '📝', colour: 'hsl(310 100% 60%)' },
+  { text: 'Repot plants by end of next month', icon: '🪴', colour: 'hsl(205 100% 55%)' },
+];
+const demoId = (i: number) => `00000000000000000000DEM${String(i + 1).padStart(3, '0')}`;
+const DEMOS = new Map(DEMO_TASKS.map((demo, i) => [demoId(i), demo]));
+
+export function isDemoTask(t: Task): boolean {
+  return DEMOS.has(t.id);
+}
+
+/** A demo task's hand-picked icon and colour, until its text is edited. */
+function unedited(t: Task): { icon: string; colour: string } | undefined {
+  const demo = DEMOS.get(t.id);
+  return demo?.text === t.text ? demo : undefined;
+}
+
+/**
+ * Once per device, on a first visit (no tasks, Drive not connected). Deadlines are read
+ * from today, so they're real dates from then on.
+ */
+export async function addDemoTasks(now = new Date()) {
+  await db.transaction('rw', db.tasks, db.settings, async () => {
+    if (await db.settings.get('demo')) return;
+    await db.settings.put({ key: 'demo', value: '1' });
+    if ((await db.tasks.count()) > 0 || (await db.settings.get('drive'))) return;
+
+    let position: string | null = null;
+    for (const [i, { text, icon, colour }] of DEMO_TASKS.entries()) {
+      position = generateKeyBetween(position, null);
+      const fields = {
+        text,
+        bucket: 'today' as const,
+        position,
+        sorted: false,
+        completedAt: null,
+        deletedAt: null,
+        aiNote: '',
+        dismissedPhrases: [],
+        ...derive(text, now),
+        icon,
+        colour,
+      };
+      await db.tasks.add({
+        id: demoId(i),
+        createdAt: DEMO_AT,
+        bucketHistory: [{ bucket: 'today', at: DEMO_AT }],
+        fieldUpdatedAt: Object.fromEntries(Object.keys(fields).map((k) => [k, DEMO_AT])),
+        ...fields,
+      });
+    }
+  });
+}
+
 export async function editText(id: string, text: string, now = new Date()) {
   text = text.trim();
   if (!text) return;
@@ -130,16 +191,19 @@ function seededRandom(seed: string): () => number {
 
 /**
  * Re-guesses every open task's icon and re-picks its colour under the current rules, top
- * to bottom so neighbours differ. Seeded by task id, so every device that runs it on the
- * same lists gets the same colours, and running it again changes nothing.
+ * to bottom so neighbours differ (unedited demo tasks keep theirs). Seeded by task id, so
+ * every device that runs it on the same lists gets the same colours, and running it again
+ * changes nothing.
  */
 export async function refreshColours(now = new Date()) {
   await db.transaction('rw', db.tasks, async () => {
     for (const bucket of BUCKETS) {
       let above: string | null = null;
       for (const task of await activeIn(bucket)) {
-        const icon = guessIcon(task.text);
-        const colour = pickCircleColour(icon, above ? [above] : [], seededRandom(task.id));
+        const demo = unedited(task);
+        const icon = demo?.icon ?? guessIcon(task.text);
+        const colour: string =
+          demo?.colour ?? pickCircleColour(icon, above ? [above] : [], seededRandom(task.id));
         above = colour;
         if (icon !== task.icon || colour !== task.colour) await updateTask(task.id, { icon, colour }, now);
       }

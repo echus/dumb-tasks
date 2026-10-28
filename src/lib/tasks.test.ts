@@ -4,6 +4,7 @@ import { exportData, importData, parseDataFile } from './data-file';
 import { db } from './db';
 import { mergeTask } from './merge';
 import {
+  addDemoTasks,
   addTask,
   byPosition,
   completeTask,
@@ -11,6 +12,7 @@ import {
   dismissDeadline,
   editText,
   isActive,
+  isDemoTask,
   moveTask,
   refreshColours,
 } from './tasks';
@@ -30,6 +32,7 @@ async function texts(bucket: Bucket): Promise<string[]> {
 beforeEach(async () => {
   await db.tasks.clear();
   await db.meta.clear();
+  await db.settings.clear();
 });
 
 describe('tasks', () => {
@@ -203,5 +206,63 @@ describe('export / import', () => {
   it('rejects files that are not backups, or from a newer version', () => {
     expect(() => parseDataFile('{"hello": 1}')).toThrow(/backup/);
     expect(() => parseDataFile('{"schemaVersion": 2, "tasks": []}')).toThrow(/newer/);
+  });
+});
+
+describe('demo tasks', () => {
+  it('adds them once on a first visit, with deadlines read from that day', async () => {
+    await addDemoTasks(t0);
+    expect(await texts('today')).toEqual([
+      'Drag me to another list',
+      'Sync me with Google Drive',
+      'Add some tasks today',
+      'Repot plants by end of next month',
+    ]);
+    const tasks = await db.tasks.toArray();
+    expect(tasks.every(isDemoTask)).toBe(true);
+    expect(tasks.find((t) => t.text === 'Add some tasks today')!.deadline?.date).toBe('2026-10-26');
+
+    await db.tasks.clear();
+    await addDemoTasks(later(1));
+    expect(await db.tasks.count()).toBe(0);
+  });
+
+  it('skips them when there are already tasks', async () => {
+    await addTask('buy milk', t0);
+    await addDemoTasks(t0);
+    expect(await db.tasks.count()).toBe(1);
+  });
+
+  it('skips them when Drive is connected', async () => {
+    await db.settings.put({ key: 'drive', value: '{}' });
+    await addDemoTasks(t0);
+    expect(await db.tasks.count()).toBe(0);
+  });
+
+  it("merges two devices' copies into one, and the user's changes win", async () => {
+    await addDemoTasks(t0);
+    const [a] = await db.tasks.toArray();
+    await completeTask(a.id, later(5));
+    const done = (await db.tasks.get(a.id))!;
+    expect(mergeTask(a, done).completedAt).toBe(done.completedAt);
+    expect(mergeTask(done, a).completedAt).toBe(done.completedAt);
+  });
+
+  it('keeps their hand-picked icons and colours until the text is edited', async () => {
+    await addDemoTasks(t0);
+    const sync = (await db.tasks.toArray()).find((t) => t.text === 'Sync me with Google Drive')!;
+    expect(sync.icon).toBe('🔄');
+    await refreshColours(later(1));
+    expect(await db.tasks.get(sync.id)).toEqual(sync);
+    await editText(sync.id, 'Sync with Google Drive', later(2));
+    await refreshColours(later(3));
+    expect((await db.tasks.get(sync.id))!.icon).toBe('📅');
+  });
+
+  it('leaves their colours as refreshColours would pick them', async () => {
+    await addDemoTasks(t0);
+    const before = await db.tasks.toArray();
+    await refreshColours(later(1));
+    expect(await db.tasks.toArray()).toEqual(before);
   });
 });
