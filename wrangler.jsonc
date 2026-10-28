@@ -12,5 +12,7 @@
   "routes": [
     { "pattern": "dumbtasks.app", "custom_domain": true },
     { "pattern": "staging.dumbtasks.app", "custom_domain": true, "previews_enabled": true, "enabled": false }
-  ]
+  ],
+  // Required by `wrangler preview`, even empty. Previews don't get production's secrets.
+  "previews": {}
 }
