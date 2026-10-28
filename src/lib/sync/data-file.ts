@@ -1,8 +1,26 @@
 import { db } from '../db';
+import type { DataFile, Task } from '../types';
 import { mergeTask } from './merge';
-import { SCHEMA_VERSION, type DataFile, type Task } from '../types';
 
 const EPOCH = new Date(0).toISOString();
+
+// Backups and the synced files are versioned. Each step upgrades a file by one version, so
+// MIGRATIONS[0] takes version 1 to 2 and adding a step bumps SCHEMA_VERSION. Add one for any
+// change to the file's or a task's shape, even a new optional field: an older app merging a
+// newer file would drop fields it doesn't know (see mergeTask), so instead it refuses the
+// file until it's updated. Old devices keep sending files in the old shape until then, and
+// a step may meet data already in the new shape, so it has to handle both.
+// A change to Task also needs a database upgrade in db.ts, for the tasks already stored.
+type Migration = (data: any) => void; // older shapes have no types
+const MIGRATIONS: Migration[] = [];
+export const SCHEMA_VERSION = MIGRATIONS.length + 1;
+
+/** The file is from a newer version of the app, so this one can't merge it safely. */
+export class NewerVersionError extends Error {
+  constructor() {
+    super('This backup is from a newer version of Dumb Tasks. Reload to update the app, then try again.');
+  }
+}
 
 // Deleted and completed tasks stay so the change reaches every device, then go for good:
 // by then every device should have synced. One offline for longer brings the task back.
@@ -20,16 +38,17 @@ export async function exportData(now = new Date()): Promise<DataFile> {
   };
 }
 
+/** Reads a backup or synced file, upgraded to this version's shape. */
 export function parseDataFile(json: string): DataFile {
-  const data = JSON.parse(json) as Partial<DataFile>;
-  if (typeof data.schemaVersion !== 'number' || !Array.isArray(data.tasks)) {
+  const data = JSON.parse(json) as Partial<DataFile> | null;
+  const version = data?.schemaVersion ?? 0;
+  if (!data || !Number.isInteger(version) || version < 1 || !Array.isArray(data.tasks)) {
     throw new Error("This doesn't look like a Dumb Tasks backup.");
   }
-  if (data.schemaVersion > SCHEMA_VERSION) {
-    throw new Error('This backup is from a newer version of Dumb Tasks.');
-  }
+  if (version > SCHEMA_VERSION) throw new NewerVersionError();
+  for (let v = version; v < SCHEMA_VERSION; v++) MIGRATIONS[v - 1](data);
   return {
-    schemaVersion: data.schemaVersion,
+    schemaVersion: SCHEMA_VERSION,
     exportedAt: data.exportedAt ?? EPOCH,
     tasks: data.tasks,
     memory: data.memory ?? '',

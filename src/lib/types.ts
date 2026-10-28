@@ -50,8 +50,6 @@ export interface Meta {
   updatedAt: string;
 }
 
-export const SCHEMA_VERSION = 1;
-
 export interface DataFile {
   schemaVersion: number;
   exportedAt: string;

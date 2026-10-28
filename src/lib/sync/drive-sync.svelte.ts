@@ -36,6 +36,7 @@ export const sync = $state({
   email: '',
   syncing: false,
   needsSignIn: false, // Google signed this device out: a click on Sign in again fixes it
+  needsUpdate: false, // a device synced from a newer version: a reload fixes it
   error: '',
   lastSyncedAt: null as string | null,
 });
@@ -130,7 +131,13 @@ async function runOnce(retry = true): Promise<void> {
       pushedKey: result.pushedKey,
     });
     await save();
-    sync.error = '';
+    // Files it couldn't take in: everything else still synced
+    sync.needsUpdate = result.skipped.newer > 0;
+    sync.error = result.skipped.newer
+      ? 'Another device synced with a newer version of Dumb Tasks. Reload to update this one.'
+      : result.skipped.unreadable
+        ? "Another device's sync file couldn't be read, so its changes are missing here."
+        : '';
   } catch (e) {
     if (settings !== current) return;
     // Google can end a token early; one fresh token, then ask to sign in.
@@ -210,6 +217,7 @@ export async function reconnect() {
 export async function disconnect() {
   settings = null;
   sync.needsSignIn = false;
+  sync.needsUpdate = false;
   sync.error = '';
   show();
   await save();

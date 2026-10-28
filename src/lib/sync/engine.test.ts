@@ -4,7 +4,8 @@ import { db } from '../db';
 import { addDemoTasks, isDemoTask } from '../tasks/demo-tasks';
 import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from '../tasks/tasks';
 import type { DataFile, Task } from '../types';
-import { startFrom, syncWith, type SyncBackend, type SyncState } from './engine';
+import { SCHEMA_VERSION } from './data-file';
+import { startFrom, syncWith, type Skipped, type SyncBackend, type SyncState } from './engine';
 import { onLocalChange } from './local-changes';
 
 const t0 = new Date(2026, 9, 26, 9, 0);
@@ -82,10 +83,13 @@ const activeTexts = async () =>
 let remote: MemoryBackend;
 let state: SyncState;
 
+let skipped: Skipped;
+
 /** Syncs as the app does, keeping the state between syncs. Returns whether it pushed. */
 async function sync(options: Parameters<typeof syncWith>[2] = {}): Promise<boolean> {
-  const { pushed, ...next } = await syncWith(remote, state, options);
+  const { pushed, skipped: left, ...next } = await syncWith(remote, state, options);
   state = next;
+  skipped = left;
   return pushed;
 }
 
@@ -334,6 +338,50 @@ describe('sync', () => {
     await sync({ tidy: true, dropMissing: startFrom(null, null).dropMissing });
     expect(remote.files.has('drawer')).toBe(false);
     expect(await db.tasks.count()).toBe(0);
+  });
+
+  describe('with a file it cannot take in', () => {
+    beforeEach(async () => {
+      await addTask('buy milk', t0);
+      await sync();
+      remote.edit('tablet', (data) => data.tasks.push({ ...data.tasks[0], id: 't', text: 'pay rent' }));
+    });
+
+    it("leaves out a newer version's file, and syncs the rest", async () => {
+      remote.edit('phone', (data) => {
+        data.schemaVersion = SCHEMA_VERSION + 1;
+        data.tasks[0].text = 'buy oat milk';
+      });
+      const before = state.cursor;
+
+      expect(await sync()).toBe(true);
+      expect(skipped).toEqual({ newer: 1, unreadable: 0 });
+      expect(await activeTexts()).toEqual(['buy milk', 'pay rent']);
+      expect(remote.texts()).toEqual(['buy milk', 'pay rent']);
+      expect(remote.data('phone').tasks[0].text).toBe('buy oat milk');
+      expect(state.cursor).toBe(before); // so the file is read again after updating
+    });
+
+    it('leaves out a damaged file, and syncs the rest', async () => {
+      remote.files.set('phone', { json: '{"tasks": [', seq: ++remote.seq, modifiedAt: Date.now() });
+
+      await sync();
+      expect(skipped).toEqual({ newer: 0, unreadable: 1 });
+      expect(await activeTexts()).toEqual(['buy milk', 'pay rent']);
+    });
+
+    it("doesn't drop tasks missing from the rest, as that file may have them", async () => {
+      remote.edit('phone', (data) => {
+        data.schemaVersion = SCHEMA_VERSION + 1;
+      });
+      remote.edit('tablet', (data) => {
+        data.tasks = data.tasks.filter((t) => t.text !== 'buy milk');
+      });
+      state = { ...state, cursor: null };
+
+      await sync({ dropMissing: { matches: () => true, after: -Infinity } });
+      expect(await activeTexts()).toEqual(['buy milk', 'pay rent']);
+    });
   });
 
   it('hears about local task writes', async () => {

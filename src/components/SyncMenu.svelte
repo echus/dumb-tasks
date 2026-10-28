@@ -100,6 +100,8 @@
           <div class="actions">
             {#if sync.needsSignIn}
               <button class="action" onclick={reconnect}>Sign in again</button>
+            {:else if sync.needsUpdate}
+              <button class="action" onclick={() => location.reload()}>Reload</button>
             {:else}
               <button class="action" disabled={sync.syncing} onclick={syncNow}>Sync now</button>
             {/if}

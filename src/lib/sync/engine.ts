@@ -2,7 +2,7 @@ import { db } from '../db';
 import { isUneditedDemo } from '../tasks/demo-tasks';
 import { lastEdited } from '../tasks/tasks';
 import type { DataFile, Task } from '../types';
-import { exportData, importData, KEEP_DAYS, parseDataFile } from './data-file';
+import { exportData, importData, KEEP_DAYS, NewerVersionError, parseDataFile } from './data-file';
 import { mergeTask } from './merge';
 
 // Sync is backend-agnostic. Each device has a file of its own holding everything it knows,
@@ -100,33 +100,53 @@ export function startFrom(
   return { cursor };
 }
 
+/** Files a sync had to leave out. Everything else still synced. */
+export interface Skipped {
+  newer: number; // from a newer version of the app, which this one can't merge safely
+  unreadable: number; // damaged, or not a data file at all
+}
+
 /**
- * One full sync. `dropMissing` applies when reading every file (a null cursor) and at least
- * one counts: the local tasks it matches that none of them has are deleted outright, not
- * tombstoned. `tidy` first clears out other devices' stale files, so they aren't read.
+ * One full sync. `dropMissing` applies when reading every file (a null cursor), all of them
+ * could be read and at least one counts: the local tasks it matches that none of them has
+ * are deleted outright, not tombstoned. `tidy` first clears out other devices' stale files,
+ * so they aren't read.
  */
 export async function syncWith(
   backend: SyncBackend,
   state: SyncState,
   { dropMissing, tidy = false }: { dropMissing?: DropMissing; tidy?: boolean } = {},
-): Promise<SyncState & { pushed: boolean }> {
+): Promise<SyncState & { pushed: boolean; skipped: Skipped }> {
   // Swept away as stale while this device was away, or removed by hand: write it again
   let pushedKey = state.pushedKey;
   if (tidy && !(await backend.removeStale(KEEP_DAYS * 86_400_000)).hasOwnFile) pushedKey = null;
 
-  const { files, cursor } = await backend.pull(state.cursor);
-  const data = files.map((f) => ({ ...f, data: parseDataFile(f.json) }));
+  const { files, cursor: pulled } = await backend.pull(state.cursor);
+  const skipped: Skipped = { newer: 0, unreadable: 0 };
+  const data: (RemoteFile & { data: DataFile })[] = [];
+  for (const file of files) {
+    try {
+      data.push({ ...file, data: parseDataFile(file.json) });
+    } catch (e) {
+      if (e instanceof NewerVersionError) skipped.newer++;
+      else skipped.unreadable++;
+    }
+  }
   if (data.length) await importData(combine(data.map((f) => f.data)));
+  // Not past a newer version's file, so it's read again once this app has updated
+  const cursor = skipped.newer ? state.cursor : pulled;
 
+  // A file left out may hold the very tasks the others lack
+  const complete = !skipped.newer && !skipped.unreadable;
   const witnesses = data.filter((f) => dropMissing && f.modifiedAt > dropMissing.after);
-  if (dropMissing && state.cursor === null && witnesses.length) {
+  if (dropMissing && state.cursor === null && complete && witnesses.length) {
     const ids = new Set(witnesses.flatMap((f) => f.data.tasks.map((t) => t.id)));
     await db.tasks.filter((t) => dropMissing.matches(t) && !ids.has(t.id)).delete();
   }
 
   const local = await exportData();
   const key = await contentKey(local);
-  if (key === pushedKey) return { cursor, pushedKey, pushed: false };
+  if (key === pushedKey) return { cursor, pushedKey, pushed: false, skipped };
   await backend.push(JSON.stringify(local));
-  return { cursor, pushedKey: key, pushed: true };
+  return { cursor, pushedKey: key, pushed: true, skipped };
 }

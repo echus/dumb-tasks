@@ -135,7 +135,7 @@ Calm and minimal, so the focus is on the tasks:
 
 ## Data model
 
-Single document, versioned. Draft shape:
+Single document, versioned (see Versioning below):
 
 ```ts
 interface DataFile {
@@ -182,6 +182,27 @@ Device-only settings (never synced): sync credentials, locale override. They get
   (synced key/values; just `memory` for now) and `settings` (device-only).
 - Request `navigator.storage.persist()` on first run; Android may otherwise evict data.
 - Once backups have a UI, nudge users without sync to export one now and then.
+
+## Versioning
+
+Released apps hold real data, so stored formats are frozen: every change comes with an
+upgrade. Installed PWAs update themselves, but a device can run an old copy for a while.
+
+- **Data file** (backups and each device's synced file): `schemaVersion`, with one upgrade
+  step per version in `sync/data-file.ts`. Any change to the file's or a task's shape bumps it, even a new
+  optional field, because an older app merging a newer file would drop fields it doesn't know.
+- **Older app meets newer file: it leaves that file out.** Its changes aren't merged, but the
+  other devices' files still are, and this device's own file is still written, in the shape
+  it knows. The sync menu asks for a reload to update (Restore refuses the file and says the
+  same). A newer app reads older files, so an old device's tasks still arrive, upgraded.
+- **Local database:** Dexie versions in `db.ts`, each with an `.upgrade()` for existing rows.
+  A change to `Task` needs both this and a data-file step. If a newer copy (say, in another
+  tab) upgrades the database, an older copy reloads, or shows "updated, reload" instead of the
+  app, rather than write the old shape into it.
+- **Never roll a deploy back past a version bump**: the older app would refuse the upgraded
+  data until the next deploy. Fix forward instead.
+- Recolour-style passes over existing tasks, where the shape doesn't change, can keep using a
+  run-once flag like `refreshColoursOnce` in `tasks/recolour.ts`.
 
 ## Sync
 
@@ -232,9 +253,13 @@ rewrites this device's file if that left it out of date.
   tasks that haven't changed here since its last sync and that no file written after that
   sync has (a device writing one had read this device's file first, so a task is missing
   only if it dropped it). Tasks added or edited while away are kept. Skipped when no such
-  file exists. A first sync does
-  the same with the demo tasks, so an account with data replaces them.
-- **Google verification** is required before public release of Drive sync.
+  file exists, or when any file couldn't be read. A first sync does the same with the demo
+  tasks, so an account with data replaces them.
+- **A file that can't be read** (from a newer version, or damaged) is skipped, and the rest
+  still sync; the sync menu says so. A newer-version file is read again once this device has
+  updated.
+- **Google verification:** brand verification passed and the OAuth app is published
+  (October 2026), so anyone can connect Drive.
 
 ## AI integration — MCP connector
 

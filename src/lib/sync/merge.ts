@@ -2,6 +2,8 @@ import type { Task } from '../types';
 
 // Fields merged last-write-wins using fieldUpdatedAt. Everything else is
 // either immutable (id, createdAt) or merged specially (bucketHistory).
+// Fields not listed here are lost from the incoming copy, which is why an older app refuses
+// a file from a newer one (see SCHEMA_VERSION in data-file.ts).
 export const MERGED_FIELDS = [
   'text',
   'bucket',
