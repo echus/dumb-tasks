@@ -15,6 +15,7 @@ describe('guessIcon', () => {
     ['take the bins out', '🗑️'],
     ['groceries', '🛒'],
     ['learn guitar', '🎵'],
+    ['upload photos to Google Drive', '📷'], // not 🚗
   ])('%s → %s', (text, emoji) => {
     expect(guessIcon(text)).toBe(emoji);
   });

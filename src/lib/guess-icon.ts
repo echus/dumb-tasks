@@ -114,7 +114,12 @@ function better(hit: string | undefined, best: string | null): hit is string {
  * Null when nothing fits; the UI then shows an empty box.
  */
 export function guessIcon(text: string): string | null {
-  const words = text.toLowerCase().replace(/'s\b/g, '').match(/[a-z0-9:-]+/g) ?? [];
+  const words =
+    text
+      .toLowerCase()
+      .replace(/'s\b/g, '')
+      .replace(/\bgoogle drive\b/g, '') // a place, not driving
+      .match(/[a-z0-9:-]+/g) ?? [];
   let best: string | null = null;
   for (const word of words) {
     for (const form of candidates(word)) {
