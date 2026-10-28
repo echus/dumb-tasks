@@ -66,3 +66,12 @@ to test offline behaviour.
 - `src/lib/theme.svelte.ts`: light/dark toggle (follows the system until used)
 - `src/lib/startup.ts`: Android share target, persistent storage
 - `src/components/`: the UI (Svelte 5)
+
+## License
+
+Copyright © 2026 Varvara Efremova. Licensed under the [GNU Affero General Public License
+v3.0](LICENSE): you can use, change and share the code, but if you publish or host a changed
+version, its source must be available under the same license.
+
+The name "Dumb Tasks" and the app icon aren't covered by the license; please use your own for
+a fork.
