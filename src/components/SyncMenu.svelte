@@ -82,7 +82,7 @@
   {#if open}
     <div class="panel" role="dialog" aria-label="Sync and backup">
       <section>
-        <h2>Google Drive sync</h2>
+        <h2><span class="icon"><Icon svg={ui.sync} size={14} /></span>Google Drive sync</h2>
         {#if !sync.available}
           <p>Sync isn't set up on this copy of the app.</p>
         {:else if !sync.connected}
@@ -112,7 +112,7 @@
       </section>
 
       <section>
-        <h2>Backup</h2>
+        <h2><span class="icon"><Icon svg={ui.download} size={14} /></span>Backup</h2>
         <div class="actions">
           <button class="action" onclick={download}>Save backup</button>
           <button class="action" onclick={() => fileInput?.click()}>Restore…</button>
@@ -123,7 +123,7 @@
         {/if}
       </section>
 
-      <a class="privacy" href="/privacy.html">Privacy</a>
+      <a class="privacy" href="/privacy">Privacy</a>
     </div>
   {/if}
 </div>
@@ -203,13 +203,23 @@
     border-top: 1px solid var(--glow-ring);
   }
 
+  /* Icon and name laid out like the bucket names (BucketName) */
   h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin: 0 0 8px;
     font-family: var(--font-title);
     font-variation-settings: var(--title-opsz);
     font-size: 0.95rem;
     font-weight: 700;
     text-transform: lowercase;
+  }
+
+  h2 .icon {
+    display: inline-grid;
+    color: var(--muted);
+    transform: translateY(0.05em);
   }
 
   p {
@@ -268,6 +278,7 @@
     border-top: 1px solid var(--glow-ring);
     color: var(--muted);
     font-size: 0.8em;
+    text-align: right;
   }
 
   .privacy:hover {

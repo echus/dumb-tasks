@@ -5,7 +5,10 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="A really simple task list." />
+    <meta
+      name="description"
+      content="Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync to your own Google Drive."
+    />
     <meta name="theme-color" content="#000000" />
     <title>Dumb Tasks</title>
     <script>
@@ -18,6 +21,14 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- The app's empty-screen description, for anything reading the page without scripts -->
+    <noscript>
+      <p>
+        Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync to your
+        own Google Drive. <a href="/privacy">Privacy</a>
+      </p>
+      <p>Dumb Tasks needs JavaScript to run.</p>
+    </noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

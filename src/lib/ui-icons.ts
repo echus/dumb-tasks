@@ -14,6 +14,7 @@ export { default as moon } from '@phosphor-icons/core/assets/fill/moon-fill.svg?
 export { default as undo } from '@phosphor-icons/core/assets/bold/arrow-u-up-left-bold.svg?raw';
 export { default as sync } from '@phosphor-icons/core/assets/bold/arrows-clockwise-bold.svg?raw';
 export { default as redo } from '@phosphor-icons/core/assets/bold/arrow-u-up-right-bold.svg?raw';
+export { default as download } from '@phosphor-icons/core/assets/bold/download-simple-bold.svg?raw';
 
 // Phosphor's arrow-right with the shaft stretched, so it's 1.5× as wide
 const longArrow =

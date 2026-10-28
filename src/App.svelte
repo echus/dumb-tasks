@@ -21,6 +21,10 @@
     return out;
   });
 
+  // Nothing to do yet (a first visit, or everything done): say what the app is. Waits for the
+  // first read so it doesn't flash up before the tasks load.
+  const empty = $derived($tasks !== undefined && BUCKETS.every((b) => grouped[b].length === 0));
+
   // Which bucket shows when they're tabs (below desktop width). Kept for this session only,
   // so a refresh stays put but a fresh visit opens on today.
   function savedTab(): Bucket {
@@ -58,6 +62,13 @@
     <ThemeToggle />
   </div>
 </header>
+
+{#if empty}
+  <p class="intro">
+    Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync to your own
+    Google Drive. <a href="/privacy">Privacy</a>
+  </p>
+{/if}
 
 <div class="bar" bind:clientHeight={barHeight}>
   <!-- Dropping a task on a tab sends it to the end of that list, without switching tabs -->
@@ -138,6 +149,20 @@
     fill: none;
     stroke: var(--on-accent);
     stroke-width: 2;
+  }
+
+  /* Also where Google expects the privacy link on the homepage */
+  .intro {
+    margin: 4px 0 8px;
+    color: var(--muted);
+  }
+
+  .intro a {
+    color: inherit;
+  }
+
+  .intro a:hover {
+    color: var(--text);
   }
 
   /* Tabs stay reachable while scrolling a long list */
