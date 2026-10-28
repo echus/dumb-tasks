@@ -106,6 +106,11 @@ export function isDemoTask(t: Task): boolean {
   return DEMOS.has(t.id);
 }
 
+/** A demo task the user hasn't retyped: moving or completing it is still just trying it out. */
+export function isUneditedDemo(t: Task): boolean {
+  return unedited(t) !== undefined;
+}
+
 /** A demo task's hand-picked icon and colour, until its text is edited. */
 function unedited(t: Task): { icon: string; colour: string } | undefined {
   const demo = DEMOS.get(t.id);

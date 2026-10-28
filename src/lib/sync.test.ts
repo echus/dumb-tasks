@@ -2,7 +2,17 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
 import { onLocalChange, syncWith, type SyncBackend } from './sync';
-import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from './tasks';
+import {
+  addDemoTasks,
+  addTask,
+  completeTask,
+  deleteTask,
+  editText,
+  isActive,
+  isDemoTask,
+  isUneditedDemo,
+  moveTask,
+} from './tasks';
 import type { DataFile } from './types';
 
 const t0 = new Date(2026, 9, 26, 9, 0);
@@ -54,6 +64,7 @@ let remote: MemoryBackend;
 beforeEach(async () => {
   await db.tasks.clear();
   await db.meta.clear();
+  await db.settings.clear();
   remote = new MemoryBackend();
 });
 
@@ -132,6 +143,48 @@ describe('sync', () => {
     const ids = (tasks: { id: string }[]) => tasks.map((t) => t.id).sort();
     expect(ids(await db.tasks.toArray())).toEqual([recent, done].sort());
     expect(ids(remote.data().tasks)).toEqual([recent, done].sort());
+  });
+
+  describe('on a first sync, with demo tasks', () => {
+    const replace = isUneditedDemo;
+
+    it('replaces them with the tasks of an account that has a data file', async () => {
+      await addTask('buy milk', t0);
+      await syncWith(remote);
+
+      await db.tasks.clear(); // a new device, showing the demo
+      await addDemoTasks(t0);
+      expect(await syncWith(remote, { replace })).toEqual({ pushed: false });
+      expect(await activeTexts()).toEqual(['buy milk']);
+    });
+
+    it('pushes them to a new account', async () => {
+      await addDemoTasks(t0);
+      expect(await syncWith(remote, { replace })).toEqual({ pushed: true });
+      expect(remote.data().tasks.filter(isDemoTask)).toHaveLength(4);
+    });
+
+    it('keeps tasks the user added or retyped', async () => {
+      remote.json = JSON.stringify({ schemaVersion: 1, tasks: [] }); // every task long deleted
+      await addDemoTasks(t0);
+      const [retyped] = await db.tasks.toArray();
+      await editText(retyped.id, 'call mum', later(1));
+      await addTask('pay rent', later(2));
+
+      expect(await syncWith(remote, { replace })).toEqual({ pushed: true });
+      expect(remote.data().tasks.map((t) => t.text).sort()).toEqual(['call mum', 'pay rent']);
+    });
+
+    it('keeps the ones the account has, with what was done to them here', async () => {
+      await addDemoTasks(t0);
+      await syncWith(remote);
+      const [done] = await db.tasks.toArray();
+      await completeTask(done.id, later(1));
+
+      expect(await syncWith(remote, { replace })).toEqual({ pushed: true });
+      expect(remote.data().tasks.filter(isDemoTask)).toHaveLength(4);
+      expect(remote.data().tasks.find((t) => t.id === done.id)!.completedAt).not.toBeNull();
+    });
   });
 
   it('hears about local task writes', async () => {

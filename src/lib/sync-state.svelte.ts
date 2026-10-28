@@ -2,6 +2,7 @@ import { db } from './db';
 import { DriveAuthError, DriveBackend, fetchEmail } from './drive';
 import { CLIENT_ID, loadGoogle, refreshToken, signIn, signOut, type AccessToken } from './google-auth';
 import { onLocalChange, syncWith } from './sync';
+import { isUneditedDemo } from './tasks';
 
 // When and how the app syncs with Google Drive, and the state the sync menu shows.
 // Syncs on open, when the app comes back into view, a few seconds after each edit, and
@@ -66,7 +67,10 @@ async function runOnce(retry = true): Promise<void> {
   try {
     const token = await freshToken();
     if (!token) return;
-    await syncWith(new DriveBackend(token));
+    // First sync on this device: an account with data replaces the demo tasks; a new one
+    // gets them.
+    const replace = settings.lastSyncedAt === null ? isUneditedDemo : undefined;
+    await syncWith(new DriveBackend(token), { replace });
     settings.lastSyncedAt = new Date().toISOString();
     await save();
     sync.error = '';

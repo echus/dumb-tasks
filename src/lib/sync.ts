@@ -1,5 +1,6 @@
 import { exportData, importData, parseDataFile } from './data-file';
-import type { DataFile } from './types';
+import { db } from './db';
+import type { DataFile, Task } from './types';
 
 // Sync is backend-agnostic: pull the data file, merge it into local data, and push the
 // result back if the remote copy is missing anything. Merging is per field, so a push that
@@ -37,14 +38,26 @@ export function contentKey(data: DataFile): string {
   return stableStringify({ tasks, memory: data.memory, memoryUpdatedAt: data.memoryUpdatedAt });
 }
 
-/** One full sync. Returns whether anything was pushed. */
-export async function syncWith(backend: SyncBackend, tries = 3): Promise<{ pushed: boolean }> {
+/**
+ * One full sync. Returns whether anything was pushed. If the remote file exists, local tasks
+ * matching `replace` that it doesn't have are dropped rather than pushed (demo tasks, on a
+ * device's first sync with an account that already has data).
+ */
+export async function syncWith(
+  backend: SyncBackend,
+  { replace, tries = 3 }: { replace?: (t: Task) => boolean; tries?: number } = {},
+): Promise<{ pushed: boolean }> {
   for (let i = 0; i < tries; i++) {
     const remote = await backend.load();
     let remoteKey: string | null = null;
     if (remote) {
       const data = parseDataFile(remote.json);
       await importData(data);
+      if (replace) {
+        const remoteIds = new Set(data.tasks.map((t) => t.id));
+        // Gone for good, not tombstoned: the remote file never had them.
+        await db.tasks.filter((t) => replace(t) && !remoteIds.has(t.id)).delete();
+      }
       remoteKey = contentKey(data);
     }
 
