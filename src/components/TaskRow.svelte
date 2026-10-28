@@ -211,7 +211,8 @@
     border-top: 1px solid var(--bg);
   }
 
-  /* The task being dragged fades in place, so it's clear what's moving */
+  /* A task dragged by mouse fades in place, so it's clear what's moving (by touch, its row
+     empties instead: see .drag-source) */
   li.dragging {
     opacity: 0.3;
   }

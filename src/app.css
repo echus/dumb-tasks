@@ -172,6 +172,46 @@ input:focus-visible {
   box-shadow: 0 0 0 1px var(--border-strong);
   pointer-events: none;
   will-change: transform;
+  transition:
+    scale 120ms ease,
+    box-shadow 120ms ease;
+}
+
+/* Picked up: a little bigger, casting a shadow on the list */
+.drag-preview.lifted {
+  scale: 1.03;
+  box-shadow:
+    0 0 0 1px var(--border-strong),
+    0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+/* Dropped: it glides into its gap, or shrinks away into a tab */
+.drag-preview.settling {
+  transition:
+    transform 180ms ease,
+    scale 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
+}
+
+.drag-preview.gone {
+  scale: 0.6;
+  opacity: 0;
+}
+
+/* Pressing a task shades it as it's about to lift. Delayed, so a quick tap doesn't flash. */
+li.pressing {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  transition: background-color 150ms ease 80ms;
+}
+
+/* While a task is held, its row is the empty gap, and the other rows slide to move it */
+li.drag-source {
+  visibility: hidden;
+}
+
+.touch-dragging li[data-task-id] {
+  transition: transform 150ms ease;
 }
 
 ::selection {

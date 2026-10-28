@@ -18,8 +18,8 @@ if (typeof document !== 'undefined') {
  */
 export const drag = $state<{
   id: string | null; // task being dragged
-  bucket: Bucket | null; // list (or tab) under the pointer
-  overTask: string | null; // task under the pointer, if any
+  bucket: Bucket | null; // list (or tab) under the pointer; mouse drags only, like overTask
+  overTask: string | null; // task under the pointer, if any (touch drags open a gap instead)
   after: boolean; // pointer is in the lower half of that task
   overTab: Bucket | null; // phone tab under the pointer: drops go to the end of that list
 }>({ id: null, bucket: null, overTask: null, after: false, overTab: null });
