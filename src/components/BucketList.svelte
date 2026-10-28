@@ -2,9 +2,7 @@
   import AddTask from './AddTask.svelte';
   import BucketName from './BucketName.svelte';
   import TaskRow from './TaskRow.svelte';
-  import { finishDrop } from '../lib/dnd';
   import type { Bucket, Task } from '../lib/types';
-  import { drag } from '../lib/ui-state.svelte';
 
   interface Props {
     bucket: Bucket;
@@ -13,40 +11,16 @@
   }
 
   let { bucket, active, tasks }: Props = $props();
-
-  // Over the list but not over a task: the task will go at the end, so the line sits there
-  const dropAtEnd = $derived(!!drag.id && drag.bucket === bucket && !drag.overTask);
-
-  // Over a task: TaskRow tracks above/below. Anywhere else in the list: at the end.
-  function ondrop(e: DragEvent) {
-    e.preventDefault();
-    finishDrop();
-  }
 </script>
 
 <section
   id="panel-{bucket}"
   class:inactive={!active}
   aria-labelledby="heading-{bucket}"
-  ondragover={(e) => {
-    if (!drag.id) return;
-    e.preventDefault();
-    drag.bucket = bucket;
-    drag.overTask = null;
-    drag.overTab = null;
-  }}
-  ondragleave={(e) => {
-    const into = e.relatedTarget as Node | null;
-    if (into && !(e.currentTarget as Node).contains(into) && drag.bucket === bucket) {
-      drag.bucket = null;
-      drag.overTask = null;
-    }
-  }}
-  {ondrop}
 >
   <h2 id="heading-{bucket}"><BucketName {bucket} /></h2>
 
-  <div class="list" class:drop-end={dropAtEnd}>
+  <div class="list">
     <!-- Scrolls on desktop, under the list's edge (.list::before) so that stays put -->
     <div class="scroll">
       <!-- New tasks land at the top of a list, so the row to write one sits there -->
@@ -91,17 +65,6 @@
     border-radius: inherit;
     box-shadow: inset 0 0 0 1px var(--glow-ring);
     pointer-events: none;
-  }
-
-  /* A straight line along the bottom (an inset shadow would follow the rounded corners) */
-  .list.drop-end::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 1px;
-    background: var(--accent);
   }
 
   /* Below desktop width the buckets are tabs: only the selected one shows, and the tab

@@ -7,5 +7,12 @@
   "compatibility_date": "2026-10-01",
   "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/auth/*"] },
   // Cloudflare makes the DNS record and certificate. www redirects here via a Redirect Rule.
-  "routes": [{ "pattern": "dumbtasks.app", "custom_domain": true }]
+  // Branch previews (`wrangler preview`) get <branch>.staging.dumbtasks.app; production
+  // isn't served there.
+  "routes": [
+    { "pattern": "dumbtasks.app", "custom_domain": true },
+    { "pattern": "staging.dumbtasks.app", "custom_domain": true, "previews_enabled": true, "enabled": false }
+  ],
+  // Required by `wrangler preview`, even empty. Previews don't get production's secrets.
+  "previews": {}
 }

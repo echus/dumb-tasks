@@ -7,7 +7,6 @@
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from './lib/db';
   import { byPosition, isActive, isDemoTask } from './lib/tasks';
-  import { finishDrop } from './lib/dnd';
   import { BUCKETS, type Bucket, type Task } from './lib/types';
   import { drag } from './lib/ui-state.svelte';
 
@@ -71,7 +70,8 @@
 {/if}
 
 <div class="bar" bind:clientHeight={barHeight}>
-  <!-- Dropping a task on a tab sends it to the end of that list, without switching tabs -->
+  <!-- Dropping a dragged task on a tab sends it to the end of that list, without switching
+       tabs; holding it there opens the tab (see dnd.ts) -->
   <div class="tabs" role="tablist" aria-label="Buckets">
     {#each BUCKETS as bucket (bucket)}
       <button
@@ -80,23 +80,7 @@
         aria-controls="panel-{bucket}"
         data-tab={bucket}
         class:drop-target={drag.id && drag.overTab === bucket}
-        onclick={() => (activeTab = bucket)}
-        ondragover={(e) => {
-          if (!drag.id) return;
-          e.preventDefault();
-          drag.bucket = drag.overTab = bucket;
-          drag.overTask = null;
-        }}
-        ondragleave={(e) => {
-          const into = e.relatedTarget as Node | null;
-          if (into && !(e.currentTarget as Node).contains(into) && drag.overTab === bucket) {
-            drag.bucket = drag.overTab = null;
-          }
-        }}
-        ondrop={(e) => {
-          e.preventDefault();
-          finishDrop();
-        }}><BucketName {bucket} /></button
+        onclick={() => (activeTab = bucket)}><BucketName {bucket} /></button
       >
     {/each}
   </div>
@@ -185,10 +169,10 @@
 
   /* Side padding shrinks on narrow phones so all four tabs, icons included, fit */
   .tabs button {
-    padding: 8px clamp(6px, (100vw - 300px) / 8, 12px) 4px;
+    position: relative;
+    padding: 8px clamp(6px, (100vw - 300px) / 8, 12px) 5px;
     margin-bottom: 4px; /* the underline sits close under the name; this keeps the gap below */
     border: none;
-    border-bottom: 1px solid transparent;
     background: none;
     color: var(--ink-faded);
     font-family: var(--font-title);
@@ -200,15 +184,27 @@
   }
 
   .tabs button[aria-selected='true'] {
-    border-bottom-color: var(--accent);
     color: var(--text);
   }
 
-  /* Dragging a task onto a tab: the same thin line as the insertion line, under its name */
+  /* Drawn as a line of its own rather than a border, so it stays straight when the tab's
+     corners round (below) */
+  .tabs button[aria-selected='true']::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* Dragging a task onto a tab shades it in, so it's clear the task will drop there (the
+     same grey as the label on the dragged task) */
   .tabs button.drop-target {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 5px;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--text) 14%, var(--bg));
+    color: var(--text);
   }
 
   main {
