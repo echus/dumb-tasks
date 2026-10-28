@@ -3,11 +3,13 @@ import '@fontsource/inter/latin-400.css';
 import '@fontsource/inter/latin-600.css';
 import './app.css';
 import App from './App.svelte';
+import { dropOldDeleted } from './lib/data-file';
 import { handleShareTarget, refreshColoursOnce, requestPersistentStorage } from './lib/startup';
 import { startSync } from './lib/sync-state.svelte';
 import { addDemoTasks } from './lib/tasks';
 
 addDemoTasks(); // before the share target, so a task shared on a first visit doesn't stop it
+dropOldDeleted(); // sync does this too, but not every device syncs
 handleShareTarget();
 requestPersistentStorage();
 startSync().finally(refreshColoursOnce); // after the first sync, so it sees every device's tasks

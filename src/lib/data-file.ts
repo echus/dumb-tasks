@@ -4,6 +4,10 @@ import { SCHEMA_VERSION, type DataFile, type Task } from './types';
 
 const EPOCH = new Date(0).toISOString();
 
+// Deleted tasks stay as tombstones so the deletion reaches every device, then go for good:
+// by then every device should have synced. One offline for longer brings the task back.
+const KEEP_DELETED_DAYS = 90;
+
 /** Everything that would sync, including completed tasks and tombstones. */
 export async function exportData(now = new Date()): Promise<DataFile> {
   const [tasks, memory] = await Promise.all([db.tasks.toArray(), db.meta.get('memory')]);
@@ -33,8 +37,20 @@ export function parseDataFile(json: string): DataFile {
   };
 }
 
-/** Merges a backup into local data the same way sync will: newest edit per field wins. */
-export async function importData(data: DataFile): Promise<{ added: number; merged: number }> {
+/** Removes tombstones older than KEEP_DELETED_DAYS. */
+export async function dropOldDeleted(now = new Date()) {
+  const cutoff = new Date(now.getTime() - KEEP_DELETED_DAYS * 86_400_000).toISOString();
+  await db.tasks.filter((t) => t.deletedAt !== null && t.deletedAt < cutoff).delete();
+}
+
+/**
+ * Merges a backup into local data the same way sync will: newest edit per field wins. Then
+ * drops old tombstones, from either side, so sync pushes a file without them.
+ */
+export async function importData(
+  data: DataFile,
+  now = new Date(),
+): Promise<{ added: number; merged: number }> {
   let added = 0;
   let merged = 0;
   await db.transaction('rw', db.tasks, db.meta, async () => {
@@ -53,6 +69,7 @@ export async function importData(data: DataFile): Promise<{ added: number; merge
       if (JSON.stringify(result) !== JSON.stringify(local)) out.push(result);
     }
     await db.tasks.bulkPut(out);
+    await dropOldDeleted(now);
 
     const memory = await db.meta.get('memory');
     if (!memory || data.memoryUpdatedAt > memory.updatedAt) {

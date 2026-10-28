@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
 import { onLocalChange, syncWith, type SyncBackend } from './sync';
-import { addTask, editText, isActive, moveTask } from './tasks';
+import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from './tasks';
 import type { DataFile } from './types';
 
 const t0 = new Date(2026, 9, 26, 9, 0);
@@ -111,6 +111,27 @@ describe('sync', () => {
     expect(await syncWith(remote)).toEqual({ pushed: true });
     expect(await activeTexts()).toEqual(['buy milk', 'call mum', 'pay rent']);
     expect(remote.data().tasks.map((t) => t.text).sort()).toEqual(['buy milk', 'call mum', 'pay rent']);
+  });
+
+  it('drops tasks deleted over 90 days ago, here and in the remote file', async () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
+    const old = (await addTask('old', daysAgo(200)))!;
+    const recent = (await addTask('recent', daysAgo(200)))!;
+    const done = (await addTask('done', daysAgo(200)))!;
+    await deleteTask(recent, daysAgo(89));
+    await completeTask(done, daysAgo(150));
+    await syncWith(remote);
+
+    // Another device deleted it long ago
+    remote.edit((data) => {
+      const task = data.tasks.find((t) => t.id === old)!;
+      task.deletedAt = task.fieldUpdatedAt.deletedAt = daysAgo(91).toISOString();
+    });
+
+    expect(await syncWith(remote)).toEqual({ pushed: true });
+    const ids = (tasks: { id: string }[]) => tasks.map((t) => t.id).sort();
+    expect(ids(await db.tasks.toArray())).toEqual([recent, done].sort());
+    expect(ids(remote.data().tasks)).toEqual([recent, done].sort());
   });
 
   it('hears about local task writes', async () => {
