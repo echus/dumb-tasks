@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="How Dumb Tasks handles your data." />
+    <meta name="theme-color" content="#000000" />
+    <title>Privacy · Dumb Tasks</title>
+    <script>
+      // Same saved theme as the app
+      try {
+        const theme = localStorage.getItem('theme');
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+    <style>
+      /* A few of the app's colours (src/app.css); dark unless the system or the switch says light */
+      :root {
+        --bg: #000000;
+        --text: #e3e4e6;
+        --muted: #888b92;
+        --rule: rgb(255 255 255 / 0.14);
+        color-scheme: dark;
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme='dark']) {
+          --bg: whitesmoke;
+          --text: #1b1c1f;
+          --muted: #5f6269;
+          --rule: rgb(0 0 0 / 0.1);
+          color-scheme: light;
+        }
+      }
+
+      :root[data-theme='light'] {
+        --bg: whitesmoke;
+        --text: #1b1c1f;
+        --muted: #5f6269;
+        --rule: rgb(0 0 0 / 0.1);
+        color-scheme: light;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.55 'Inter', system-ui, sans-serif;
+      }
+
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        margin: 32px 0 8px;
+        padding-top: 24px;
+        border-top: 1px solid var(--rule);
+        font-size: 1.05rem;
+      }
+
+      .updated,
+      .back {
+        color: var(--muted);
+        font-size: 0.9em;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="back"><a href="/">← Dumb Tasks</a></p>
+      <h1>Privacy</h1>
+      <p class="updated">Last updated 28 October 2026</p>
+
+      <p>
+        Dumb Tasks is a local-first,
+        <a href="https://github.com/echus/dumb-tasks">open source</a> task list, with optional
+        sync to your own Google Drive. If
+        you don't turn on sync, your tasks stay entirely on your device. Either way, Dumb Tasks
+        can't see them. There's no Dumb Tasks account, no ads and no analytics.
+      </p>
+
+      <h2>What stays on your device</h2>
+      <ul>
+        <li>Your tasks, and the app's settings, are stored in your browser's storage on this
+          device.</li>
+        <li>Text you share into the app from another Android app becomes a task here, and goes
+          nowhere else.</li>
+        <li>Backups you save are files on your device; restoring one reads it on your device.</li>
+      </ul>
+
+      <h2>Google Drive sync (optional)</h2>
+      <p>
+        If you connect Google Drive, the app copies your tasks to a single file in a hidden
+        folder in your own Drive, and reads it back to keep your devices in step. It
+        asks Google only for access to that hidden folder (the <code>drive.appdata</code>
+        permission), so it can't see, change or list any of your other Drive files. Your tasks
+        travel between your device and Google directly, over an encrypted connection.
+      </p>
+      <p>
+        The app also reads your Google account's email address, only to show you which account
+        is connected. It's kept on your device.
+      </p>
+      <p>
+        To keep you signed in, the app's website handles your Google sign-in token. The token is
+        kept in a cookie on your device, not stored on any server, and your tasks never pass
+        through the website.
+      </p>
+      <p>
+        Dumb Tasks' use and transfer to any other app of information received from Google APIs
+        will adhere to the
+        <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API
+        Services User Data Policy</a>, including the Limited Use requirements. Data from Google
+        is used only to sync your tasks: it isn't sold, used for ads, or shared with anyone.
+      </p>
+
+      <h2>Hosting</h2>
+      <p>
+        The app is served by Cloudflare. Like any web host, Cloudflare handles your IP address
+        and basic request details to deliver the app and protect it from abuse. See
+        <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's privacy policy</a>.
+        When you open the sync menu, the app loads Google's sign-in script from Google, under
+        <a href="https://policies.google.com/privacy">Google's privacy policy</a>.
+      </p>
+
+      <h2>Deleting your data</h2>
+      <ul>
+        <li><strong>Stop syncing on a device:</strong> open the sync menu and choose Disconnect.
+          This signs that device out; your tasks stay on it and in Drive.</li>
+        <li><strong>Remove the app's access to Google:</strong> go to
+          <a href="https://myaccount.google.com/connections">myaccount.google.com/connections</a>
+          and remove Dumb Tasks. Every device stops syncing.</li>
+        <li><strong>Delete the synced copy:</strong> in Google Drive on the web, open Settings →
+          Manage apps, find Dumb Tasks, and choose Options → Delete hidden app data.</li>
+        <li><strong>Delete tasks on a device:</strong> uninstall the app, or clear its site data
+          in your browser.</li>
+      </ul>
+
+      <h2>Changes and contact</h2>
+      <p>
+        If this policy changes, the date at the top will change with it.
+        Dumb Tasks is made by <a href="https://echus.co">Varvara Efremova</a>. Questions:
+        <a href="mailto:varvara@echus.co">varvara@echus.co</a>.
+      </p>
+    </main>
+  </body>
+</html>

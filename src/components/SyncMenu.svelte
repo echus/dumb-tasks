@@ -122,6 +122,8 @@
           <p class="result">{backupMessage}</p>
         {/if}
       </section>
+
+      <a class="privacy" href="/privacy.html">Privacy</a>
     </div>
   {/if}
 </div>
@@ -257,5 +259,18 @@
   .action:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  /* Small print under the sections, where Play and Google expect a privacy link */
+  .privacy {
+    display: block;
+    padding: 10px 16px;
+    border-top: 1px solid var(--glow-ring);
+    color: var(--muted);
+    font-size: 0.8em;
+  }
+
+  .privacy:hover {
+    color: var(--text);
   }
 </style>
