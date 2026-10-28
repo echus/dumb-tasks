@@ -1,51 +1,34 @@
 # Dumb Tasks
 
-A deliberately simple, local-first task list. Brain-dump one-line tasks, then sort them into
-**Today**, **Week**, **Month** or **Later**. See [SPEC.md](SPEC.md) for the full design.
+A really simple, local-first, open source task list with optional sync to your own Google Drive.
 
-Everything is stored in your browser (IndexedDB). There's no account, and no server holds your
-tasks. Optionally, tasks sync between devices through a hidden folder in your Google Drive.
+Live at [dumbtasks.app](https://dumbtasks.app).
 
 ## Development
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173, with the sign-in Worker
-npm test         # unit tests (Vitest)
+npm test
 npm run check    # type-check
-npm run build    # production build in dist/
+npm run build
 ```
+
+The service worker only runs in production builds (`npm run build && npm run preview`).
 
 ### Google Drive sync
 
-Sync needs a Google OAuth client ID and secret; without them the app works as before, with
-sync shown as not set up. The secret stays in the sign-in Worker (`worker/index.ts`), which
-swaps Google's sign-in for a refresh token so people stay signed in.
-
-1. In [Google Cloud Console](https://console.cloud.google.com/), create a project and enable
-   the **Google Drive API**.
-2. Set up the OAuth consent screen (External; add yourself as a test user) with the
-   `.../auth/drive.appdata` scope.
-3. Create an **OAuth client ID** of type *Web application*. Add `http://localhost:5173`, and
-   any origin you deploy to, under *Authorized JavaScript origins*. No redirect URIs needed.
-4. Copy `.env.example` to `.env.local` and set `VITE_GOOGLE_CLIENT_ID`.
-5. Copy `.dev.vars.example` to `.dev.vars` and set `GOOGLE_CLIENT_SECRET` (from the same
-   OAuth client).
-
-While the consent screen is in *Testing*, Google ends sign-ins after 7 days. Publishing it
-(*In production*) removes that limit.
+Optional; without credentials the app runs with sync shown as not set up. Create a Google
+Cloud OAuth client (*Web application*) with the Drive API enabled and the `drive.appdata`
+scope, and add your origins to its JavaScript origins. Then set `VITE_GOOGLE_CLIENT_ID` in
+`.env.local` and `GOOGLE_CLIENT_SECRET` in `.dev.vars` (see the `.example` files). The secret
+stays in the sign-in Worker (`worker/index.ts`), which keeps people signed in.
 
 ### Deploying
 
-The app is static files plus the small sign-in Worker, deployed together to Cloudflare
-(`wrangler.jsonc`). In Cloudflare: Workers & Pages → Create → Import a repository, build
-command `npm run build`, `VITE_GOOGLE_CLIENT_ID` as a **build** variable, and
-`GOOGLE_CLIENT_SECRET` as a **secret** under Settings → Variables and Secrets. Add the
-Worker's address (or custom domain) to the OAuth client's Authorized JavaScript origins.
-Every push to `main` deploys.
-
-The service worker only runs in production builds; use `npm run build && npm run preview`
-to test offline behaviour.
+A Cloudflare Worker serves the app and the sign-in helper (`wrangler.jsonc`); every push to
+`main` deploys via Workers Builds. Set `VITE_GOOGLE_CLIENT_ID` as a build variable and
+`GOOGLE_CLIENT_SECRET` as a secret.
 
 ## Layout
 
@@ -69,9 +52,5 @@ to test offline behaviour.
 
 ## License
 
-Copyright © 2026 Varvara Efremova. Licensed under the [GNU Affero General Public License
-v3.0](LICENSE): you can use, change and share the code, but if you publish or host a changed
-version, its source must be available under the same license.
-
-The name "Dumb Tasks" and the app icon aren't covered by the license; please use your own for
-a fork.
+Copyright © 2026 Varvara Efremova, under the [AGPL-3.0](LICENSE). The name "Dumb Tasks" and
+the app icon aren't covered by the license; please use your own for a fork.
