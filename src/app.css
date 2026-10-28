@@ -22,15 +22,15 @@
   /* Ink: the accent is the text colour itself, so the emoji circles are the only colour */
   --accent: var(--text);
   --on-accent: #121314;
-  /* Deadline badges run green (plenty of time) → yellow (this week) → red (due/overdue).
-     They're outlines; --due-ink-mix is how much of the colour (vs black) the outline and text
-     use: all of it on the dark lists, darker on white so it stays readable. */
+  /* Deadline badges shade from green (plenty of time) through yellow to red (due/overdue).
+     They're outlines; the -ink colours are what the outline and text use: the colours
+     themselves on the dark lists, darker on white so they stay readable. */
   --due-later: #39ff14;
   --due-near: #ffd000;
   --due-soon: #ff2d55;
-  --due-ink-mix: 100%;
-  --due-soon-ink-mix: 100%;
+  --due-later-ink: var(--due-later);
   --due-near-ink: var(--due-near);
+  --due-soon-ink: var(--due-soon);
 
   /* A faint light edge and haze around the panels */
   --glow-ring: rgb(255 255 255 / 0.14);
@@ -70,9 +70,9 @@
     --on-accent: #ffffff;
     /* Red needs less darkening than green to read on white; darkened yellow turns olive,
        so on white it's amber instead */
-    --due-ink-mix: 70%;
-    --due-soon-ink-mix: 92%;
+    --due-later-ink: color-mix(in srgb, var(--due-later) 70%, black);
     --due-near-ink: #d69e00;
+    --due-soon-ink: color-mix(in srgb, var(--due-soon) 92%, black);
     --glow-ring: rgb(0 0 0 / 0.1);
     --glow: transparent; /* no shadow on white: the edge is enough */
     --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
@@ -92,9 +92,9 @@
   --muted: #5f6269;
   --border-strong: #a9abb1;
   --on-accent: #ffffff;
-  --due-ink-mix: 70%;
-  --due-soon-ink-mix: 92%;
+  --due-later-ink: color-mix(in srgb, var(--due-later) 70%, black);
   --due-near-ink: #d69e00;
+  --due-soon-ink: color-mix(in srgb, var(--due-soon) 92%, black);
   --glow-ring: rgb(0 0 0 / 0.1);
   --glow: transparent; /* no shadow on white: the edge is enough */
   --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));

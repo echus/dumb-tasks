@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysUntil, describeDeadline, parseDeadline } from './deadline';
+import { daysUntil, deadlineHeat, describeDeadline, parseDeadline } from './deadline';
 
 // Monday 26 October 2026
 const ref = new Date(2026, 9, 26, 10, 0);
@@ -64,5 +64,21 @@ describe('describeDeadline', () => {
     ['2026-10-24', '2 days overdue'],
   ])('%s → %s', (deadline, label) => {
     expect(describeDeadline(deadline, ref)).toBe(label);
+  });
+});
+
+describe('deadlineHeat', () => {
+  it.each([
+    ['2026-10-24', 1],
+    ['2026-10-26', 1],
+    ['2026-10-31', 0.5],
+    ['2026-11-05', 0],
+    ['2026-12-25', 0],
+  ])('%s → %s', (deadline, heat) => {
+    expect(deadlineHeat(deadline, ref)).toBe(heat);
+  });
+
+  it('cools a little each day', () => {
+    expect(deadlineHeat('2026-10-28', ref)).toBeGreaterThan(deadlineHeat('2026-10-29', ref));
   });
 });

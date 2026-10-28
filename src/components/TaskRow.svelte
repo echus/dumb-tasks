@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { deadlineUrgency, describeDeadline } from '../lib/deadline';
+  import { daysUntil, deadlineHeat, describeDeadline } from '../lib/deadline';
   import { PLAIN_ICON } from '../lib/task-icons';
   import * as ui from '../lib/ui-icons';
   import { completeTask, deleteTask, dismissDeadline, editText } from '../lib/tasks';
@@ -172,7 +172,11 @@
          and long text wraps before them. -->
     <span class="end">
       {#if task.deadline}
-        <span class="badge" data-urgency={deadlineUrgency(task.deadline.date, clock.now)}>
+        <span
+          class="badge"
+          class:overdue={daysUntil(task.deadline.date, clock.now) < 0}
+          style:--heat={deadlineHeat(task.deadline.date, clock.now)}
+        >
           {describeDeadline(task.deadline.date, clock.now)}
         </span>
       {/if}
@@ -304,12 +308,20 @@
     text-underline-offset: 4px;
   }
 
-  /* Traffic lights: green with plenty of time, yellow this week, red when it's nearly
-     due. Upcoming ones are just an outline, so they don't compete with the icon circles;
+  /* Shades from green with plenty of time, through yellow, to red when it's due: --heat
+     (0 → 1) runs green → yellow over its first half and yellow → red over its second.
+     Upcoming ones are just an outline, so they don't compete with the icon circles;
      overdue is filled dark red with light text, the one that should catch the eye. */
   .badge {
-    --due: var(--due-later);
-    --ink: color-mix(in srgb, var(--due) var(--due-ink-mix), black);
+    --ink: color-mix(
+      in oklch,
+      var(--due-soon-ink) clamp(0%, (var(--heat) * 2 - 1) * 100%, 100%),
+      color-mix(
+        in oklch,
+        var(--due-near-ink) clamp(0%, var(--heat) * 200%, 100%),
+        var(--due-later-ink)
+      )
+    );
     padding: 0 8px;
     border: 1px solid var(--ink);
     border-radius: 999px; /* a pill, round like the icon circles */
@@ -321,16 +333,7 @@
     color: var(--ink);
   }
 
-  .badge[data-urgency='near'] {
-    --ink: var(--due-near-ink);
-  }
-
-  .badge[data-urgency='soon'] {
-    --due: var(--due-soon);
-    --due-ink-mix: var(--due-soon-ink-mix);
-  }
-
-  .badge[data-urgency='overdue'] {
+  .badge.overdue {
     border-color: transparent;
     background: color-mix(in srgb, var(--due-soon) 85%, black);
     color: #ffffff;

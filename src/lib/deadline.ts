@@ -97,12 +97,11 @@ export function describeDeadline(deadline: string, today: Date = new Date()): st
   return `${-n} days overdue`;
 }
 
-type Urgency = 'overdue' | 'soon' | 'near' | 'later';
+// Days out at which a badge has cooled all the way to green; it's yellow halfway there.
+const HEAT_HORIZON = 10;
 
-export function deadlineUrgency(deadline: string, today: Date = new Date()): Urgency {
+/** How close a deadline is: 1 when due today (or overdue), easing to 0 at HEAT_HORIZON days. */
+export function deadlineHeat(deadline: string, today: Date = new Date()): number {
   const n = daysUntil(deadline, today);
-  if (n < 0) return 'overdue';
-  if (n <= 2) return 'soon';
-  if (n <= 7) return 'near';
-  return 'later';
+  return Math.min(1, Math.max(0, 1 - n / HEAT_HORIZON));
 }

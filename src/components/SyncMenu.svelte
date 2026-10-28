@@ -240,7 +240,7 @@
   }
 
   .error {
-    color: color-mix(in srgb, var(--due-soon) var(--due-soon-ink-mix), black);
+    color: var(--due-soon-ink);
   }
 
   .actions {
