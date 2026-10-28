@@ -35,6 +35,12 @@
     autocomplete="off"
     enterkeyhint="done"
   />
+  {#if text.trim()}
+    <!-- The Enter key's arrow, saying how to add it; also a button for touch screens -->
+    <button class="enter" type="submit" aria-label="Add task" title="Add (Enter)">
+      <Icon svg={ui.enter} size={16} />
+    </button>
+  {/if}
 </form>
 
 <style>
@@ -79,5 +85,21 @@
   input::placeholder {
     color: var(--icon-quiet);
     opacity: 1;
+  }
+
+  .enter {
+    flex: none;
+    display: grid;
+    place-items: center;
+    padding: 6px;
+    margin-right: -6px; /* the arrow lines up with the badges below; the padding is tap room */
+    border: none;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .enter:hover {
+    color: var(--text);
   }
 </style>
