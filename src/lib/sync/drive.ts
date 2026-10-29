@@ -5,11 +5,11 @@ import type { RemoteFile, SyncBackend } from './engine';
 const API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
 const PREFIX = 'device-';
-// The one file every device shared before each had its own. Read like another device's
-// until it's stale, as devices still on an older version keep writing it till they update.
+// The one file every device shared before each had its own. Ignored, and deleted with the
+// stale files: a device still on that version recreates it until it updates.
 const LEGACY = 'dumb-tasks.json';
 
-const isDataFile = (name: string) => name.startsWith(PREFIX) || name === LEGACY;
+const isDataFile = (name: string) => name.startsWith(PREFIX);
 
 /** The token has expired or been revoked: the user needs to sign in again. */
 export class DriveAuthError extends Error {
@@ -73,7 +73,7 @@ export class DriveBackend implements SyncBackend {
     return (await call(this.token, url)).json();
   }
 
-  /** Every data file, this device's included. */
+  /** Every file in the app's folder. */
   private async list(): Promise<DriveFile[]> {
     const params = new URLSearchParams({
       spaces: 'appDataFolder',
@@ -82,7 +82,12 @@ export class DriveBackend implements SyncBackend {
       pageSize: '1000',
     });
     const { files } = await this.get<{ files: DriveFile[] }>(`${API}/files?${params}`);
-    return files.filter((f) => isDataFile(f.name));
+    return files;
+  }
+
+  /** Every device's data file, this one's included. */
+  private async listData(): Promise<DriveFile[]> {
+    return (await this.list()).filter((f) => isDataFile(f.name));
   }
 
   /** Other devices' files changed since `cursor`, and the cursor after them. */
@@ -139,13 +144,13 @@ export class DriveBackend implements SyncBackend {
     const { startPageToken } = await this.get<{ startPageToken: string }>(
       `${API}/changes/startPageToken?fields=startPageToken`,
     );
-    const others = (await this.list()).filter((f) => f.name !== this.name);
+    const others = (await this.listData()).filter((f) => f.name !== this.name);
     return { files: await this.download(others), cursor: startPageToken };
   }
 
   async push(json: string) {
     const body = new Blob([json], { type: 'application/json' });
-    this.fileId ??= (await this.list()).find((f) => f.name === this.name)?.id ?? null;
+    this.fileId ??= (await this.listData()).find((f) => f.name === this.name)?.id ?? null;
     if (this.fileId) {
       try {
         await call(this.token, `${UPLOAD}/${this.fileId}?uploadType=media&fields=id`, {
@@ -171,11 +176,13 @@ export class DriveBackend implements SyncBackend {
   // Ages are measured back from the newest file, by Drive's clock, so a device whose own
   // clock is far ahead can't sweep away files still in use.
   async removeStale(maxAge: number) {
-    const files = await this.list();
+    const all = await this.list();
+    const files = all.filter((f) => isDataFile(f.name));
     const newest = Math.max(...files.map((f) => Date.parse(f.modifiedTime)));
-    const stale = files.filter(
-      (f) => f.name !== this.name && Date.parse(f.modifiedTime) < newest - maxAge,
-    );
+    const stale = [
+      ...files.filter((f) => f.name !== this.name && Date.parse(f.modifiedTime) < newest - maxAge),
+      ...all.filter((f) => f.name === LEGACY),
+    ];
     await Promise.all(
       stale.map((f) =>
         call(this.token, `${API}/files/${f.id}`, { method: 'DELETE' }).catch((e) => {

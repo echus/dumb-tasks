@@ -197,9 +197,8 @@ rewrites this device's file if that left it out of date.
   scope), never full Drive access. The id is made once per install and kept through
   reconnects. Drive's Changes API says which files changed since the last sync, so a sync with
   nothing to do is one small request. The file `dumb-tasks.json`, which every device shared
-  before, is read like another device's file until it goes stale; devices still on an older
-  version keep writing it, so their changes still arrive, but they don't see the newer
-  devices' changes until they update. The app folder belongs to the OAuth client: check the
+  before, is ignored and deleted with the stale files; a device still on that version
+  recreates it until it updates, and its changes reach the others only once it has. The app folder belongs to the OAuth client: check the
   MCP server can share it before milestone 4 (it would be one more device, with its own file).
 - **Sign-in:** Google Identity Services' popup gives a one-time code; a small Worker
   (`worker/index.ts`, beside the static files) swaps it for a refresh token, which needs the
