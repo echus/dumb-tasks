@@ -138,9 +138,10 @@ export async function reconnect() {
   sync.error = '';
   try {
     const token = await signIn(fullSignIn ? undefined : settings.email);
+    if (!settings) return; // disconnected meanwhile
     // The full sign-in may have picked another account: sync it as if newly connected
     const email = fullSignIn ? await fetchEmail(token.value) : settings.email;
-    if (!settings) return; // disconnected meanwhile
+    if (!settings) return;
     if (email !== settings.email) settings = { email, token, lastSyncedAt: null };
     else settings.token = token;
     fullSignIn = false;

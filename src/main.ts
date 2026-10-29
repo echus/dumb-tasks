@@ -9,7 +9,7 @@ import { startSync } from './lib/sync/drive-sync.svelte';
 import { addDemoTasks } from './lib/tasks/demo-tasks';
 import { refreshColoursOnce } from './lib/tasks/recolour';
 
-addDemoTasks().then(handleShareTarget); // so a task shared on a first visit doesn't stop the demo
+addDemoTasks().finally(handleShareTarget); // so a task shared on a first visit doesn't stop the demo
 dropOldTasks(); // sync does this too, but not every device syncs
 requestPersistentStorage();
 startSync().finally(refreshColoursOnce); // after the first sync, so it sees every device's tasks

@@ -26,7 +26,7 @@ export async function activeIn(bucket: Bucket): Promise<Task[]> {
  * from a device whose clock is ahead. Either way an edit made after seeing another wins.
  */
 function editStamp(task: Task, now: Date): string {
-  const last = Math.max(...Object.values(task.fieldUpdatedAt).map(Date.parse));
+  const last = Math.max(...Object.values(task.fieldUpdatedAt).map(Date.parse).filter(Number.isFinite));
   return new Date(Math.max(now.getTime(), last + 1)).toISOString();
 }
 
