@@ -91,7 +91,7 @@
       <p>
         Dumb Tasks is a local-first,
         <a href="https://github.com/echus/dumb-tasks">open source</a> task list, with optional
-        sync to your own Google Drive. If
+        sync to your Google Drive or WebDAV server. If
         you don't turn on sync, your tasks stay entirely on your device. Either way, Dumb Tasks
         can't see them. There's no Dumb Tasks account, no ads, and no analytics or
         tracking.
@@ -131,6 +131,19 @@
         is used only to sync your tasks: it isn't sold, used for ads, or shared with anyone.
       </p>
 
+      <h2>WebDAV sync (optional)</h2>
+      <p>
+        If you connect your WebDAV server, such as Nextcloud, the app keeps a file of your
+        tasks for each device in a <code>dumb-tasks</code> folder there, and reads the other
+        devices' files to keep them in step. Your tasks travel between your device and your
+        server directly, and never pass through the app's website.
+      </p>
+      <p>
+        The server's address, your username and your password are kept in the app's storage on
+        your device, unencrypted, so that it can keep syncing. Use an app password if your server
+        offers them: you can revoke one without changing your main password.
+      </p>
+
       <h2>Hosting</h2>
       <p>
         The app is served by Cloudflare. Like any web host, Cloudflare handles your IP address
@@ -145,12 +158,13 @@
       <h2>Deleting your data</h2>
       <ul>
         <li><strong>Stop syncing on a device:</strong> open the sync menu and choose Disconnect.
-          This signs that device out; your tasks stay on it and in Drive.</li>
+          This signs that device out; your tasks stay on it, and in Drive or on your server.</li>
         <li><strong>Remove the app's access to Google:</strong> go to
           <a href="https://myaccount.google.com/connections">myaccount.google.com/connections</a>
           and remove Dumb Tasks. Every device stops syncing.</li>
         <li><strong>Delete the synced copy:</strong> in Google Drive on the web, open Settings →
-          Manage apps, find Dumb Tasks, and choose Options → Delete hidden app data.</li>
+          Manage apps, find Dumb Tasks, and choose Options → Delete hidden app data. On a WebDAV
+          server, delete the <code>dumb-tasks</code> folder.</li>
         <li><strong>Delete tasks on a device:</strong> uninstall the app, or clear its site data
           in your browser.</li>
       </ul>

@@ -28,6 +28,9 @@ export interface SyncBackend {
   removeStale(maxAge: number): Promise<{ hasOwnFile: boolean }>;
 }
 
+/** The backend no longer accepts this device's sign-in: the user needs to sign in again. */
+export class SignedOutError extends Error {}
+
 export interface RemoteFile {
   json: string;
   modifiedAt: number; // ms, by the backend's clock

@@ -5,9 +5,12 @@ import { execSync } from 'node:child_process'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-/** The commit being built (Workers Builds says which), shown so you can tell what a device runs. */
+/**
+ * The commit being built (Workers Builds says which, or the Docker build), shown so you can
+ * tell what a device runs.
+ */
 function commit(): string {
-  const sha = process.env.WORKERS_CI_COMMIT_SHA
+  const sha = process.env.WORKERS_CI_COMMIT_SHA || process.env.COMMIT_SHA
   if (sha) return sha.slice(0, 7)
   try {
     return execSync('git rev-parse --short HEAD').toString().trim()
@@ -55,6 +58,8 @@ export default defineConfig({
   // Not the copies of the app in other branches' worktrees
   test: {
     exclude: ['**/node_modules/**', '.claude/**'],
+    // As a build without Google Drive, whatever .env.local says
+    env: { VITE_GOOGLE_CLIENT_ID: '' },
   },
   // Lets `npm run preview` be reached through a Cloudflare quick tunnel for phone testing
   preview: {

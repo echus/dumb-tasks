@@ -3,24 +3,57 @@
   import { exportData, importData, parseDataFile } from '../lib/sync/data-file';
   import { loadGoogle } from '../lib/sync/google-auth';
   import { localChanged } from '../lib/sync/local-changes';
-  import { connect, disconnect, reconnect, sync, syncNow } from '../lib/sync/drive-sync.svelte';
+  import {
+    connectDrive,
+    connectWebDav,
+    disconnect,
+    reconnectDrive,
+    reconnectWebDav,
+    sync,
+    syncNow,
+  } from '../lib/sync/sync.svelte';
   import * as ui from '../lib/ui/icons';
+
+  const WEBDAV_HELP = 'https://github.com/echus/dumb-tasks#webdav-sync';
 
   let open = $state(false);
   let menu: HTMLElement;
   let fileInput = $state<HTMLInputElement>();
   let backupMessage = $state('');
+  // The WebDAV form: shown on request, as most people will want Drive
+  let webdavForm = $state(false);
+  let webdav = $state({ url: '', username: '', password: '' });
+  let checking = $state(false); // trying the address and sign-in before saving them
+  // The service last tried, so a failed connect shows its error in that service's section
+  let tried = $state<'drive' | 'webdav' | null>(null);
+  const errorIn = $derived(sync.service ?? tried);
 
-  const attention = $derived(sync.connected && (sync.needsSignIn || Boolean(sync.error)));
+  const connected = $derived(sync.service !== null);
+  const service = $derived(sync.service === 'webdav' ? 'WebDAV' : 'Google Drive');
+  const attention = $derived(connected && (sync.needsSignIn || Boolean(sync.error)));
   const label = $derived(
-    !sync.connected ? 'Sync and backup' : attention ? 'Sync needs attention' : 'Synced with Google Drive',
+    !connected ? 'Sync and backup' : attention ? 'Sync needs attention' : `Synced with ${service}`,
   );
 
   function toggle() {
     open = !open;
     backupMessage = '';
+    webdavForm = false;
     // Google's script has to be loaded before the click that opens its popup.
-    if (open && sync.available) loadGoogle().catch(() => {});
+    if (open && sync.driveAvailable && sync.service !== 'webdav') loadGoogle().catch(() => {});
+  }
+
+  async function submitWebDav(e: SubmitEvent) {
+    e.preventDefault();
+    tried = 'webdav';
+    checking = true;
+    if (sync.needsSignIn) await reconnectWebDav(webdav.password);
+    else await connectWebDav(webdav.url, webdav.username, webdav.password);
+    checking = false;
+    if (!sync.error) {
+      webdav = { url: '', username: '', password: '' };
+      webdavForm = false;
+    }
   }
 
   function ago(iso: string): string {
@@ -56,7 +89,8 @@
   }
 
   function onwindowclick(e: MouseEvent) {
-    if (open && !menu.contains(e.target as Node)) open = false;
+    // The path as clicked: a button that swaps itself out (Connect WebDAV) has left the menu by now
+    if (open && !e.composedPath().includes(menu)) open = false;
   }
 
   function onkeydown(e: KeyboardEvent) {
@@ -81,43 +115,127 @@
 
   {#if open}
     <div class="panel" role="dialog" aria-label="Sync and backup">
-      <section>
-        <h2><span class="icon"><Icon svg={ui.sync} size={14} /></span>Google Drive sync</h2>
-        {#if !sync.available}
-          <p>Sync isn't set up on this copy of the app.</p>
-        {:else if !sync.connected}
-          <p>Sync your tasks to Google Drive to access them on all your devices.</p>
-          <button class="action" onclick={connect}>Connect Google Drive</button>
-        {:else}
-          <p class="account">{sync.email}</p>
-          {#if sync.needsSignIn}
-            <p>Google signed this device out. Sign in again to keep syncing.</p>
-          {:else if sync.syncing}
-            <p>Syncing…</p>
-          {:else if sync.lastSyncedAt}
-            <p>Synced {ago(sync.lastSyncedAt)}</p>
-          {/if}
-          <div class="actions">
-            {#if sync.needsSignIn}
-              <button class="action" onclick={reconnect}>Sign in again</button>
-            {:else if sync.needsUpdate}
-              <button class="action" onclick={() => location.reload()}>Reload</button>
-            {:else}
-              <button class="action" disabled={sync.syncing} onclick={syncNow}>Sync now</button>
-            {/if}
-            <button class="action" onclick={disconnect}>Disconnect</button>
-          </div>
+      {#snippet status()}
+        <p class="account">{sync.account}</p>
+        {#if sync.needsSignIn && sync.service === 'webdav'}
+          <p>The server turned down the saved password. Enter it again to keep syncing.</p>
+        {:else if sync.needsSignIn}
+          <p>Google signed this device out. Sign in again to keep syncing.</p>
+        {:else if sync.syncing}
+          <p>Syncing…</p>
+        {:else if sync.lastSyncedAt}
+          <p>Synced {ago(sync.lastSyncedAt)}</p>
         {/if}
-        {#if sync.error}
+      {/snippet}
+
+      {#snippet syncButton()}
+        {#if sync.needsUpdate}
+          <button class="action" onclick={() => location.reload()}>Reload</button>
+        {:else}
+          <button class="action" disabled={sync.syncing} onclick={syncNow}>Sync now</button>
+        {/if}
+      {/snippet}
+
+      {#snippet error(service: 'drive' | 'webdav')}
+        {#if sync.error && errorIn === service}
           <p class="error">{sync.error}</p>
         {/if}
+      {/snippet}
+
+      {#if sync.driveAvailable}
+        <section>
+          <h2><span class="icon"><Icon svg={ui.drive} size={14} /></span>Google Drive sync</h2>
+          {#if sync.service === 'drive'}
+            {@render status()}
+            <div class="actions">
+              {#if sync.needsSignIn}
+                <button class="action" onclick={reconnectDrive}>Sign in again</button>
+              {:else}
+                {@render syncButton()}
+              {/if}
+              <button class="action" onclick={disconnect}>Disconnect</button>
+            </div>
+          {:else if sync.service === 'webdav'}
+            <p>Disconnect WebDAV to sync with Google Drive.</p>
+          {:else}
+            <p>Sync your tasks to Google Drive to access them on all your devices.</p>
+            <button
+              class="action"
+              onclick={() => {
+                tried = 'drive';
+                connectDrive();
+              }}>Connect Google Drive</button
+            >
+          {/if}
+          {@render error('drive')}
+        </section>
+      {/if}
+
+      <section>
+        <h2><span class="icon"><Icon svg={ui.server} size={14} /></span>WebDAV sync</h2>
+        {#if sync.service === 'webdav'}
+          {@render status()}
+          {#if sync.needsSignIn}
+            <form onsubmit={submitWebDav}>
+              <label>
+                Password
+                <input type="password" autocomplete="current-password" required bind:value={webdav.password} />
+              </label>
+              <div class="actions">
+                <button class="action" type="submit" disabled={checking}>Sign in again</button>
+                <button class="action" type="button" onclick={disconnect}>Disconnect</button>
+              </div>
+            </form>
+          {:else}
+            <div class="actions">
+              {@render syncButton()}
+              <button class="action" onclick={disconnect}>Disconnect</button>
+            </div>
+          {/if}
+        {:else if sync.service === 'drive'}
+          <p>Disconnect Google Drive to sync with WebDAV.</p>
+        {:else if webdavForm}
+          <form onsubmit={submitWebDav}>
+            <label>
+              Folder address
+              <input type="url" autocomplete="url" placeholder="https://" required bind:value={webdav.url} />
+            </label>
+            <label>
+              Username
+              <input autocomplete="username" autocapitalize="none" spellcheck="false" required bind:value={webdav.username} />
+            </label>
+            <label>
+              Password
+              <input type="password" autocomplete="current-password" required bind:value={webdav.password} />
+            </label>
+            <p>
+              Best an app password. Tasks go in a <span class="nowrap">dumb-tasks</span> folder there, and the server has to
+              allow this app: <a href={WEBDAV_HELP} target="_blank" rel="noopener">how to set it up</a>.
+            </p>
+            <div class="actions">
+              <button class="action" type="submit" disabled={checking}>{checking ? 'Connecting…' : 'Connect'}</button>
+              <button
+                class="action"
+                type="button"
+                onclick={() => {
+                  webdavForm = false;
+                  sync.error = '';
+                }}>Cancel</button
+              >
+            </div>
+          </form>
+        {:else}
+          <p>Sync tasks to your server through WebDAV.</p>
+          <button class="action" onclick={() => (webdavForm = true)}>Connect WebDAV</button>
+        {/if}
+        {@render error('webdav')}
       </section>
 
       <section>
         <h2><span class="icon"><Icon svg={ui.download} size={14} /></span>Backup</h2>
         <div class="actions">
           <button class="action" onclick={download}>Save backup</button>
-          <button class="action" onclick={() => fileInput?.click()}>Restore…</button>
+          <button class="action" onclick={() => fileInput?.click()}>Restore</button>
         </div>
         <input type="file" accept=".json,application/json" hidden bind:this={fileInput} onchange={upload} />
         {#if backupMessage}
@@ -237,6 +355,40 @@
     color: var(--text);
     margin-bottom: 2px;
     overflow-wrap: anywhere;
+  }
+
+  label {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 0.9em;
+  }
+
+  /* Outlined like the buttons. 16px, so phones don't zoom in on focus */
+  input {
+    min-width: 0;
+    padding: 6px 8px;
+    border: none;
+    border-radius: var(--radius);
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    color: var(--text);
+    font: inherit;
+    font-size: 16px;
+  }
+
+  input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  p a {
+    color: inherit;
+  }
+
+  .nowrap {
+    white-space: nowrap;
   }
 
   .error,

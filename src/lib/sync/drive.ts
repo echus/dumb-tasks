@@ -1,4 +1,4 @@
-import type { RemoteFile, SyncBackend } from './engine';
+import { SignedOutError, type RemoteFile, type SyncBackend } from './engine';
 
 // Each device's data file lives in the app's hidden folder in the user's Google Drive.
 
@@ -12,7 +12,7 @@ const LEGACY = 'dumb-tasks.json';
 const isDataFile = (name: string) => name.startsWith(PREFIX);
 
 /** The token has expired or been revoked: the user needs to sign in again. */
-export class DriveAuthError extends Error {
+export class DriveAuthError extends SignedOutError {
   constructor() {
     super('Signed out of Google Drive.');
   }

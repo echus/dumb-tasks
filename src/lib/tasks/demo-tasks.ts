@@ -1,5 +1,6 @@
 import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
+import { CLIENT_ID } from '../sync/google-auth';
 import type { Task } from '../types';
 import { derive } from './tasks';
 
@@ -10,7 +11,12 @@ import { derive } from './tasks';
 const DEMO_AT = '2000-01-01T00:00:00.000Z';
 const DEMO_TASKS: { text: string; icon: string; colour: string }[] = [
   { text: 'Drag me to another list', icon: '👉', colour: 'hsl(260 100% 60%)' },
-  { text: 'Sync me with Google Drive', icon: '🔄', colour: 'hsl(50 100% 52%)' },
+  // Builds without Google Drive (e.g. self-hosted) sync with WebDAV only
+  {
+    text: CLIENT_ID ? 'Sync me with Google Drive' : 'Sync me with WebDAV',
+    icon: '🔄',
+    colour: 'hsl(50 100% 52%)',
+  },
   { text: 'Add some tasks today', icon: '📝', colour: 'hsl(310 100% 60%)' },
   { text: 'Repot plants by end of next month', icon: '🪴', colour: 'hsl(205 100% 55%)' },
 ];
@@ -33,14 +39,15 @@ export function unedited(t: Task): { icon: string; colour: string } | undefined 
 }
 
 /**
- * Once per device, on a first visit (no tasks, Drive not connected). Deadlines are read
+ * Once per device, on a first visit (no tasks, sync not connected). Deadlines are read
  * from today, so they're real dates from then on.
  */
 export async function addDemoTasks(now = new Date()) {
   await db.transaction('rw', db.tasks, db.settings, async () => {
     if (await db.settings.get('demo')) return;
     await db.settings.put({ key: 'demo', value: '1' });
-    if ((await db.tasks.count()) > 0 || (await db.settings.get('drive'))) return;
+    const syncing = (await db.settings.bulkGet(['drive', 'webdav'])).some(Boolean);
+    if ((await db.tasks.count()) > 0 || syncing) return;
 
     let position: string | null = null;
     for (const [i, { text, icon, colour }] of DEMO_TASKS.entries()) {

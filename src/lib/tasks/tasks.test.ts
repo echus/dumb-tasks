@@ -213,7 +213,7 @@ describe('demo tasks', () => {
     await addDemoTasks(t0);
     expect(await texts('today')).toEqual([
       'Drag me to another list',
-      'Sync me with Google Drive',
+      'Sync me with WebDAV',
       'Add some tasks today',
       'Repot plants by end of next month',
     ]);
@@ -249,7 +249,7 @@ describe('demo tasks', () => {
 
   it('keeps their hand-picked icons and colours until the text is edited', async () => {
     await addDemoTasks(t0);
-    const sync = (await db.tasks.toArray()).find((t) => t.text === 'Sync me with Google Drive')!;
+    const sync = (await db.tasks.toArray()).find((t) => t.text === 'Sync me with WebDAV')!;
     expect(sync.icon).toBe('🔄');
     await refreshColours(later(1));
     expect(await db.tasks.get(sync.id)).toEqual(sync);
