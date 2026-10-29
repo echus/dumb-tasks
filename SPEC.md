@@ -30,7 +30,8 @@ are not the primary audience and don't drive design decisions.
 | Month   | Needs doing on some timeline, not urgent. |
 | Later   | Ideas and someday stuff (stored as `icebox`). |
 
-Completed tasks leave their bucket but are kept (with completion time) as history.
+Completed tasks leave their bucket but are kept (with completion time) as history for 90
+days, then dropped like deleted ones (see Tombstone purge).
 
 ## User interactions
 
@@ -209,8 +210,9 @@ Optional and pluggable. The app pulls the data file, merges, and pushes back.
 - **Push only when needed:** after merging, push only if the remote file lacks something.
 - **When:** on app open, when the app comes into view or is left, 3 s after edits, every
   5 minutes, and on coming back online.
-- **Tombstone purge:** after a long retention window (e.g. 90 days). A device offline longer
-  than that could resurrect deleted tasks — acceptable, but document it.
+- **Tombstone purge:** deleted and completed tasks go for good 90 days after the delete or
+  completion. A device offline longer than that could resurrect them — acceptable, but
+  document it.
 - **Google verification** is required before public release of Drive sync.
 
 ## AI integration — MCP connector

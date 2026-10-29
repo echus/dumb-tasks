@@ -4,9 +4,9 @@ import { SCHEMA_VERSION, type DataFile, type Task } from './types';
 
 const EPOCH = new Date(0).toISOString();
 
-// Deleted tasks stay as tombstones so the deletion reaches every device, then go for good:
+// Deleted and completed tasks stay so the change reaches every device, then go for good:
 // by then every device should have synced. One offline for longer brings the task back.
-const KEEP_DELETED_DAYS = 90;
+const KEEP_DAYS = 90;
 
 /** Everything that would sync, including completed tasks and tombstones. */
 export async function exportData(now = new Date()): Promise<DataFile> {
@@ -37,15 +37,17 @@ export function parseDataFile(json: string): DataFile {
   };
 }
 
-/** Removes tombstones older than KEEP_DELETED_DAYS. */
-export async function dropOldDeleted(now = new Date()) {
-  const cutoff = new Date(now.getTime() - KEEP_DELETED_DAYS * 86_400_000).toISOString();
-  await db.tasks.filter((t) => t.deletedAt !== null && t.deletedAt < cutoff).delete();
+/** Removes tasks deleted or completed more than KEEP_DAYS ago. */
+export async function dropOldTasks(now = new Date()) {
+  const cutoff = new Date(now.getTime() - KEEP_DAYS * 86_400_000).toISOString();
+  const old = (at: string | null) => at !== null && at < cutoff;
+  await db.tasks.filter((t) => old(t.deletedAt) || old(t.completedAt)).delete();
 }
 
 /**
  * Merges a backup into local data the same way sync will: newest edit per field wins. Then
- * drops old tombstones, from either side, so sync pushes a file without them.
+ * drops old deleted and completed tasks, from either side, so sync pushes a file without
+ * them.
  */
 export async function importData(
   data: DataFile,
@@ -69,7 +71,7 @@ export async function importData(
       if (JSON.stringify(result) !== JSON.stringify(local)) out.push(result);
     }
     await db.tasks.bulkPut(out);
-    await dropOldDeleted(now);
+    await dropOldTasks(now);
 
     const memory = await db.meta.get('memory');
     if (!memory || data.memoryUpdatedAt > memory.updatedAt) {

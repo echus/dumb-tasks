@@ -124,13 +124,15 @@ describe('sync', () => {
     expect(remote.data().tasks.map((t) => t.text).sort()).toEqual(['buy milk', 'call mum', 'pay rent']);
   });
 
-  it('drops tasks deleted over 90 days ago, here and in the remote file', async () => {
+  it('drops tasks deleted or completed over 90 days ago, here and in the remote file', async () => {
     const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
     const old = (await addTask('old', daysAgo(200)))!;
     const recent = (await addTask('recent', daysAgo(200)))!;
     const done = (await addTask('done', daysAgo(200)))!;
+    const longDone = (await addTask('long done', daysAgo(200)))!;
     await deleteTask(recent, daysAgo(89));
-    await completeTask(done, daysAgo(150));
+    await completeTask(done, daysAgo(89));
+    await completeTask(longDone, daysAgo(150));
     await syncWith(remote);
 
     // Another device deleted it long ago
