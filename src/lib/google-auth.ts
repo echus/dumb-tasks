@@ -110,14 +110,17 @@ export async function signOut(): Promise<void> {
 }
 
 async function callWorker(path: string, body?: object): Promise<AccessToken | null> {
+  const unreachable = new Error("Couldn't reach Google. Will try again.");
   const res = await fetch(path, {
     method: 'POST',
     headers: body && { 'Content-Type': 'application/json' },
     body: body && JSON.stringify(body),
+  }).catch(() => {
+    throw unreachable;
   });
   if (res.status === 400 || res.status === 401) return null;
   if (res.status === 501) throw new Error("Sync isn't fully set up on the server.");
-  if (!res.ok) throw new Error("Couldn't reach Google. Will try again.");
+  if (!res.ok) throw unreachable;
   const { value, expiresIn, remembered } = await res.json();
   return { value, expiresAt: Date.now() + expiresIn * 1000, remembered };
 }

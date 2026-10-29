@@ -33,7 +33,7 @@ function stableStringify(value: unknown): string {
 }
 
 /** What a data file holds, ignoring when it was written and the order of its tasks. */
-export function contentKey(data: DataFile): string {
+function contentKey(data: DataFile): string {
   const tasks = [...data.tasks].sort((a, b) => a.id.localeCompare(b.id));
   return stableStringify({ tasks, memory: data.memory, memoryUpdatedAt: data.memoryUpdatedAt });
 }

@@ -49,39 +49,50 @@ function show() {
   sync.lastSyncedAt = settings?.lastSyncedAt ?? null;
 }
 
+/** Shows Sign in again, with Google's script loading so its popup can open from the click. */
+function askToSignIn() {
+  sync.needsSignIn = true;
+  loadGoogle().catch(() => {});
+}
+
 /** The saved token, or a new one from the Worker once it runs out. Null: sign in again. */
-async function freshToken(): Promise<string | null> {
-  if (settings!.token.expiresAt - EXPIRY_MARGIN > Date.now()) return settings!.token.value;
+async function freshToken(current: DriveSettings): Promise<string | null> {
+  if (current.token.expiresAt - EXPIRY_MARGIN > Date.now()) return current.token.value;
   const token = await refreshToken();
-  if (!settings) return null; // disconnected meanwhile
-  sync.needsSignIn = !token;
-  if (!token) return null;
-  settings.token = token;
+  if (settings !== current) return null; // disconnected meanwhile
+  if (!token) {
+    askToSignIn();
+    return null;
+  }
+  sync.needsSignIn = false;
+  current.token = token;
   await save();
   return token.value;
 }
 
 async function runOnce(retry = true): Promise<void> {
-  if (!settings) return;
+  const current = settings;
+  if (!current) return;
   sync.syncing = true;
   try {
-    const token = await freshToken();
+    const token = await freshToken(current);
     if (!token) return;
     // First sync on this device: an account with data replaces the demo tasks; a new one
     // gets them.
-    const replace = settings.lastSyncedAt === null ? isUneditedDemo : undefined;
+    const replace = current.lastSyncedAt === null ? isUneditedDemo : undefined;
     await syncWith(new DriveBackend(token), { replace });
-    settings.lastSyncedAt = new Date().toISOString();
+    if (settings !== current) return; // disconnected meanwhile
+    current.lastSyncedAt = new Date().toISOString();
     await save();
     sync.error = '';
   } catch (e) {
+    if (settings !== current) return;
     // Google can end a token early; one fresh token, then ask to sign in.
-    if (e instanceof DriveAuthError && retry && settings) {
-      settings.token.expiresAt = 0;
+    if (e instanceof DriveAuthError && retry) {
+      current.token.expiresAt = 0;
       return await runOnce(false);
     }
-    if (e instanceof DriveAuthError) sync.needsSignIn = true;
-    else if (e instanceof TypeError) sync.error = "Couldn't reach Google Drive. Will try again.";
+    if (e instanceof DriveAuthError) askToSignIn();
     else sync.error = (e as Error).message;
   } finally {
     sync.syncing = false;
@@ -125,11 +136,16 @@ export async function reconnect() {
   if (!settings) return;
   sync.error = '';
   try {
-    settings.token = await signIn(fullSignIn ? undefined : settings.email);
-    if (fullSignIn) settings.email = await fetchEmail(settings.token.value); // may have picked another account
+    const token = await signIn(fullSignIn ? undefined : settings.email);
+    // The full sign-in may have picked another account: sync it as if newly connected
+    const email = fullSignIn ? await fetchEmail(token.value) : settings.email;
+    if (!settings) return; // disconnected meanwhile
+    if (email !== settings.email) settings = { email, token, lastSyncedAt: null };
+    else settings.token = token;
     fullSignIn = false;
     sync.needsSignIn = false;
     await save();
+    show();
     await syncNow();
   } catch (e) {
     fullSignIn = true;
@@ -169,8 +185,5 @@ export async function startSync() {
     if (settings && document.visibilityState === 'visible') syncNow();
   }, INTERVAL);
 
-  if (settings) {
-    loadGoogle().catch(() => {}); // ready for a quick Reconnect
-    await syncNow();
-  }
+  if (settings) await syncNow();
 }

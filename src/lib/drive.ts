@@ -13,10 +13,19 @@ export class DriveAuthError extends Error {
   }
 }
 
+/** Drive couldn't be reached at all (offline, or the request was cut off): try again later. */
+export class DriveUnreachableError extends Error {
+  constructor() {
+    super("Couldn't reach Google Drive. Will try again.");
+  }
+}
+
 async function call(token: string, url: string, init: RequestInit = {}): Promise<Response> {
   const res = await fetch(url, {
     ...init,
     headers: { ...init.headers, Authorization: `Bearer ${token}` },
+  }).catch(() => {
+    throw new DriveUnreachableError();
   });
   if (res.status === 401) throw new DriveAuthError();
   if (!res.ok) throw new Error(`Google Drive replied ${res.status}.`);

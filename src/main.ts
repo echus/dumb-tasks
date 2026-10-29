@@ -8,9 +8,8 @@ import { handleShareTarget, refreshColoursOnce, requestPersistentStorage } from 
 import { startSync } from './lib/sync-state.svelte';
 import { addDemoTasks } from './lib/tasks';
 
-addDemoTasks(); // before the share target, so a task shared on a first visit doesn't stop it
+addDemoTasks().then(handleShareTarget); // so a task shared on a first visit doesn't stop the demo
 dropOldTasks(); // sync does this too, but not every device syncs
-handleShareTarget();
 requestPersistentStorage();
 startSync().finally(refreshColoursOnce); // after the first sync, so it sees every device's tasks
 
