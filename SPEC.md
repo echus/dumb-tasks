@@ -220,15 +220,18 @@ rewrites this device's file if that left it out of date.
   written only when local data no longer matches it.
 - **When:** on app open, when the app comes into view, is left or gets focus, 3 s after
   edits, every minute while in view, and on coming back online.
-- **Stale files:** once per app open, other devices' files unchanged for 90 days (by Drive's
-  clock, measured back from the newest file) are deleted: their changes are in every other
-  file by then. A device whose own file went is told by the same check and writes it again.
+- **Stale files:** once per app open, before reading anything, other devices' files
+  unchanged for 90 days (by Drive's clock, measured back from the newest file) are deleted:
+  their changes are in every other file by then, and they may still hold tasks the others
+  have dropped since. A device whose own file went is told by the same check and writes it again.
 - **Tombstone purge:** deleted and completed tasks go for good 90 days after the delete or
   completion.
 - **Coming back after 90 days away:** the other devices may have purged tasks this one never
   heard were deleted or completed. So its first sync back reads every file and drops local
-  tasks that none of them has and that haven't changed here since its last sync. Tasks added
-  or edited while away are kept. Skipped when no other device has a file. A first sync does
+  tasks that haven't changed here since its last sync and that no file written after that
+  sync has (a device writing one had read this device's file first, so a task is missing
+  only if it dropped it). Tasks added or edited while away are kept. Skipped when no such
+  file exists. A first sync does
   the same with the demo tasks, so an account with data replaces them.
 - **Google verification** is required before public release of Drive sync.
 

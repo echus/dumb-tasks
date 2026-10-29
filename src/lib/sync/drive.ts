@@ -1,4 +1,4 @@
-import type { SyncBackend } from './engine';
+import type { RemoteFile, SyncBackend } from './engine';
 
 // Each device's data file lives in the app's hidden folder in the user's Google Drive.
 
@@ -85,40 +85,42 @@ export class DriveBackend implements SyncBackend {
     return files.filter((f) => isDataFile(f.name));
   }
 
-  /** The ids of other devices' files changed since `cursor`, and the cursor after them. */
-  private async changedSince(cursor: string): Promise<{ ids: string[]; cursor: string }> {
-    const ids = new Set<string>();
+  /** Other devices' files changed since `cursor`, and the cursor after them. */
+  private async changedSince(cursor: string): Promise<{ changed: DriveFile[]; cursor: string }> {
+    const changed = new Map<string, DriveFile>();
     let page = cursor;
     for (;;) {
       const params = new URLSearchParams({
         pageToken: page,
         spaces: 'appDataFolder',
-        fields: 'nextPageToken,newStartPageToken,changes(fileId,removed,file(name,trashed))',
+        fields:
+          'nextPageToken,newStartPageToken,changes(fileId,removed,file(name,trashed,modifiedTime))',
         pageSize: '1000',
       });
       const res = await this.get<{
-        changes: { fileId: string; removed: boolean; file?: { name: string; trashed: boolean } }[];
+        changes: { fileId: string; removed: boolean; file?: DriveFile & { trashed: boolean } }[];
         nextPageToken?: string;
         newStartPageToken?: string;
       }>(`${API}/changes?${params}`);
-      for (const c of res.changes) {
-        const name = c.file?.name;
-        if (!c.removed && !c.file?.trashed && name && isDataFile(name) && name !== this.name) {
-          ids.add(c.fileId);
+      for (const { fileId, removed, file } of res.changes) {
+        if (!removed && file && !file.trashed && isDataFile(file.name) && file.name !== this.name) {
+          changed.set(fileId, { ...file, id: fileId });
         }
       }
-      if (res.newStartPageToken) return { ids: [...ids], cursor: res.newStartPageToken };
+      if (res.newStartPageToken) {
+        return { changed: [...changed.values()], cursor: res.newStartPageToken };
+      }
       page = res.nextPageToken!;
     }
   }
 
   /** The files' contents, skipping any removed since they were listed. */
-  private async download(ids: string[]): Promise<string[]> {
+  private async download(files: DriveFile[]): Promise<RemoteFile[]> {
     const texts = await Promise.all(
-      ids.map(async (id) => {
+      files.map(async ({ id, modifiedTime }) => {
         try {
           const res = await call(this.token, `${API}/files/${id}?alt=media`, { cache: 'no-store' });
-          return await res.text();
+          return { json: await res.text(), modifiedAt: Date.parse(modifiedTime) };
         } catch (e) {
           if (e instanceof DriveNotFoundError) return null;
           throw e;
@@ -130,15 +132,15 @@ export class DriveBackend implements SyncBackend {
 
   async pull(cursor: string | null) {
     if (cursor) {
-      const changed = await this.changedSince(cursor);
-      return { files: await this.download(changed.ids), cursor: changed.cursor };
+      const { changed, cursor: next } = await this.changedSince(cursor);
+      return { files: await this.download(changed), cursor: next };
     }
     // The cursor first, so a file written while these download shows up next time
     const { startPageToken } = await this.get<{ startPageToken: string }>(
       `${API}/changes/startPageToken?fields=startPageToken`,
     );
     const others = (await this.list()).filter((f) => f.name !== this.name);
-    return { files: await this.download(others.map((f) => f.id)), cursor: startPageToken };
+    return { files: await this.download(others), cursor: startPageToken };
   }
 
   async push(json: string) {

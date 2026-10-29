@@ -17,7 +17,7 @@ export interface SyncBackend {
    * The other devices' files changed since `cursor`, or all of them when it's null, and the
    * cursor for next time.
    */
-  pull(cursor: string | null): Promise<{ files: string[]; cursor: string }>;
+  pull(cursor: string | null): Promise<{ files: RemoteFile[]; cursor: string }>;
   /** Writes this device's file. */
   push(json: string): Promise<void>;
   /**
@@ -26,6 +26,11 @@ export interface SyncBackend {
    * is there.
    */
   removeStale(maxAge: number): Promise<{ hasOwnFile: boolean }>;
+}
+
+export interface RemoteFile {
+  json: string;
+  modifiedAt: number; // ms, by the backend's clock
 }
 
 /** Kept between syncs, so each only reads and writes what changed. */
@@ -65,47 +70,59 @@ function combine(files: DataFile[]): DataFile {
 }
 
 /**
+ * Local tasks to drop when reading every file finds that no other device has them. Only
+ * files written after `after` count: a device that wrote one had read this device's file
+ * first, so lacks a task only if it dropped it. An older file may just predate the task.
+ */
+export interface DropMissing {
+  matches: (t: Task) => boolean;
+  after: number; // ms
+}
+
+/**
  * Where a sync starts reading, and which local tasks it drops if no other device has them.
  * A first sync reads everything, and drops the demo tasks for an account's own. So does one
- * after more than KEEP_DAYS away, dropping tasks unchanged since: every other device has
+ * after more than KEEP_DAYS away, dropping tasks unchanged since: the other devices have
  * dropped them by now, as deleted or completed long ago, and this one never heard.
  */
 export function startFrom(
   lastSyncedAt: string | null,
   cursor: string | null,
   now = new Date(),
-): { cursor: string | null; dropMissing?: (t: Task) => boolean } {
-  if (lastSyncedAt === null) return { cursor: null, dropMissing: isUneditedDemo };
+): { cursor: string | null; dropMissing?: DropMissing } {
+  if (lastSyncedAt === null) {
+    return { cursor: null, dropMissing: { matches: isUneditedDemo, after: -Infinity } };
+  }
   const since = Date.parse(lastSyncedAt);
   if (now.getTime() - since > KEEP_DAYS * 86_400_000) {
-    return { cursor: null, dropMissing: (t) => lastEdited(t) < since };
+    return { cursor: null, dropMissing: { matches: (t) => lastEdited(t) < since, after: since } };
   }
   return { cursor };
 }
 
 /**
- * One full sync. `dropMissing` applies when reading every file (a null cursor) and there is
- * at least one: local tasks it matches that none of them has are deleted outright, not
- * tombstoned. `tidy` also clears out other devices' stale files.
+ * One full sync. `dropMissing` applies when reading every file (a null cursor) and at least
+ * one counts: the local tasks it matches that none of them has are deleted outright, not
+ * tombstoned. `tidy` first clears out other devices' stale files, so they aren't read.
  */
 export async function syncWith(
   backend: SyncBackend,
   state: SyncState,
-  { dropMissing, tidy = false }: { dropMissing?: (t: Task) => boolean; tidy?: boolean } = {},
+  { dropMissing, tidy = false }: { dropMissing?: DropMissing; tidy?: boolean } = {},
 ): Promise<SyncState & { pushed: boolean }> {
-  const { files, cursor } = await backend.pull(state.cursor);
-  if (files.length) {
-    const remote = combine(files.map(parseDataFile));
-    await importData(remote);
-    if (dropMissing && state.cursor === null) {
-      const ids = new Set(remote.tasks.map((t) => t.id));
-      await db.tasks.filter((t) => dropMissing(t) && !ids.has(t.id)).delete();
-    }
-  }
-
   // Swept away as stale while this device was away, or removed by hand: write it again
   let pushedKey = state.pushedKey;
   if (tidy && !(await backend.removeStale(KEEP_DAYS * 86_400_000)).hasOwnFile) pushedKey = null;
+
+  const { files, cursor } = await backend.pull(state.cursor);
+  const data = files.map((f) => ({ ...f, data: parseDataFile(f.json) }));
+  if (data.length) await importData(combine(data.map((f) => f.data)));
+
+  const witnesses = data.filter((f) => dropMissing && f.modifiedAt > dropMissing.after);
+  if (dropMissing && state.cursor === null && witnesses.length) {
+    const ids = new Set(witnesses.flatMap((f) => f.data.tasks.map((t) => t.id)));
+    await db.tasks.filter((t) => dropMissing.matches(t) && !ids.has(t.id)).delete();
+  }
 
   const local = await exportData();
   const key = await contentKey(local);

@@ -16,7 +16,7 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
  * this device; tests write the other devices' files directly.
  */
 class MemoryBackend implements SyncBackend {
-  files = new Map<string, { json: string; seq: number }>(); // by device
+  files = new Map<string, { json: string; seq: number; modifiedAt: number }>(); // by device
   seq = 0;
   pushes = 0;
 
@@ -24,7 +24,7 @@ class MemoryBackend implements SyncBackend {
     const since = cursor === null ? -1 : Number(cursor);
     const files = [...this.files]
       .filter(([device, f]) => device !== 'here' && f.seq > since)
-      .map(([, f]) => f.json);
+      .map(([, { json, modifiedAt }]) => ({ json, modifiedAt }));
     return { files, cursor: String(this.seq) };
   }
 
@@ -33,7 +33,12 @@ class MemoryBackend implements SyncBackend {
     this.pushes++;
   }
 
-  async removeStale() {
+  // As Drive's: measured back from the newest file
+  async removeStale(maxAge: number) {
+    const newest = Math.max(...[...this.files.values()].map((f) => f.modifiedAt));
+    for (const [device, f] of this.files) {
+      if (device !== 'here' && f.modifiedAt < newest - maxAge) this.files.delete(device);
+    }
     return { hasOwnFile: this.files.has('here') };
   }
 
@@ -48,15 +53,15 @@ class MemoryBackend implements SyncBackend {
   }
 
   /** Another device writes its file. */
-  write(device: string, data: DataFile) {
-    this.files.set(device, { json: JSON.stringify(data), seq: ++this.seq });
+  write(device: string, data: DataFile, at = new Date()) {
+    this.files.set(device, { json: JSON.stringify(data), seq: ++this.seq, modifiedAt: at.getTime() });
   }
 
   /** Another device, which has synced with this one, writes a change to its file. */
-  edit(device: string, fn: (data: DataFile) => void) {
+  edit(device: string, fn: (data: DataFile) => void, at = new Date()) {
     const data = this.data(this.files.has(device) ? device : 'here');
     fn(data);
-    this.write(device, data);
+    this.write(device, data, at);
   }
 }
 
@@ -294,6 +299,17 @@ describe('sync', () => {
       expect(await ids()).toEqual(['gone elsewhere', 'kept elsewhere']);
     });
 
+    it("keeps tasks missing only from files older than this device's last sync", async () => {
+      // The phone last wrote before this device's last sync, so never had the newest task
+      remote.edit('phone', (data) => {
+        data.tasks = data.tasks.filter((t) => t.text !== 'gone elsewhere');
+      }, daysAgo(121));
+      await addTask('added before going', daysAgo(120));
+
+      await comeBack();
+      expect(await ids()).toEqual(['added before going', 'gone elsewhere', 'kept elsewhere']);
+    });
+
     it("doesn't apply after a shorter time away", async () => {
       remote.edit('phone', (data) => {
         data.tasks = data.tasks.filter((t) => t.text !== 'gone elsewhere');
@@ -304,6 +320,20 @@ describe('sync', () => {
       await sync({ dropMissing: plan.dropMissing });
       expect(await ids()).toEqual(['gone elsewhere', 'kept elsewhere']);
     });
+  });
+
+  it("clears out a device's stale file before a new device reads it", async () => {
+    await addTask('done long ago', daysAgo(300));
+    await sync();
+    remote.edit('drawer', () => {}, daysAgo(150)); // not used since, so never heard it was done
+    remote.write('phone', emptyFile()); // done, then dropped, long ago
+    await db.tasks.clear(); // a new device
+    remote.files.delete('here');
+    state = { cursor: null, pushedKey: null };
+
+    await sync({ tidy: true, dropMissing: startFrom(null, null).dropMissing });
+    expect(remote.files.has('drawer')).toBe(false);
+    expect(await db.tasks.count()).toBe(0);
   });
 
   it('hears about local task writes', async () => {
