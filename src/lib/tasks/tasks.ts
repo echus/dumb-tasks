@@ -26,8 +26,12 @@ export async function activeIn(bucket: Bucket): Promise<Task[]> {
  * from a device whose clock is ahead. Either way an edit made after seeing another wins.
  */
 function editStamp(task: Task, now: Date): string {
-  const last = Math.max(...Object.values(task.fieldUpdatedAt).map(Date.parse).filter(Number.isFinite));
-  return new Date(Math.max(now.getTime(), last + 1)).toISOString();
+  return new Date(Math.max(now.getTime(), lastEdited(task) + 1)).toISOString();
+}
+
+/** When any of a task's fields last changed, in ms. */
+export function lastEdited(task: Task): number {
+  return Math.max(...Object.values(task.fieldUpdatedAt).map(Date.parse).filter(Number.isFinite));
 }
 
 /** Every write goes through here so each changed field gets a merge timestamp. */

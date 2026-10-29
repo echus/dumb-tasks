@@ -185,15 +185,22 @@ Device-only settings (never synced): sync credentials, locale override. They get
 
 ## Sync
 
-Optional and pluggable. The app pulls the data file, merges, and pushes back.
+Optional and pluggable. Each device has its own data file holding everything it knows, and
+writes only that one. A sync reads the files other devices changed, merges them in, and
+rewrites this device's file if that left it out of date.
 
 - **Backends:** **Google Drive first** — it's what regular people already have, and the MCP
   server depends on it. WebDAV / Nextcloud comes later as a bonus for self-hosters. A backend
-  is just `load()` and `save(json, version)` (`SyncBackend` in `sync.ts`).
-- **Drive:** one `dumb-tasks.json` in the hidden app folder (`drive.appdata` scope), never
-  full Drive access. Found by name each sync, so a deleted file is simply made again.
-  The app folder belongs to the OAuth client: check the MCP server can share it before
-  milestone 4.
+  is `pull(cursor)`, `push(json)` and `removeStale(maxAge)` (`SyncBackend` in
+  `sync/engine.ts`).
+- **Drive:** a `device-<id>.json` per install in the hidden app folder (`drive.appdata`
+  scope), never full Drive access. The id is made once per install and kept through
+  reconnects. Drive's Changes API says which files changed since the last sync, so a sync with
+  nothing to do is one small request. The file `dumb-tasks.json`, which every device shared
+  before, is read like another device's file until it goes stale; devices still on an older
+  version keep writing it, so their changes still arrive, but they don't see the newer
+  devices' changes until they update. The app folder belongs to the OAuth client: check the
+  MCP server can share it before milestone 4 (it would be one more device, with its own file).
 - **Sign-in:** Google Identity Services' popup gives a one-time code; a small Worker
   (`worker/index.ts`, beside the static files) swaps it for a refresh token, which needs the
   client secret, and keeps it in an HttpOnly cookie. When the hour-long access token runs out,
@@ -206,15 +213,23 @@ Optional and pluggable. The app pulls the data file, merges, and pushes back.
   already used by backup import.) An edit is stamped just after the task's last edit when
   this device's clock is behind the one that made it, so an edit made after seeing another
   always wins.
-- **Concurrency:** Drive has no conditional writes, so the file's `version` is checked just
-  before writing; if it moved, re-pull, re-merge, retry. A write that still races another is
-  harmless: the losing device keeps its changes locally and pushes them on its next sync.
-- **Push only when needed:** after merging, push only if the remote file lacks something.
-- **When:** on app open, when the app comes into view or is left, 3 s after edits, every
-  5 minutes, and on coming back online.
+- **Concurrency:** none needed. Each file has one writer, so no write can overwrite another
+  device's. Taking in another device's change rewrites this device's file too, so every file
+  soon holds every change, and any one can be lost without losing data.
+- **Push only when needed:** a hash of what this device's file holds is kept, and the file is
+  written only when local data no longer matches it.
+- **When:** on app open, when the app comes into view, is left or gets focus, 3 s after
+  edits, every minute while in view, and on coming back online.
+- **Stale files:** once per app open, other devices' files unchanged for 90 days (by Drive's
+  clock, measured back from the newest file) are deleted: their changes are in every other
+  file by then. A device whose own file went is told by the same check and writes it again.
 - **Tombstone purge:** deleted and completed tasks go for good 90 days after the delete or
-  completion. A device offline longer than that could resurrect them — acceptable, but
-  document it.
+  completion.
+- **Coming back after 90 days away:** the other devices may have purged tasks this one never
+  heard were deleted or completed. So its first sync back reads every file and drops local
+  tasks that none of them has and that haven't changed here since its last sync. Tasks added
+  or edited while away are kept. Skipped when no other device has a file. A first sync does
+  the same with the demo tasks, so an account with data replaces them.
 - **Google verification** is required before public release of Drive sync.
 
 ## AI integration — MCP connector

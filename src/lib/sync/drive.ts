@@ -1,15 +1,27 @@
 import type { SyncBackend } from './engine';
 
-// The data file lives in the app's hidden folder in the user's Google Drive.
+// Each device's data file lives in the app's hidden folder in the user's Google Drive.
 
-const FILES = 'https://www.googleapis.com/drive/v3/files';
+const API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
-const NAME = 'dumb-tasks.json';
+const PREFIX = 'device-';
+// The one file every device shared before each had its own. Read like another device's
+// until it's stale, as devices still on an older version keep writing it till they update.
+const LEGACY = 'dumb-tasks.json';
+
+const isDataFile = (name: string) => name.startsWith(PREFIX) || name === LEGACY;
 
 /** The token has expired or been revoked: the user needs to sign in again. */
 export class DriveAuthError extends Error {
   constructor() {
     super('Signed out of Google Drive.');
+  }
+}
+
+/** The file asked for isn't there (any more). */
+class DriveNotFoundError extends Error {
+  constructor() {
+    super('Google Drive file not found.');
   }
 }
 
@@ -28,63 +40,147 @@ async function call(token: string, url: string, init: RequestInit = {}): Promise
     throw new DriveUnreachableError();
   });
   if (res.status === 401) throw new DriveAuthError();
+  if (res.status === 404) throw new DriveNotFoundError();
   if (!res.ok) throw new Error(`Google Drive replied ${res.status}.`);
   return res;
 }
 
 /** The signed-in account's email, shown in the sync menu and used to sign in again quietly. */
 export async function fetchEmail(token: string): Promise<string> {
-  const res = await call(token, 'https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)');
+  const res = await call(token, `${API}/about?fields=user(emailAddress)`);
   return (await res.json()).user.emailAddress;
 }
 
-export class DriveBackend implements SyncBackend {
-  constructor(private token: string) {}
+interface DriveFile {
+  id: string;
+  name: string;
+  modifiedTime: string;
+}
 
-  /**
-   * Looks the file up by name each time rather than remembering its id, so a file removed
-   * from Drive is simply made again. If two devices ever both create one, the oldest wins;
-   * the other device's tasks get merged into it on its next sync.
-   */
-  private async find(): Promise<{ id: string; version: string } | null> {
+export class DriveBackend implements SyncBackend {
+  private name: string;
+
+  /** `fileId`: this device's file, if known. Read it back after a sync, as push may make one. */
+  constructor(
+    private token: string,
+    device: string,
+    public fileId: string | null,
+  ) {
+    this.name = `${PREFIX}${device}.json`;
+  }
+
+  private async get<T>(url: string): Promise<T> {
+    return (await call(this.token, url)).json();
+  }
+
+  /** Every data file, this device's included. */
+  private async list(): Promise<DriveFile[]> {
     const params = new URLSearchParams({
       spaces: 'appDataFolder',
-      q: `name = '${NAME}' and trashed = false`,
-      orderBy: 'createdTime',
-      fields: 'files(id,version)',
+      q: 'trashed = false',
+      fields: 'files(id,name,modifiedTime)',
+      pageSize: '1000',
     });
-    const res = await call(this.token, `${FILES}?${params}`);
-    const file = (await res.json()).files[0];
-    // Drive bumps `version` on every change to the file.
-    return file ? { id: file.id, version: `${file.id}@${file.version}` } : null;
+    const { files } = await this.get<{ files: DriveFile[] }>(`${API}/files?${params}`);
+    return files.filter((f) => isDataFile(f.name));
   }
 
-  async load() {
-    const file = await this.find();
-    if (!file) return null;
-    const res = await call(this.token, `${FILES}/${file.id}?alt=media`, { cache: 'no-store' });
-    return { json: await res.text(), version: file.version };
-  }
-
-  // Drive has no conditional writes, so this checks the version just before writing. Another
-  // device could still slip in between; merging makes that harmless (see engine.ts).
-  async save(json: string, version: string | null) {
-    const file = await this.find();
-    if ((file?.version ?? null) !== version) return false;
-
-    const body = new Blob([json], { type: 'application/json' });
-    if (file) {
-      await call(this.token, `${UPLOAD}/${file.id}?uploadType=media`, {
-        method: 'PATCH',
-        body,
+  /** The ids of other devices' files changed since `cursor`, and the cursor after them. */
+  private async changedSince(cursor: string): Promise<{ ids: string[]; cursor: string }> {
+    const ids = new Set<string>();
+    let page = cursor;
+    for (;;) {
+      const params = new URLSearchParams({
+        pageToken: page,
+        spaces: 'appDataFolder',
+        fields: 'nextPageToken,newStartPageToken,changes(fileId,removed,file(name,trashed))',
+        pageSize: '1000',
       });
-    } else {
-      const form = new FormData();
-      const metadata = { name: NAME, parents: ['appDataFolder'], mimeType: 'application/json' };
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', body);
-      await call(this.token, `${UPLOAD}?uploadType=multipart&fields=id`, { method: 'POST', body: form });
+      const res = await this.get<{
+        changes: { fileId: string; removed: boolean; file?: { name: string; trashed: boolean } }[];
+        nextPageToken?: string;
+        newStartPageToken?: string;
+      }>(`${API}/changes?${params}`);
+      for (const c of res.changes) {
+        const name = c.file?.name;
+        if (!c.removed && !c.file?.trashed && name && isDataFile(name) && name !== this.name) {
+          ids.add(c.fileId);
+        }
+      }
+      if (res.newStartPageToken) return { ids: [...ids], cursor: res.newStartPageToken };
+      page = res.nextPageToken!;
     }
-    return true;
+  }
+
+  /** The files' contents, skipping any removed since they were listed. */
+  private async download(ids: string[]): Promise<string[]> {
+    const texts = await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const res = await call(this.token, `${API}/files/${id}?alt=media`, { cache: 'no-store' });
+          return await res.text();
+        } catch (e) {
+          if (e instanceof DriveNotFoundError) return null;
+          throw e;
+        }
+      }),
+    );
+    return texts.filter((t) => t !== null);
+  }
+
+  async pull(cursor: string | null) {
+    if (cursor) {
+      const changed = await this.changedSince(cursor);
+      return { files: await this.download(changed.ids), cursor: changed.cursor };
+    }
+    // The cursor first, so a file written while these download shows up next time
+    const { startPageToken } = await this.get<{ startPageToken: string }>(
+      `${API}/changes/startPageToken?fields=startPageToken`,
+    );
+    const others = (await this.list()).filter((f) => f.name !== this.name);
+    return { files: await this.download(others.map((f) => f.id)), cursor: startPageToken };
+  }
+
+  async push(json: string) {
+    const body = new Blob([json], { type: 'application/json' });
+    this.fileId ??= (await this.list()).find((f) => f.name === this.name)?.id ?? null;
+    if (this.fileId) {
+      try {
+        await call(this.token, `${UPLOAD}/${this.fileId}?uploadType=media&fields=id`, {
+          method: 'PATCH',
+          body,
+        });
+        return;
+      } catch (e) {
+        if (!(e instanceof DriveNotFoundError)) throw e;
+      }
+    }
+    const form = new FormData();
+    const metadata = { name: this.name, parents: ['appDataFolder'], mimeType: 'application/json' };
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', body);
+    const res = await call(this.token, `${UPLOAD}?uploadType=multipart&fields=id`, {
+      method: 'POST',
+      body: form,
+    });
+    this.fileId = (await res.json()).id;
+  }
+
+  // Ages are measured back from the newest file, by Drive's clock, so a device whose own
+  // clock is far ahead can't sweep away files still in use.
+  async removeStale(maxAge: number) {
+    const files = await this.list();
+    const newest = Math.max(...files.map((f) => Date.parse(f.modifiedTime)));
+    const stale = files.filter(
+      (f) => f.name !== this.name && Date.parse(f.modifiedTime) < newest - maxAge,
+    );
+    await Promise.all(
+      stale.map((f) =>
+        call(this.token, `${API}/files/${f.id}`, { method: 'DELETE' }).catch((e) => {
+          if (!(e instanceof DriveNotFoundError)) throw e;
+        }),
+      ),
+    );
+    return { hasOwnFile: files.some((f) => f.name === this.name) };
   }
 }

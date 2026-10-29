@@ -1,16 +1,18 @@
+import { ulid } from 'ulid';
 import { db } from '../db';
 import { DriveAuthError, DriveBackend, fetchEmail } from './drive';
+import { startFrom, syncWith } from './engine';
 import { CLIENT_ID, loadGoogle, refreshToken, signIn, signOut, type AccessToken } from './google-auth';
-import { syncWith } from './engine';
 import { onLocalChange } from './local-changes';
-import { isUneditedDemo } from '../tasks/demo-tasks';
 
 // When and how the app syncs with Google Drive, and the state the sync menu shows.
-// Syncs on open, when the app comes back into view, a few seconds after each edit, and
-// every few minutes. Never blocks the app: everything is saved locally first.
+// Syncs on open, when the app comes back into view or its window gets focus, a few seconds
+// after each edit, and every minute. Never blocks the app: everything is saved locally first.
+// A sync with nothing to do is a single small request.
 
 const EDIT_DELAY = 3_000;
-const INTERVAL = 5 * 60_000;
+const INTERVAL = 60_000;
+const FOCUS_GAP = 5_000; // focus often comes with coming into view, which already synced
 const EXPIRY_MARGIN = 60_000; // don't start a sync with a token about to run out
 
 // Device-only, in the settings table. The token is kept so syncs within its hour don't each
@@ -18,7 +20,14 @@ const EXPIRY_MARGIN = 60_000; // don't start a sync with a token about to run ou
 interface DriveSettings {
   email: string;
   token: AccessToken;
-  lastSyncedAt: string | null;
+  lastSyncedAt: string | null; // when the last sync that worked began
+  fileId: string | null; // this device's file in Drive
+  cursor: string | null; // see SyncState
+  pushedKey: string | null;
+}
+
+function newSettings(email: string, token: AccessToken): DriveSettings {
+  return { email, token, lastSyncedAt: null, fileId: null, cursor: null, pushedKey: null };
 }
 
 export const sync = $state({
@@ -32,6 +41,9 @@ export const sync = $state({
 });
 
 let settings: DriveSettings | null = null;
+let device = ''; // names this device's file: one per install, kept through reconnects
+let tidied = false; // stale files cleared out since the app opened
+let lastStart = 0;
 let running: Promise<void> | null = null;
 let again = false;
 let editTimer: ReturnType<typeof setTimeout> | undefined;
@@ -76,14 +88,26 @@ async function runOnce(retry = true): Promise<void> {
   if (!current) return;
   sync.syncing = true;
   try {
+    const started = new Date();
+    lastStart = started.getTime();
     const token = await freshToken(current);
     if (!token) return;
-    // First sync on this device: an account with data replaces the demo tasks; a new one
-    // gets them.
-    const replace = current.lastSyncedAt === null ? isUneditedDemo : undefined;
-    await syncWith(new DriveBackend(token), { replace });
+    const { cursor, dropMissing } = startFrom(current.lastSyncedAt, current.cursor, started);
+    const backend = new DriveBackend(token, device, current.fileId);
+    const result = await syncWith(
+      backend,
+      { cursor, pushedKey: current.pushedKey },
+      { dropMissing, tidy: !tidied },
+    );
     if (settings !== current) return; // disconnected meanwhile
-    current.lastSyncedAt = new Date().toISOString();
+    tidied = true;
+    // The start, not now: a task written during the sync may not be in the file
+    Object.assign(current, {
+      lastSyncedAt: started.toISOString(),
+      fileId: backend.fileId,
+      cursor: result.cursor,
+      pushedKey: result.pushedKey,
+    });
     await save();
     sync.error = '';
   } catch (e) {
@@ -123,7 +147,8 @@ export async function connect() {
   sync.error = '';
   try {
     const token = await signIn();
-    settings = { email: await fetchEmail(token.value), token, lastSyncedAt: null };
+    settings = newSettings(await fetchEmail(token.value), token);
+    tidied = false;
     await save();
     show();
     await syncNow();
@@ -142,8 +167,10 @@ export async function reconnect() {
     // The full sign-in may have picked another account: sync it as if newly connected
     const email = fullSignIn ? await fetchEmail(token.value) : settings.email;
     if (!settings) return;
-    if (email !== settings.email) settings = { email, token, lastSyncedAt: null };
-    else settings.token = token;
+    if (email !== settings.email) {
+      settings = newSettings(email, token);
+      tidied = false;
+    } else settings.token = token;
     fullSignIn = false;
     sync.needsSignIn = false;
     await save();
@@ -165,11 +192,22 @@ export async function disconnect() {
   signOut().catch(() => {});
 }
 
+/** This install's id, made the first time it's needed. */
+async function deviceId(): Promise<string> {
+  const saved = await db.settings.get('device');
+  if (saved) return saved.value;
+  const id = ulid();
+  await db.settings.put({ key: 'device', value: id });
+  return id;
+}
+
 /** Called once at startup. */
 export async function startSync() {
   if (!CLIENT_ID) return;
+  device = await deviceId();
   const saved = await db.settings.get('drive');
-  settings = saved ? JSON.parse(saved.value) : null;
+  // Older versions saved fewer fields
+  settings = saved ? { fileId: null, cursor: null, pushedKey: null, ...JSON.parse(saved.value) } : null;
   show();
 
   onLocalChange(() => {
@@ -181,6 +219,9 @@ export async function startSync() {
   document.addEventListener('visibilitychange', () => {
     // Coming back: pull what other devices did. Leaving: push any edit still waiting.
     if (settings) syncNow();
+  });
+  window.addEventListener('focus', () => {
+    if (settings && Date.now() - lastStart > FOCUS_GAP) syncNow();
   });
   window.addEventListener('online', () => settings && syncNow());
   setInterval(() => {

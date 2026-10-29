@@ -6,7 +6,7 @@ const EPOCH = new Date(0).toISOString();
 
 // Deleted and completed tasks stay so the change reaches every device, then go for good:
 // by then every device should have synced. One offline for longer brings the task back.
-const KEEP_DAYS = 90;
+export const KEEP_DAYS = 90;
 
 /** Everything that would sync, including completed tasks and tombstones. */
 export async function exportData(now = new Date()): Promise<DataFile> {
