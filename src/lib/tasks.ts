@@ -21,12 +21,21 @@ async function activeIn(bucket: Bucket): Promise<Task[]> {
   return tasks.filter(isActive).sort(byPosition);
 }
 
+/**
+ * The merge timestamp for an edit: now, or just after the task's last edit if that came
+ * from a device whose clock is ahead. Either way an edit made after seeing another wins.
+ */
+function editStamp(task: Task, now: Date): string {
+  const last = Math.max(...Object.values(task.fieldUpdatedAt).map(Date.parse));
+  return new Date(Math.max(now.getTime(), last + 1)).toISOString();
+}
+
 /** Every write goes through here so each changed field gets a merge timestamp. */
 async function updateTask(id: string, patch: Partial<Pick<Task, MergedField>>, now = new Date()) {
-  const at = now.toISOString();
   await db.transaction('rw', db.tasks, async () => {
     const task = await db.tasks.get(id);
     if (!task) return;
+    const at = editStamp(task, now);
     const fieldUpdatedAt = { ...task.fieldUpdatedAt };
     for (const key of Object.keys(patch)) fieldUpdatedAt[key] = at;
     const bucketHistory =

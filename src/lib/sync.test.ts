@@ -109,6 +109,22 @@ describe('sync', () => {
     expect(remote.data().tasks[0]).toMatchObject({ text: 'buy oat milk', bucket: 'week' });
   });
 
+  it('keeps an edit made after syncing, even with this clock behind the other device', async () => {
+    const id = (await addTask('buy milk', t0))!;
+    await syncWith(remote);
+
+    remote.edit((data) => {
+      const task = data.tasks[0];
+      task.text = 'buy oat milk';
+      task.fieldUpdatedAt.text = later(10).toISOString(); // its clock is 10 minutes ahead
+    });
+    await syncWith(remote);
+    await editText(id, 'buy soy milk', later(1));
+
+    await syncWith(remote);
+    expect(remote.data().tasks[0].text).toBe('buy soy milk');
+  });
+
   it('merges again when another device writes mid-sync', async () => {
     await addTask('buy milk', t0);
     await syncWith(remote);
