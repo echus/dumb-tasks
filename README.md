@@ -1,6 +1,6 @@
 # Dumb Tasks
 
-A simple, local-first, open source task list. You can sync tasks with Google Drive or with your
+A simple, local-first, open source task list. You can sync tasks with Google Drive or with a
 WebDAV server.
 
 Live at [dumbtasks.app](https://dumbtasks.app).
