@@ -1,8 +1,8 @@
 import { tick } from 'svelte';
-import { track } from './history.svelte';
-import { moveTask } from './tasks';
-import { BUCKET_LABELS, type Bucket } from './types';
-import { drag, endDrag } from './ui-state.svelte';
+import { track } from '../tasks/history.svelte';
+import { moveTask } from '../tasks/tasks';
+import { BUCKET_LABELS, type Bucket } from '../types';
+import { drag, endDrag } from './state.svelte';
 
 // Dragging a task to a new spot, by mouse or touch: the task lifts off its list and the rows
 // part to show where it will land. The browser's own drag-and-drop isn't used: it doesn't

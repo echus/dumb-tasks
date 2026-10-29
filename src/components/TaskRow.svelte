@@ -1,13 +1,13 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { daysUntil, deadlineHeat, describeDeadline } from '../lib/deadline';
-  import { PLAIN_ICON } from '../lib/task-icons';
-  import * as ui from '../lib/ui-icons';
-  import { completeTask, deleteTask, dismissDeadline, editText } from '../lib/tasks';
-  import { track } from '../lib/history.svelte';
+  import { daysUntil, deadlineHeat, describeDeadline } from '../lib/tasks/deadline';
+  import { PLAIN_ICON } from '../lib/tasks/circle-colours';
+  import * as ui from '../lib/ui/icons';
+  import { completeTask, deleteTask, dismissDeadline, editText } from '../lib/tasks/tasks';
+  import { track } from '../lib/tasks/history.svelte';
   import type { Task } from '../lib/types';
-  import { dragTask } from '../lib/dnd';
-  import { clock, drag } from '../lib/ui-state.svelte';
+  import { dragTask } from '../lib/ui/dnd';
+  import { clock, drag } from '../lib/ui/state.svelte';
 
   let { task }: { task: Task } = $props();
 

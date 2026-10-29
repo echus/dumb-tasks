@@ -1,4 +1,4 @@
-import type { Bucket } from './types';
+import type { Bucket } from '../types';
 
 // Small pieces of app-wide UI state shared between components.
 

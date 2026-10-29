@@ -2,7 +2,7 @@
 import arrow from '@phosphor-icons/core/assets/bold/arrow-right-bold.svg?raw';
 import arrowDown from '@phosphor-icons/core/assets/bold/arrow-down-bold.svg?raw';
 import dots from '@phosphor-icons/core/assets/bold/dots-three-bold.svg?raw';
-import type { Bucket } from './types';
+import type { Bucket } from '../types';
 
 // Bold, not fill: Phosphor's filled check is a solid box with the tick cut out
 export { default as check } from '@phosphor-icons/core/assets/bold/check-bold.svg?raw';

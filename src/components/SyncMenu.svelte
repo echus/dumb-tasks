@@ -1,10 +1,10 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { exportData, importData, parseDataFile } from '../lib/data-file';
-  import { loadGoogle } from '../lib/google-auth';
-  import { localChanged } from '../lib/sync';
-  import { connect, disconnect, reconnect, sync, syncNow } from '../lib/sync-state.svelte';
-  import * as ui from '../lib/ui-icons';
+  import { exportData, importData, parseDataFile } from '../lib/sync/data-file';
+  import { loadGoogle } from '../lib/sync/google-auth';
+  import { localChanged } from '../lib/sync/local-changes';
+  import { connect, disconnect, reconnect, sync, syncNow } from '../lib/sync/drive-sync.svelte';
+  import * as ui from '../lib/ui/icons';
 
   let open = $state(false);
   let menu: HTMLElement;

@@ -1,7 +1,7 @@
-import { db } from './db';
-import { MERGED_FIELDS } from './merge';
+import { db } from '../db';
+import { MERGED_FIELDS } from '../sync/merge';
 import { applySnapshot } from './tasks';
-import type { Task } from './types';
+import type { Task } from '../types';
 
 // Undo/redo for this session: each step remembers how the tasks it touched looked
 // before and after, and undo/redo write those copies back.

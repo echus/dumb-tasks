@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { effectiveTheme, toggleTheme } from '../lib/theme.svelte';
-  import * as ui from '../lib/ui-icons';
+  import { effectiveTheme, toggleTheme } from '../lib/ui/theme.svelte';
+  import * as ui from '../lib/ui/icons';
 
   // Shows the theme a click switches to: a sun in dark mode, a moon in light mode.
   const dark = $derived(effectiveTheme() === 'dark');

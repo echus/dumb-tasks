@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db } from './db';
+import { db } from '../db';
 import { history, redo, track, undo } from './history.svelte';
 import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from './tasks';
 

@@ -1,4 +1,4 @@
-import type { SyncBackend } from './sync';
+import type { SyncBackend } from './engine';
 
 // The data file lives in the app's hidden folder in the user's Google Drive.
 
@@ -67,7 +67,7 @@ export class DriveBackend implements SyncBackend {
   }
 
   // Drive has no conditional writes, so this checks the version just before writing. Another
-  // device could still slip in between; merging makes that harmless (see sync.ts).
+  // device could still slip in between; merging makes that harmless (see engine.ts).
   async save(json: string, version: string | null) {
     const file = await this.find();
     if ((file?.version ?? null) !== version) return false;

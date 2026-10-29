@@ -34,21 +34,25 @@ A Cloudflare Worker serves the app and the sign-in helper (`wrangler.jsonc`); ev
 
 - `src/lib/types.ts`: the data model (`Task`, `DataFile`)
 - `src/lib/db.ts`: IndexedDB tables
-- `src/lib/tasks.ts`: every task operation (add, move, complete, edit, delete)
-- `src/lib/history.svelte.ts`: undo / redo
-- `src/lib/merge.ts`: per-field merge for backup import and sync
-- `src/lib/data-file.ts`: JSON export / import
-- `src/lib/sync.ts`: pull, merge, push against any `SyncBackend`
-- `src/lib/drive.ts`, `src/lib/google-auth.ts`: the Google Drive backend and sign-in
-- `worker/index.ts`: the sign-in Worker, which keeps people signed in to Drive
-- `src/lib/sync-state.svelte.ts`: when to sync, and the state the sync menu shows
-- `src/lib/deadline.ts`: finds deadlines in task text ("by friday", "14 nov")
-- `src/lib/guess-icon.ts`: picks an icon from keywords
-- `src/lib/task-icons.ts`: the fallback emoji, and each task's circle colour
-- `src/lib/dnd.ts`: where dragged tasks land; long-press touch dragging
-- `src/lib/theme.svelte.ts`: light/dark toggle (follows the system until used)
 - `src/lib/startup.ts`: Android share target, persistent storage
+- `src/lib/tasks/`: the task list itself
+  - `tasks.ts`: every task operation (add, move, complete, edit, delete)
+  - `demo-tasks.ts`: the tasks shown on a first visit
+  - `history.svelte.ts`: undo / redo
+  - `deadline.ts`: finds deadlines in task text ("by friday", "14 nov")
+  - `guess-icon.ts`: picks an icon from keywords
+  - `circle-colours.ts`: the fallback emoji, and each task's circle colour
+  - `recolour.ts`: brings older tasks up to the current icon and colour rules
+- `src/lib/sync/`: backup and Google Drive sync
+  - `merge.ts`: per-field merge for backup import and sync
+  - `data-file.ts`: JSON export / import
+  - `engine.ts`: pull, merge, push against any `SyncBackend`
+  - `local-changes.ts`: tells sync a task was written
+  - `drive.ts`, `google-auth.ts`: the Google Drive backend and sign-in
+  - `drive-sync.svelte.ts`: when to sync, and the state the sync menu shows
+- `src/lib/ui/`: drag and drop (`dnd.ts`), shared UI state, theme, icons
 - `src/components/`: the UI (Svelte 5)
+- `worker/index.ts`: the sign-in Worker, which keeps people signed in to Drive
 
 ## License
 

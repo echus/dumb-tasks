@@ -1,19 +1,11 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db } from './db';
-import { onLocalChange, syncWith, type SyncBackend } from './sync';
-import {
-  addDemoTasks,
-  addTask,
-  completeTask,
-  deleteTask,
-  editText,
-  isActive,
-  isDemoTask,
-  isUneditedDemo,
-  moveTask,
-} from './tasks';
-import type { DataFile } from './types';
+import { db } from '../db';
+import { addDemoTasks, isDemoTask, isUneditedDemo } from '../tasks/demo-tasks';
+import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from '../tasks/tasks';
+import type { DataFile } from '../types';
+import { syncWith, type SyncBackend } from './engine';
+import { onLocalChange } from './local-changes';
 
 const t0 = new Date(2026, 9, 26, 9, 0);
 const later = (mins: number) => new Date(t0.getTime() + mins * 60_000);

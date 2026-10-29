@@ -1,6 +1,6 @@
 import { exportData, importData, parseDataFile } from './data-file';
-import { db } from './db';
-import type { DataFile, Task } from './types';
+import { db } from '../db';
+import type { DataFile, Task } from '../types';
 
 // Sync is backend-agnostic: pull the data file, merge it into local data, and push the
 // result back if the remote copy is missing anything. Merging is per field, so a push that
@@ -66,16 +66,4 @@ export async function syncWith(
     if (await backend.save(JSON.stringify(local), remote?.version ?? null)) return { pushed: true };
   }
   throw new SyncConflictError();
-}
-
-// Task writes call localChanged() so sync can push them soon after. A listener rather than a
-// direct call keeps task code free of network code.
-let listener: () => void = () => {};
-
-export function onLocalChange(fn: () => void) {
-  listener = fn;
-}
-
-export function localChanged() {
-  listener();
 }

@@ -1,4 +1,4 @@
-import type { Task } from './types';
+import type { Task } from '../types';
 
 // Fields merged last-write-wins using fieldUpdatedAt. Everything else is
 // either immutable (id, createdAt) or merged specially (bucketHistory).

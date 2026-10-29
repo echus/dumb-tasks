@@ -1,6 +1,6 @@
-import { db } from './db';
+import { db } from '../db';
 import { mergeTask } from './merge';
-import { SCHEMA_VERSION, type DataFile, type Task } from './types';
+import { SCHEMA_VERSION, type DataFile, type Task } from '../types';
 
 const EPOCH = new Date(0).toISOString();
 

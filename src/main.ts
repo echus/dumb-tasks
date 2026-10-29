@@ -3,10 +3,11 @@ import '@fontsource/inter/latin-400.css';
 import '@fontsource/inter/latin-600.css';
 import './app.css';
 import App from './App.svelte';
-import { dropOldTasks } from './lib/data-file';
-import { handleShareTarget, refreshColoursOnce, requestPersistentStorage } from './lib/startup';
-import { startSync } from './lib/sync-state.svelte';
-import { addDemoTasks } from './lib/tasks';
+import { dropOldTasks } from './lib/sync/data-file';
+import { handleShareTarget, requestPersistentStorage } from './lib/startup';
+import { startSync } from './lib/sync/drive-sync.svelte';
+import { addDemoTasks } from './lib/tasks/demo-tasks';
+import { refreshColoursOnce } from './lib/tasks/recolour';
 
 addDemoTasks().then(handleShareTarget); // so a task shared on a first visit doesn't stop the demo
 dropOldTasks(); // sync does this too, but not every device syncs

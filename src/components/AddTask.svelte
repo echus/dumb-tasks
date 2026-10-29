@@ -1,8 +1,8 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { track } from '../lib/history.svelte';
-  import { addTask } from '../lib/tasks';
-  import * as ui from '../lib/ui-icons';
+  import { track } from '../lib/tasks/history.svelte';
+  import { addTask } from '../lib/tasks/tasks';
+  import * as ui from '../lib/ui/icons';
   import { BUCKET_LABELS, type Bucket } from '../lib/types';
 
   // A row at the top of every list, like a task still to be written. Only Today's takes

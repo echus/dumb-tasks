@@ -1,8 +1,9 @@
-import { db } from './db';
+import { db } from '../db';
 import { DriveAuthError, DriveBackend, fetchEmail } from './drive';
 import { CLIENT_ID, loadGoogle, refreshToken, signIn, signOut, type AccessToken } from './google-auth';
-import { onLocalChange, syncWith } from './sync';
-import { isUneditedDemo } from './tasks';
+import { syncWith } from './engine';
+import { onLocalChange } from './local-changes';
+import { isUneditedDemo } from '../tasks/demo-tasks';
 
 // When and how the app syncs with Google Drive, and the state the sync menu shows.
 // Syncs on open, when the app comes back into view, a few seconds after each edit, and

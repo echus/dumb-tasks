@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { history, redo, undo } from '../lib/history.svelte';
-  import * as ui from '../lib/ui-icons';
+  import { history, redo, undo } from '../lib/tasks/history.svelte';
+  import * as ui from '../lib/ui/icons';
 
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
   const mod = mac ? '⌘' : 'Ctrl+';

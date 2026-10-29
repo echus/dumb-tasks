@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ICONS } from './guess-icon';
-import { CLASHING_HUES, PLAIN_ICON, pickCircleColour } from './task-icons';
+import { CLASHING_HUES, PLAIN_ICON, pickCircleColour } from './circle-colours';
 
 const hue = (colour: string) => parseFloat(colour.slice(4));
 

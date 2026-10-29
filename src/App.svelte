@@ -6,9 +6,10 @@
   import SyncMenu from './components/SyncMenu.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from './lib/db';
-  import { byPosition, isActive, isDemoTask } from './lib/tasks';
+  import { isDemoTask } from './lib/tasks/demo-tasks';
+  import { byPosition, isActive } from './lib/tasks/tasks';
   import { BUCKETS, type Bucket, type Task } from './lib/types';
-  import { drag } from './lib/ui-state.svelte';
+  import { drag } from './lib/ui/state.svelte';
 
   // Re-runs whenever the tasks table changes, from any tab.
   const tasks = liveQuery(() => db.tasks.toArray());

@@ -1,10 +1,11 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { exportData, importData, parseDataFile } from './data-file';
-import { db } from './db';
-import { mergeTask } from './merge';
+import { exportData, importData, parseDataFile } from '../sync/data-file';
+import { db } from '../db';
+import { mergeTask } from '../sync/merge';
+import { addDemoTasks, isDemoTask } from './demo-tasks';
+import { refreshColours } from './recolour';
 import {
-  addDemoTasks,
   addTask,
   byPosition,
   completeTask,
@@ -12,11 +13,9 @@ import {
   dismissDeadline,
   editText,
   isActive,
-  isDemoTask,
   moveTask,
-  refreshColours,
 } from './tasks';
-import type { Bucket } from './types';
+import type { Bucket } from '../types';
 
 const t0 = new Date(2026, 9, 26, 9, 0);
 const later = (mins: number) => new Date(t0.getTime() + mins * 60_000);

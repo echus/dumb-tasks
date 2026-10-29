@@ -1,5 +1,5 @@
 // Measures which circle hues each task icon disappears on, for CLASHING_HUES in
-// src/lib/task-icons.ts. Paste into the browser console on the dev server (Safari or Chrome
+// src/lib/tasks/circle-colours.ts. Paste into the browser console on the dev server (Safari or Chrome
 // on a Mac, so the emoji are Apple's) and copy the printed table over the old one.
 //
 // Each emoji is drawn on a canvas and its outline pixels (opaque pixels next to transparent
@@ -7,8 +7,8 @@
 // thin grey line art vanishes on a mid blue even though grey and blue differ. A hue clashes
 // when 40% or more of the outline is that close, in either theme, at any circle lightness.
 
-const { ICONS } = await import('/src/lib/guess-icon.ts');
-const { PLAIN_ICON } = await import('/src/lib/task-icons.ts');
+const { ICONS } = await import('/src/lib/tasks/guess-icon.ts');
+const { PLAIN_ICON } = await import('/src/lib/tasks/circle-colours.ts');
 
 const HUE_FROM = 44;
 const HUE_TO = 346;
