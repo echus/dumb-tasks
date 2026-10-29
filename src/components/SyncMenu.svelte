@@ -14,7 +14,7 @@
   } from '../lib/sync/sync.svelte';
   import * as ui from '../lib/ui/icons';
 
-  const WEBDAV_HELP = 'https://github.com/echus/dumb-tasks#webdav-sync';
+  const WEBDAV_HELP = 'https://github.com/echus/dumb-tasks#set-up-webdav-sync';
 
   let open = $state(false);
   let menu: HTMLElement;
@@ -84,7 +84,7 @@
       backupMessage = `Restored. ${added} new task${added === 1 ? '' : 's'}.`;
       localChanged();
     } catch (e) {
-      backupMessage = e instanceof SyntaxError ? "That file isn't a Dumb Tasks backup." : (e as Error).message;
+      backupMessage = e instanceof SyntaxError ? 'This file is not a Dumb Tasks backup.' : (e as Error).message;
     }
   }
 
@@ -118,9 +118,9 @@
       {#snippet status()}
         <p class="account">{sync.account}</p>
         {#if sync.needsSignIn && sync.service === 'webdav'}
-          <p>The server turned down the saved password. Enter it again to keep syncing.</p>
+          <p>The server did not accept the saved password. Enter the password again to continue to sync.</p>
         {:else if sync.needsSignIn}
-          <p>Google signed this device out. Sign in again to keep syncing.</p>
+          <p>Google signed out this device. Sign in again to continue to sync.</p>
         {:else if sync.syncing}
           <p>Syncing…</p>
         {:else if sync.lastSyncedAt}
@@ -158,7 +158,7 @@
           {:else if sync.service === 'webdav'}
             <p>Disconnect WebDAV to sync with Google Drive.</p>
           {:else}
-            <p>Sync your tasks to Google Drive to access them on all your devices.</p>
+            <p>Sync your tasks with Google Drive to use them on all your devices.</p>
             <button
               class="action"
               onclick={() => {
@@ -209,8 +209,8 @@
               <input type="password" autocomplete="current-password" required bind:value={webdav.password} />
             </label>
             <p>
-              Best an app password. Tasks go in a <span class="nowrap">dumb-tasks</span> folder there, and the server has to
-              allow this app: <a href={WEBDAV_HELP} target="_blank" rel="noopener">how to set it up</a>.
+              The app keeps your tasks in a <span class="nowrap">dumb-tasks</span> folder at this address. The server must allow this app:
+              <a href={WEBDAV_HELP} target="_blank" rel="noopener">set up the server</a>.
             </p>
             <div class="actions">
               <button class="action" type="submit" disabled={checking}>{checking ? 'Connecting…' : 'Connect'}</button>
@@ -245,7 +245,10 @@
 
       <footer>
         <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
-        <a href="/privacy">Privacy</a>
+        <!-- Self-hosted builds (no Drive) have no privacy page: see vite.config.ts -->
+        {#if sync.driveAvailable}
+          <a href="/privacy">Privacy</a>
+        {/if}
       </footer>
     </div>
   {/if}
@@ -429,7 +432,7 @@
   }
 
   /* Small print under the sections: which version this is (to check a device has updated),
-     and where Play and Google expect a privacy link */
+     and where Play and Google expect a privacy link (only on the public instance) */
   footer {
     display: flex;
     justify-content: space-between;

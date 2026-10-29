@@ -67,7 +67,8 @@
 {#if showIntro}
   <p class="intro">
     Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync through
-    {sync.driveAvailable ? 'Google Drive or ' : ''}your WebDAV server. <a href="/privacy">Privacy</a>
+    {sync.driveAvailable ? 'Google Drive or ' : ''}your WebDAV server.
+    {#if sync.driveAvailable}<a href="/privacy">Privacy</a>{/if}
   </p>
 {/if}
 

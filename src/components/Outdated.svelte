@@ -1,6 +1,6 @@
 <!-- Shown instead of the app when a newer version of it has upgraded this device's tasks -->
 <main>
-  <p>Dumb Tasks has been updated. Reload to keep using it.</p>
+  <p>There is a new version of Dumb Tasks. Reload the app to continue.</p>
   <button onclick={() => location.reload()}>Reload</button>
 </main>
 

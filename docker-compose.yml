@@ -1,4 +1,4 @@
-# Self-hosted Dumb Tasks, with WebDAV sync. See "Self-hosting with Docker" in the README.
+# Self-hosted Dumb Tasks, with WebDAV sync. See "Self-host with Docker" in the README.
 services:
   dumb-tasks:
     build:
@@ -10,6 +10,3 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
-    # Your own privacy policy, in place of the one describing the public instance
-    # volumes:
-    #   - ./privacy.html:/usr/share/nginx/html/privacy.html:ro

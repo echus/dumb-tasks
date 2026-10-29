@@ -17,7 +17,7 @@ export interface WebDavAccount {
 /** The server turned down the username or password: the user needs to enter them again. */
 export class WebDavAuthError extends SignedOutError {
   constructor() {
-    super("The WebDAV server didn't accept the username or password.");
+    super('The WebDAV server did not accept the username or password.');
   }
 }
 
@@ -27,13 +27,13 @@ export class WebDavAuthError extends SignedOutError {
  */
 export class WebDavUnreachableError extends Error {
   constructor() {
-    super("Couldn't reach the WebDAV server. Will try again.");
+    super('Cannot connect to the WebDAV server. The app will try again.');
   }
 }
 
 class StatusError extends Error {
   constructor(public status: number) {
-    super(`The WebDAV server replied ${status}.`);
+    super(`The WebDAV server sent error ${status}.`);
   }
 }
 
@@ -49,12 +49,12 @@ export function serverUrl(input: string): string {
   try {
     url = new URL(input.trim());
   } catch {
-    throw new Error('Enter the full address, starting with https://.');
+    throw new Error('Enter the full address. It must start with https://.');
   }
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   const plainOk = local || location.protocol === 'http:';
   if (url.protocol !== 'https:' && !(url.protocol === 'http:' && plainOk)) {
-    throw new Error('The address has to start with https://.');
+    throw new Error('The address must start with https://.');
   }
   if (!url.pathname.endsWith('/')) url.pathname += '/';
   url.search = '';
@@ -140,12 +140,12 @@ export class WebDavBackend implements SyncBackend {
     } catch (e) {
       if (e instanceof WebDavUnreachableError) {
         throw new Error(
-          "Couldn't reach the server. Check the address, and that the server allows Dumb Tasks (CORS).",
+          'Cannot connect to the server. Make sure that the address is correct and the server allows this app (CORS).',
         );
       }
       if (e instanceof StatusError) {
         throw new Error(
-          e.status === 404 ? 'Nothing found at that address.' : "That address isn't a WebDAV folder.",
+          e.status === 404 ? 'There is no folder at this address.' : 'This address is not a WebDAV folder.',
         );
       }
       throw e;

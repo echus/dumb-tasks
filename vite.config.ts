@@ -2,7 +2,9 @@
 import { cloudflare } from '@cloudflare/vite-plugin'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { execSync } from 'node:child_process'
-import { defineConfig } from 'vite'
+import { rmSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 /**
@@ -19,8 +21,25 @@ function commit(): string {
   }
 }
 
+/**
+ * Leaves out the privacy page and the links to it. It describes the public instance, which has
+ * it because Google asks for one, so builds without Google Drive (self-hosted) don't need it.
+ */
+function withoutPrivacyPage(): Plugin {
+  return {
+    name: 'without-privacy-page',
+    apply: 'build',
+    transformIndexHtml: (html) => html.replace(' <a href="/privacy">Privacy</a>', ''),
+    // Before the service worker is made, so it doesn't list the page either
+    writeBundle() {
+      const { root, build } = this.environment.config
+      rmSync(resolve(root, build.outDir, 'privacy.html'), { force: true })
+    },
+  }
+}
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   define: {
     __COMMIT__: JSON.stringify(commit()),
   },
@@ -28,6 +47,7 @@ export default defineConfig({
     svelte(),
     // Runs the Worker (worker/index.ts) alongside the app in dev and preview. Not in tests.
     !process.env.VITEST && cloudflare(),
+    !loadEnv(mode, process.cwd()).VITE_GOOGLE_CLIENT_ID && withoutPrivacyPage(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
@@ -65,4 +85,4 @@ export default defineConfig({
   preview: {
     allowedHosts: ['.trycloudflare.com'],
   },
-})
+}))

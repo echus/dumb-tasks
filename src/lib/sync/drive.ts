@@ -14,7 +14,7 @@ const isDataFile = (name: string) => name.startsWith(PREFIX);
 /** The token has expired or been revoked: the user needs to sign in again. */
 export class DriveAuthError extends SignedOutError {
   constructor() {
-    super('Signed out of Google Drive.');
+    super('Google Drive signed out this device.');
   }
 }
 
@@ -28,7 +28,7 @@ class DriveNotFoundError extends Error {
 /** Drive couldn't be reached at all (offline, or the request was cut off): try again later. */
 export class DriveUnreachableError extends Error {
   constructor() {
-    super("Couldn't reach Google Drive. Will try again.");
+    super('Cannot connect to Google Drive. The app will try again.');
   }
 }
 
@@ -41,7 +41,7 @@ async function call(token: string, url: string, init: RequestInit = {}): Promise
   });
   if (res.status === 401) throw new DriveAuthError();
   if (res.status === 404) throw new DriveNotFoundError();
-  if (!res.ok) throw new Error(`Google Drive replied ${res.status}.`);
+  if (!res.ok) throw new Error(`Google Drive sent error ${res.status}.`);
   return res;
 }
 

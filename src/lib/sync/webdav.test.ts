@@ -132,7 +132,7 @@ describe('WebDavBackend', () => {
       dav.failWith = 'offline';
       await expect(backend().check()).rejects.toThrow('CORS');
       dav.failWith = 405;
-      await expect(backend().check()).rejects.toThrow("isn't a WebDAV folder");
+      await expect(backend().check()).rejects.toThrow('is not a WebDAV folder');
       dav.failWith = 401;
       await expect(backend().check()).rejects.toBeInstanceOf(WebDavAuthError);
     });
@@ -245,7 +245,7 @@ describe('WebDavBackend', () => {
 
     it('reports any other failure with its status', async () => {
       dav.failWith = 500;
-      await expect(backend().pull(null)).rejects.toThrow('The WebDAV server replied 500.');
+      await expect(backend().pull(null)).rejects.toThrow('The WebDAV server sent error 500.');
     });
   });
 });

@@ -241,7 +241,7 @@ describe('DriveBackend', () => {
 
     it('reports any other failure with its status', async () => {
       drive.failWith = 500;
-      await expect(backend().pull(null)).rejects.toThrow('Google Drive replied 500.');
+      await expect(backend().pull(null)).rejects.toThrow('Google Drive sent error 500.');
     });
   });
 });

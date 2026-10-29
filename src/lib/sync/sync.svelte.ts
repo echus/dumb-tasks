@@ -169,9 +169,9 @@ async function runOnce(retry = true): Promise<void> {
     // Files it couldn't take in: everything else still synced
     sync.needsUpdate = result.skipped.newer > 0;
     sync.error = result.skipped.newer
-      ? 'Another device synced with a newer version of Dumb Tasks. Reload to update this one.'
+      ? 'Another device synced with a newer version of Dumb Tasks. Reload the app to update it.'
       : result.skipped.unreadable
-        ? "Another device's sync file couldn't be read, so its changes are missing here."
+        ? 'The app cannot read the sync file of another device. Changes from that device are not here.'
         : '';
   } catch (e) {
     if (settings !== current) return;
@@ -242,7 +242,7 @@ export async function reconnectDrive() {
     // Merging this device's tasks into another account should be a choice, not a slip
     if (email !== current.email) {
       signOut().catch(() => {}); // the Worker now holds the other account's sign-in
-      throw new Error(`That's ${email}, not ${current.email}. To switch accounts, disconnect first.`);
+      throw new Error(`This is ${email}, not ${current.email}. To use a different account, disconnect first.`);
     }
     current.token = token;
     fullSignIn = false;
