@@ -37,6 +37,10 @@ export default defineConfig({
       },
     }),
   ],
+  // Not the copies of the app in other branches' worktrees
+  test: {
+    exclude: ['**/node_modules/**', '.claude/**'],
+  },
   // Lets `npm run preview` be reached through a Cloudflare quick tunnel for phone testing
   preview: {
     allowedHosts: ['.trycloudflare.com'],

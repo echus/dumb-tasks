@@ -17,7 +17,6 @@
   let caret = 0;
   let words = $state<HTMLElement>();
 
-
   // Split the text around the parsed deadline phrase so it can be underlined.
   const parts = $derived.by(() => {
     const phrase = task.deadline?.phrase;

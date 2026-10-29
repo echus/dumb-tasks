@@ -40,12 +40,12 @@ days, then dropped like deleted ones (see Tombstone purge).
   can be shared into it from any app.
 - **Add:** every list starts with an "add a task" row, laid out like a task with an empty
   + ring for its icon. It stays in view (under the phone tabs) while a long list scrolls. Enter adds the task just below it, ready for the next one.
-- **Move:** drag a task. With a mouse it's the browser's drag-and-drop; on touch screens,
-  long-press a task to pick it up (a copy of the task follows your finger and the original fades). Drop on a list to
-  place it above or below the task under the pointer, or at the end. A thin line showing
-  where it'll land is the only drag highlight; a phone tab being dropped on gets the same
-  thin underline. On phones, dropping on
-  a tab sends the task to the end of that list without switching tabs.
+- **Move:** drag a task: with a mouse, press and move; on touch screens, long-press to pick
+  it up. Mouse and touch share one implementation, not the browser's drag-and-drop (unreliable
+  with touch, and it can't move the rows). A copy of the task follows the pointer and the rows
+  part to show where it will land; near a list's top or bottom edge the list scrolls. On
+  phones, dropping on a tab sends the task to the end of that list without switching tabs,
+  and holding it over a tab opens that list.
 - **Reorder:** drag within a bucket.
 - **Complete:** click or tap the task's icon. With a mouse, hovering it first turns it into a
   tick. Task leaves the list.
@@ -203,7 +203,9 @@ Optional and pluggable. The app pulls the data file, merges, and pushes back.
   which would sign out every device.
 - **Merge:** last-write-wins **per field** using `fieldUpdatedAt`, so editing text on one
   device and moving the task on another both survive. Deletes are tombstones. (Built, and
-  already used by backup import.)
+  already used by backup import.) An edit is stamped just after the task's last edit when
+  this device's clock is behind the one that made it, so an edit made after seeing another
+  always wins.
 - **Concurrency:** Drive has no conditional writes, so the file's `version` is checked just
   before writing; if it moved, re-pull, re-merge, retry. A write that still races another is
   harmless: the losing device keeps its changes locally and pushes them on its next sync.

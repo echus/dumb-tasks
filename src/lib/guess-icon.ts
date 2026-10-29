@@ -111,7 +111,7 @@ function better(hit: string | undefined, best: string | null): hit is string {
 
 /**
  * Best-guess icon for a task: exact keyword matches first, then near misses.
- * Null when nothing fits; the UI then shows an empty box.
+ * Null when nothing fits; the UI then shows PLAIN_ICON.
  */
 export function guessIcon(text: string): string | null {
   const words =
