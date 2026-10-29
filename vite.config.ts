@@ -1,11 +1,26 @@
 /// <reference types="vitest/config" />
 import { cloudflare } from '@cloudflare/vite-plugin'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { execSync } from 'node:child_process'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+/** The commit being built (Workers Builds says which), shown so you can tell what a device runs. */
+function commit(): string {
+  const sha = process.env.WORKERS_CI_COMMIT_SHA
+  if (sha) return sha.slice(0, 7)
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'unknown'
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __COMMIT__: JSON.stringify(commit()),
+  },
   plugins: [
     svelte(),
     // Runs the Worker (worker/index.ts) alongside the app in dev and preview. Not in tests.

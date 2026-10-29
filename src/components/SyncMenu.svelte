@@ -123,7 +123,10 @@
         {/if}
       </section>
 
-      <a class="privacy" href="/privacy">Privacy</a>
+      <footer>
+        <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
+        <a href="/privacy">Privacy</a>
+      </footer>
     </div>
   {/if}
 </div>
@@ -271,17 +274,22 @@
     cursor: default;
   }
 
-  /* Small print under the sections, where Play and Google expect a privacy link */
-  .privacy {
-    display: block;
+  /* Small print under the sections: which version this is (to check a device has updated),
+     and where Play and Google expect a privacy link */
+  footer {
+    display: flex;
+    justify-content: space-between;
     padding: 10px 16px;
     border-top: 1px solid var(--glow-ring);
     color: var(--muted);
     font-size: 0.8em;
-    text-align: right;
   }
 
-  .privacy:hover {
+  footer a {
+    color: inherit;
+  }
+
+  footer a:hover {
     color: var(--text);
   }
 </style>
