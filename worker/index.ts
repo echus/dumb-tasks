@@ -50,7 +50,7 @@ export default {
 
 /** After the sign-in popup: swaps its code for tokens and remembers the refresh token. */
 async function exchange(request: Request, env: Env, url: URL): Promise<Response> {
-  const { code } = await request.json<{ code?: string }>();
+  const { code } = await request.json<{ code?: string }>().catch(() => ({ code: undefined }));
   if (!code) return new Response('Missing code', { status: 400 });
   const res = await google(env, { grant_type: 'authorization_code', code, redirect_uri: 'postmessage' });
   if (!res.ok) {

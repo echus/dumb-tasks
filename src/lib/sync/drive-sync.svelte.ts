@@ -51,6 +51,27 @@ let editTimer: ReturnType<typeof setTimeout> | undefined;
 // Google's full sign-in. It can't follow straight on, as the popup needs a fresh click.
 let fullSignIn = false;
 
+async function load(): Promise<DriveSettings | null> {
+  const saved = await db.settings.get('drive');
+  // Older versions saved fewer fields
+  return saved ? { fileId: null, cursor: null, pushedKey: null, ...JSON.parse(saved.value) } : null;
+}
+
+/** Takes in what another tab of the app saved: a sync, a new token, a disconnect. */
+async function catchUp() {
+  const saved = await load();
+  if (saved && settings && saved.email === settings.email) Object.assign(settings, saved);
+  else {
+    settings = saved;
+    show();
+  }
+}
+
+/** One sync at a time across this device's open tabs, as they share its file and settings. */
+function oneAtATime(fn: () => Promise<void>): Promise<void> {
+  return navigator.locks ? navigator.locks.request('drive-sync', fn) : fn();
+}
+
 async function save() {
   if (settings) await db.settings.put({ key: 'drive', value: JSON.stringify(settings) });
   else await db.settings.delete('drive');
@@ -135,7 +156,10 @@ export function syncNow(): Promise<void> {
   running = (async () => {
     do {
       again = false;
-      await runOnce();
+      await oneAtATime(async () => {
+        await catchUp();
+        await runOnce();
+      });
     } while (again);
     running = null;
   })();
@@ -163,14 +187,14 @@ export async function reconnect() {
   sync.error = '';
   try {
     const token = await signIn(fullSignIn ? undefined : settings.email);
+    const email = await fetchEmail(token.value);
     if (!settings) return; // disconnected meanwhile
-    // The full sign-in may have picked another account: sync it as if newly connected
-    const email = fullSignIn ? await fetchEmail(token.value) : settings.email;
-    if (!settings) return;
+    // Merging this device's tasks into another account should be a choice, not a slip
     if (email !== settings.email) {
-      settings = newSettings(email, token);
-      tidied = false;
-    } else settings.token = token;
+      signOut().catch(() => {}); // the Worker now holds the other account's sign-in
+      throw new Error(`That's ${email}, not ${settings.email}. To switch accounts, disconnect first.`);
+    }
+    settings.token = token;
     fullSignIn = false;
     sync.needsSignIn = false;
     await save();
@@ -205,9 +229,7 @@ async function deviceId(): Promise<string> {
 export async function startSync() {
   if (!CLIENT_ID) return;
   device = await deviceId();
-  const saved = await db.settings.get('drive');
-  // Older versions saved fewer fields
-  settings = saved ? { fileId: null, cursor: null, pushedKey: null, ...JSON.parse(saved.value) } : null;
+  settings = await load();
   show();
 
   onLocalChange(() => {

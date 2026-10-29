@@ -204,7 +204,9 @@ rewrites this device's file if that left it out of date.
   (`worker/index.ts`, beside the static files) swaps it for a refresh token, which needs the
   client secret, and keeps it in an HttpOnly cookie. When the hour-long access token runs out,
   the app quietly gets a new one from the Worker, so people stay signed in until they
-  disconnect or revoke access. "Sign in again" shows only if that fails. No tasks pass
+  disconnect or revoke access. "Sign in again" shows only if that fails, and only takes the
+  same account: switching accounts means disconnecting first, so this device's tasks never
+  merge into another account by accident. No tasks pass
   through the Worker. Disconnect forgets this device's cookie without revoking Google's grant,
   which would sign out every device.
 - **Merge:** last-write-wins **per field** using `fieldUpdatedAt`, so editing text on one
