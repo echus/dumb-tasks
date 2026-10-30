@@ -142,8 +142,11 @@ accepts `http` for a server on this computer.
 
 ## Layout
 
+Code outside `src/lib/` imports it as `$lib/...`.
+
 - `src/lib/types.ts`: the data model (`Task`, `DataFile`)
 - `src/lib/db.ts`: IndexedDB tables
+- `src/lib/config.ts`: the build settings (the Google client, which turns on Drive sync)
 - `src/lib/startup.ts`: Android share target, persistent storage
 - `src/lib/tasks/`: the task list itself
   - `tasks.ts`: every task operation (add, move, complete, edit, delete)
@@ -160,15 +163,22 @@ accepts `http` for a server on this computer.
   - `local-changes.ts`: tells sync a task was written
   - `drive.ts`, `google-auth.ts`: the Google Drive backend and sign-in
   - `webdav.ts`: the WebDAV backend
+  - `device-files.ts`: what both backends do alike with the device files
+  - `settings.ts`: what this device keeps about syncing (service, sign-in, progress)
   - `sync.svelte.ts`: when to sync, connecting each service, and the state the sync menu shows
-- `src/lib/ui/`: drag and drop (`dnd.ts`), shared UI state, theme, icons
+- `src/lib/ui/`: the parts of the UI that are not components
+  - `drag-and-drop.ts`: dragging a task, from press to drop, with `drag-layout.ts` (where it
+    lands), `drag-preview.ts` (the copy under the pointer) and `drag-scroll.ts`
+  - `caret.ts`: puts the caret where a task's text was clicked
+  - `state.svelte.ts`, `theme.svelte.ts`, `icons.ts`: shared UI state, theme, icons
 - `src/components/`: the UI (Svelte 5)
+  - `sync-menu/`: the sections of the sync and backup menu (`SyncMenu.svelte`)
 - `worker/index.ts`: the sign-in Worker, which keeps people signed in to Drive
 - `Dockerfile`, `docker-compose.yml`, `docker/nginx.conf`: the self-hosted image (WebDAV only)
 - `tests/`: the tests, in the same layout as `src/`
   - `helpers/`: fake servers, fake Google sign-in, and tabs of the app on one device
   - `servers/`: the WebDAV servers for `npm run test:servers` and `npm run test:browser`
-  - `browser/`: the tests for `npm run test:browser`
+  - `browser/`: the tests for `npm run test:browser`: tasks, offline, drag and drop, sync
 
 ## License
 
