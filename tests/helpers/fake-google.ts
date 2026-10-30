@@ -3,8 +3,8 @@
 // out new tokens with, and whether the build has Drive at all. A test file puts it in place
 // of google-auth.ts and config.ts with
 //
-//   vi.mock('<path to src>/lib/sync/google-auth', () => google.module);
-//   vi.mock('<path to src>/lib/config', () => google.config);
+//   vi.mock('$lib/sync/google-auth', () => google.module);
+//   vi.mock('$lib/config', () => google.config);
 //   const google = fakeGoogle();
 //
 // which works as long as nothing the file imports up front loads either.

@@ -4,6 +4,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { execSync } from 'node:child_process'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -76,7 +77,7 @@ export default defineConfig(({ mode }) => ({
     }),
   ],
   resolve: {
-    alias: { $lib: resolve(import.meta.dirname, 'src/lib') },
+    alias: { $lib: fileURLToPath(new URL('src/lib', import.meta.url)) },
     // Svelte's browser build in tests too: its server build can't mount components
     ...(process.env.VITEST && { conditions: ['browser'] }),
   },
