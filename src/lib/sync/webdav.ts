@@ -1,3 +1,4 @@
+import { deviceFileName, isDeviceFile, REQUEST_TIMEOUT, staleFiles } from './device-files';
 import { SignedOutError, type RemoteFile, type SyncBackend } from './engine';
 
 // Each device's data file lives in a dumb-tasks folder on the user's own WebDAV server (e.g.
@@ -5,10 +6,6 @@ import { SignedOutError, type RemoteFile, type SyncBackend } from './engine';
 // allow the app's origin (CORS): see the README for setup.
 
 const FOLDER = 'dumb-tasks/';
-const PREFIX = 'device-';
-// A server that stops answering (busy, waking a disk, a dropped connection) would hold up
-// every later sync, in every tab: give up, and try again on the next one
-const TIMEOUT = 30_000;
 // Nextcloud keeps a file's ETag when it's written again within the same second at the same
 // size, so other devices would miss that write: writes to this device's file wait this long
 const WRITE_GAP = 1_100;
@@ -114,7 +111,7 @@ export class WebDavBackend implements SyncBackend {
   constructor(account: WebDavAccount, device: string) {
     this.root = account.url;
     this.folder = new URL(FOLDER, account.url).href;
-    this.name = `${PREFIX}${device}.json`;
+    this.name = deviceFileName(device);
     this.auth = basicAuth(account.username, account.password);
   }
 
@@ -123,7 +120,7 @@ export class WebDavBackend implements SyncBackend {
       ...init,
       cache: 'no-store',
       headers: { ...init.headers, Authorization: this.auth },
-      signal: AbortSignal.timeout(TIMEOUT),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT),
     }).catch(() => {
       throw new WebDavUnreachableError();
     });
@@ -165,7 +162,7 @@ export class WebDavBackend implements SyncBackend {
   private async list(): Promise<Entry[]> {
     try {
       const res = await this.propfind(this.folder, '1');
-      return parseListing(await res.text()).filter((f) => f.name.startsWith(PREFIX));
+      return parseListing(await res.text()).filter((f) => isDeviceFile(f.name));
     } catch (e) {
       if (isMissing(e)) return []; // no device has synced yet
       throw e;
@@ -217,12 +214,9 @@ export class WebDavBackend implements SyncBackend {
     }
   }
 
-  // Ages are measured back from the newest file, by the server's clock, so a device whose
-  // own clock is far ahead can't sweep away files still in use.
   async removeStale(maxAge: number) {
     const files = await this.list();
-    const newest = Math.max(...files.map((f) => f.modifiedAt));
-    const stale = files.filter((f) => f.name !== this.name && f.modifiedAt < newest - maxAge);
+    const stale = staleFiles(files, this.name, maxAge, (f) => f.modifiedAt);
     await Promise.all(
       stale.map((f) =>
         // E.g. locked (423) or not allowed (403): tried again next time the app opens
