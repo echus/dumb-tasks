@@ -110,13 +110,18 @@ The app keeps one file for each device in a `dumb-tasks` folder at that address.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev            # http://localhost:5173
 npm test
-npm run check    # type check
+npm run test:servers   # WebDAV sync against Apache and Nextcloud, in Docker
+npm run check          # type check
 npm run build
 ```
 
 The service worker runs only in production builds: `npm run build && npm run preview`.
+
+`npm run test:servers` needs Docker and the internet (for the Nextcloud WebAppPassword app). It
+sets up each server as this README says, and takes about a minute the first time. To keep the
+servers running between runs, set `KEEP_SERVERS=1`.
 
 To test WebDAV sync, use a WebDAV server that allows the origin `http://localhost:5173`. The app
 accepts `http` for a server on this computer.
@@ -155,6 +160,9 @@ accepts `http` for a server on this computer.
 - `src/components/`: the UI (Svelte 5)
 - `worker/index.ts`: the sign-in Worker, which keeps people signed in to Drive
 - `Dockerfile`, `docker-compose.yml`, `docker/nginx.conf`: the self-hosted image (WebDAV only)
+- `tests/`: the tests, in the same layout as `src/`
+  - `helpers/`: fake servers, fake Google sign-in, and tabs of the app on one device
+  - `servers/`: the WebDAV servers for `npm run test:servers`
 
 ## License
 

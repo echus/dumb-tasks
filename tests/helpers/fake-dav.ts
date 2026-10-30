@@ -17,6 +17,7 @@ export class FakeDav implements FakeServer {
   folder = false; // whether the app's folder exists
   files = new Map<string, { content: string; modified: string; etag: number }>();
   calls: string[] = [];
+  headers = new Set<string>(); // the names of every header sent, in lowercase
   nextEtag = 1;
   prefix = 'd';
   fullHrefs = false;
@@ -44,6 +45,7 @@ export class FakeDav implements FakeServer {
     const method = init.method ?? 'GET';
     const folder = this.folderPath;
     this.calls.push(`${method} ${url.pathname.replace(folder, '')}`);
+    for (const name of new Headers(init.headers).keys()) this.headers.add(name);
     await this.gate.pass();
     if (this.failWith === 'offline') throw new TypeError('Failed to fetch');
     if (this.failWith === 'stall') {

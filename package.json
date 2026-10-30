@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json && tsc -p tsconfig.worker.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:servers": "vitest run --config tests/servers/vitest.config.ts"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.65.0",

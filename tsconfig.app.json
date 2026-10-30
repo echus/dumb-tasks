@@ -18,6 +18,6 @@
     "moduleDetection": "force"
   },
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "tests/**/*.ts"],
-  // Checked with the Worker's types, in tsconfig.worker.json
-  "exclude": ["tests/worker/**"]
+  // Checked with the Worker's types (tsconfig.worker.json), and with Node's (tsconfig.node.json)
+  "exclude": ["tests/worker/**", "tests/servers/setup.ts", "tests/servers/vitest.config.ts"]
 }

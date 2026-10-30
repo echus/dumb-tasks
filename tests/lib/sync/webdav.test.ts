@@ -2,6 +2,7 @@
 // @vitest-environment-options {"url": "https://dumbtasks.app/"}
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { at, DAY, FakeDav, ROOT } from '../../helpers/fake-dav';
+import { readmeAllows } from '../../helpers/readme';
 import { serverUrl, WebDavAuthError, WebDavBackend, WebDavUnreachableError } from '../../../src/lib/sync/webdav';
 
 let dav: FakeDav;
@@ -171,6 +172,24 @@ describe('WebDavBackend', () => {
       dav.add('device-drawer.json', 'drawer', at(91));
       dav.failDelete = 401;
       await expect(backend().removeStale(MAX_AGE)).rejects.toBeInstanceOf(WebDavAuthError);
+    });
+  });
+
+  // Browsers only send what the server's CORS setup allows, so the README's has to cover it all
+  describe('requests', () => {
+    it("use only the methods and headers the README's server setup allows", async () => {
+      await backend().check();
+      await backend().push('mine'); // into no folder yet: PUT, MKCOL, PUT
+      dav.add('device-phone.json', 'phone');
+      dav.add('device-drawer.json', 'drawer', at(91));
+      await backend().removeStale(90 * DAY);
+      await backend().pull(null);
+
+      const methods = new Set(dav.calls.map((call) => call.split(' ')[0]));
+      expect([...methods].sort()).toEqual(['DELETE', 'GET', 'MKCOL', 'PROPFIND', 'PUT']);
+      expect([...methods].filter((m) => !readmeAllows('Methods').includes(m))).toEqual([]);
+      const allowed = readmeAllows('Headers').map((h) => h.toLowerCase());
+      expect([...dav.headers].filter((h) => !allowed.includes(h))).toEqual([]);
     });
   });
 
