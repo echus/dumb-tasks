@@ -7,7 +7,7 @@
   import { track } from '../lib/tasks/history.svelte';
   import type { Task } from '../lib/types';
   import { clickOffset } from '../lib/ui/caret';
-  import { dragTask } from '../lib/ui/dnd';
+  import { dragTask } from '../lib/ui/drag-and-drop';
   import { clock, drag } from '../lib/ui/state.svelte';
 
   let { task }: { task: Task } = $props();

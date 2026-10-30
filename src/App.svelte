@@ -74,7 +74,7 @@
 
 <div class="bar" bind:clientHeight={barHeight}>
   <!-- Dropping a dragged task on a tab sends it to the end of that list, without switching
-       tabs; holding it there opens the tab (see dnd.ts) -->
+       tabs; holding it there opens the tab (see drag-and-drop.ts) -->
   <div class="tabs" role="tablist" aria-label="Buckets">
     {#each BUCKETS as bucket (bucket)}
       <button
