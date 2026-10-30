@@ -1,11 +1,18 @@
-import { ulid } from 'ulid';
 import { DRIVE_AVAILABLE } from '../config';
-import { db } from '../db';
 import { DriveAuthError, DriveBackend, fetchEmail } from './drive';
 import { SignedOutError, startFrom, syncWith } from './engine';
-import { loadGoogle, refreshToken, signIn, signOut, type AccessToken } from './google-auth';
+import { loadGoogle, refreshToken, signIn, signOut } from './google-auth';
 import { onLocalChange } from './local-changes';
-import { serverUrl, WebDavBackend, type WebDavAccount } from './webdav';
+import {
+  deviceId,
+  identity,
+  loadSettings,
+  NOT_SYNCED,
+  saveSettings,
+  type DriveSettings,
+  type Settings,
+} from './settings';
+import { serverUrl, WebDavBackend } from './webdav';
 
 // When and how the app syncs, with Google Drive or a WebDAV server, and the state the sync
 // menu shows. Syncs on open, when the app comes back into view or its window gets focus, a
@@ -16,37 +23,6 @@ const EDIT_DELAY = 3_000;
 const INTERVAL = 60_000;
 const FOCUS_GAP = 5_000; // focus often comes with coming into view, which already synced
 const EXPIRY_MARGIN = 60_000; // don't start a sync with a token about to run out
-
-// Device-only, in the settings table, under the service's name: one service at a time.
-interface Progress {
-  lastSyncedAt: string | null; // when the last sync that worked began
-  cursor: string | null; // see SyncState
-  pushedKey: string | null;
-}
-
-// The token is kept so syncs within its hour don't each ask the Worker for a new one; it
-// only grants access to the app's own Drive folder.
-interface DriveSettings extends Progress {
-  service: 'drive';
-  email: string;
-  token: AccessToken;
-  fileId: string | null; // this device's file in Drive
-}
-
-// The password is kept as entered, like the Drive token. Best an app password, which can be
-// revoked on its own.
-interface WebDavSettings extends Progress, WebDavAccount {
-  service: 'webdav';
-}
-
-type Settings = DriveSettings | WebDavSettings;
-
-const NOT_SYNCED: Progress = { lastSyncedAt: null, cursor: null, pushedKey: null };
-
-/** Who and where, to tell a sign-in to the same account from one to another. */
-function identity(s: Settings): string {
-  return s.service === 'drive' ? `drive ${s.email}` : `webdav ${s.username} ${s.url}`;
-}
 
 export const sync = $state({
   driveAvailable: DRIVE_AVAILABLE,
@@ -73,20 +49,9 @@ let editTimer: ReturnType<typeof setTimeout> | undefined;
 // Google's full sign-in. It can't follow straight on, as the popup needs a fresh click.
 let fullSignIn = false;
 
-async function load(): Promise<Settings | null> {
-  const [drive, webdav] = await db.settings.bulkGet(['drive', 'webdav']);
-  if (webdav) return { service: 'webdav', ...JSON.parse(webdav.value) };
-  // A build without Drive (self-hosted) can't sync with it or show its Disconnect button, so
-  // it ignores the Drive row. A WebDAV connect replaces it. Older versions saved fewer fields
-  if (drive && DRIVE_AVAILABLE) {
-    return { service: 'drive', fileId: null, cursor: null, pushedKey: null, ...JSON.parse(drive.value) };
-  }
-  return null;
-}
-
 /** Takes in what another tab of the app saved: a sync, a new token, a disconnect. */
 async function catchUp() {
-  const saved = await load();
+  const saved = await loadSettings();
   if (saved && settings && identity(saved) === identity(settings)) Object.assign(settings, saved);
   else {
     // Disconnected or switched: what this tab showed was about the old connection
@@ -106,21 +71,13 @@ function oneAtATime(fn: () => Promise<void>): Promise<void> {
   return navigator.locks ? navigator.locks.request('drive-sync', fn) : fn();
 }
 
-/** Saves the settings in place of any other service's. Only from within oneAtATime. */
-async function save() {
-  await db.transaction('rw', db.settings, async () => {
-    await db.settings.bulkDelete(['drive', 'webdav']);
-    if (settings) await db.settings.put({ key: settings.service, value: JSON.stringify(settings) });
-  });
-}
-
 /**
- * save() from a click, after any sync running in another tab: else that sync, finishing
- * late, could put back the connection this click replaced. Not around syncNow, which takes
- * its own turn (locks don't nest).
+ * Saves the settings from a click, after any sync running in another tab: else that sync,
+ * finishing late, could put back the connection this click replaced. Not around syncNow,
+ * which takes its own turn (locks don't nest).
  */
 function saveInTurn(): Promise<void> {
-  return oneAtATime(save);
+  return oneAtATime(() => saveSettings(settings));
 }
 
 function show() {
@@ -150,7 +107,7 @@ async function freshToken(current: DriveSettings): Promise<string | null> {
   }
   sync.needsSignIn = false;
   current.token = token;
-  await save();
+  await saveSettings(settings);
   return token.value;
 }
 
@@ -188,7 +145,7 @@ async function runOnce(retry = true): Promise<void> {
     });
     if (current.service === 'drive' && backend instanceof DriveBackend) current.fileId = backend.fileId;
     sync.needsSignIn = false;
-    await save();
+    await saveSettings(settings);
     // Files it couldn't take in: everything else still synced
     sync.needsUpdate = result.skipped.newer > 0;
     sync.error = result.skipped.newer
@@ -326,19 +283,10 @@ export async function disconnect() {
   if (was?.service === 'drive') signOut().catch(() => {});
 }
 
-/** This install's id, made the first time it's needed. */
-async function deviceId(): Promise<string> {
-  const saved = await db.settings.get('device');
-  if (saved) return saved.value;
-  const id = ulid();
-  await db.settings.put({ key: 'device', value: id });
-  return id;
-}
-
 /** Called once at startup. */
 export async function startSync() {
   device = await deviceId();
-  settings = await load();
+  settings = await loadSettings();
   show();
 
   onLocalChange(() => {
