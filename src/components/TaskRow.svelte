@@ -6,6 +6,7 @@
   import { completeTask, deleteTask, dismissDeadline, editText } from '../lib/tasks/tasks';
   import { track } from '../lib/tasks/history.svelte';
   import type { Task } from '../lib/types';
+  import { clickOffset } from '../lib/ui/caret';
   import { dragTask } from '../lib/ui/dnd';
   import { clock, drag } from '../lib/ui/state.svelte';
 
@@ -29,30 +30,9 @@
     };
   });
 
-  /** Where in the text a click landed, so the caret goes there like in any text field. */
-  function clickOffset(e: MouseEvent): number | null {
-    let node: Node | null = null;
-    let offset = 0;
-    if (document.caretPositionFromPoint) {
-      const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-      if (pos) ({ offsetNode: node, offset } = pos);
-    } else if (document.caretRangeFromPoint) {
-      const range = document.caretRangeFromPoint(e.clientX, e.clientY);
-      if (range) ({ startContainer: node, startOffset: offset } = range);
-    }
-    if (!node || !words?.contains(node)) return null;
-
-    let before = 0;
-    const walker = document.createTreeWalker(words!, NodeFilter.SHOW_TEXT);
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-      if (n === node) return before + offset;
-      before += n.textContent!.length;
-    }
-    return null;
-  }
-
   function startEdit(e: MouseEvent) {
-    caret = clickOffset(e) ?? task.text.length;
+    // The caret goes where the click landed, as in any text field
+    caret = (words && clickOffset(e, words)) ?? task.text.length;
     draft = task.text;
     editing = true;
   }
