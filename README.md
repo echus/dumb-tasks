@@ -61,7 +61,15 @@ the app (CORS). The origin is the scheme and host of the app address, for exampl
 ### Apache
 
 1. Enable `mod_dav`, `mod_dav_fs`, `mod_auth_basic` and `mod_headers`.
-2. Add this configuration to the `<Directory>` of the shared folder. Change the origin to the
+2. Set the lock database in the server configuration, outside all `<Directory>` sections.
+   Without it, Apache cannot save files. Debian and Ubuntu set it when you enable `mod_dav_fs`.
+
+   ```apache
+   DavLockDB /var/lib/apache2/dav/lockdb
+   ```
+
+   Apache must have write access to the folder of the lock database.
+3. Add this configuration to the `<Directory>` of the shared folder. Change the origin to the
    app origin.
 
    ```apache
@@ -80,7 +88,7 @@ the app (CORS). The origin is the scheme and host of the app address, for exampl
    Header always set Access-Control-Max-Age "86400"
    ```
 
-3. Restart Apache.
+4. Restart Apache.
 
 ### Other WebDAV servers
 
