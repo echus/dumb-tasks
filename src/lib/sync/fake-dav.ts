@@ -1,3 +1,5 @@
+import { Gate, type FakeServer } from './fake-server';
+
 // For tests only: an in-memory WebDAV server, and dates to set its files' ages by.
 
 export const DAY = 86_400_000;
@@ -11,7 +13,7 @@ export const ROOT = 'https://cloud.example.com/remote.php/dav/files/me/';
  * folder and its files. Replies vary the way real servers do: namespace prefixes, full or
  * path-only hrefs, ETags or none.
  */
-export class FakeDav {
+export class FakeDav implements FakeServer {
   folder = false; // whether the app's folder exists
   files = new Map<string, { content: string; modified: string; etag: number }>();
   calls: string[] = [];
@@ -21,8 +23,8 @@ export class FakeDav {
   etags = true;
   failWith: number | 'offline' | 'stall' | null = null;
   failDelete: number | null = null; // e.g. 423: the file is locked
+  gate = new Gate();
   private folderPath: string;
-  private held: { arrived: () => void; released: Promise<void> } | null = null;
 
   constructor(
     public root = ROOT,
@@ -37,32 +39,12 @@ export class FakeDav {
     this.files.set(name, { content, modified, etag: this.nextEtag++ });
   }
 
-  /** Holds back every reply until release(). `arrived` settles once a request is waiting. */
-  hold(): { arrived: Promise<void>; release: () => void } {
-    let arrived!: () => void;
-    let release!: () => void;
-    const hasArrived = new Promise<void>((resolve) => (arrived = resolve));
-    const released = new Promise<void>((resolve) => (release = resolve));
-    this.held = { arrived, released };
-    return {
-      arrived: hasArrived,
-      release: () => {
-        this.held = null;
-        release();
-      },
-    };
-  }
-
   fetch = async (input: string | URL | Request, init: RequestInit = {}): Promise<Response> => {
     const url = new URL(String(input));
     const method = init.method ?? 'GET';
     const folder = this.folderPath;
     this.calls.push(`${method} ${url.pathname.replace(folder, '')}`);
-    const held = this.held;
-    if (held) {
-      held.arrived();
-      await held.released;
-    }
+    await this.gate.pass();
     if (this.failWith === 'offline') throw new TypeError('Failed to fetch');
     if (this.failWith === 'stall') {
       return new Promise((_, reject) => init.signal?.addEventListener('abort', () => reject(init.signal?.reason)));
@@ -125,13 +107,4 @@ export class FakeDav {
   names(): string[] {
     return [...this.files.keys()].sort();
   }
-}
-
-/** A fetch that sends each request to the server whose folder it's in. */
-export function serve(...servers: FakeDav[]): typeof fetch {
-  return (input, init) => {
-    const server = servers.find((s) => String(input).startsWith(s.root));
-    if (!server) return Promise.reject(new TypeError(`No server at ${input}`)); // as fetch does
-    return server.fetch(input, init);
-  };
 }
