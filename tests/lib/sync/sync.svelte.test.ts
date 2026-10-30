@@ -11,6 +11,7 @@ import { clearDevice, openTab, setUpDevice, type Tab } from '../../helpers/test-
 
 // Built when a tab first loads the sync module, after this file's top level has run
 vi.mock('../../../src/lib/sync/google-auth', () => google.module);
+vi.mock('../../../src/lib/config', () => google.config);
 const google = fakeGoogle();
 
 let dav: FakeDav;

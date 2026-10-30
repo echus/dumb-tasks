@@ -1,8 +1,9 @@
 import { ulid } from 'ulid';
+import { DRIVE_AVAILABLE } from '../config';
 import { db } from '../db';
 import { DriveAuthError, DriveBackend, fetchEmail } from './drive';
 import { SignedOutError, startFrom, syncWith } from './engine';
-import { CLIENT_ID, loadGoogle, refreshToken, signIn, signOut, type AccessToken } from './google-auth';
+import { loadGoogle, refreshToken, signIn, signOut, type AccessToken } from './google-auth';
 import { onLocalChange } from './local-changes';
 import { serverUrl, WebDavBackend, type WebDavAccount } from './webdav';
 
@@ -48,7 +49,7 @@ function identity(s: Settings): string {
 }
 
 export const sync = $state({
-  driveAvailable: Boolean(CLIENT_ID),
+  driveAvailable: DRIVE_AVAILABLE,
   service: null as Settings['service'] | null, // null: not syncing
   account: '', // the Google email, or the WebDAV user and server
   syncing: false,
@@ -77,7 +78,7 @@ async function load(): Promise<Settings | null> {
   if (webdav) return { service: 'webdav', ...JSON.parse(webdav.value) };
   // A build without Drive (self-hosted) can't sync with it or show its Disconnect button, so
   // it ignores the Drive row. A WebDAV connect replaces it. Older versions saved fewer fields
-  if (drive && CLIENT_ID) {
+  if (drive && DRIVE_AVAILABLE) {
     return { service: 'drive', fileId: null, cursor: null, pushedKey: null, ...JSON.parse(drive.value) };
   }
   return null;

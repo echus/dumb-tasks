@@ -1,3 +1,5 @@
+import { GOOGLE_CLIENT_ID } from '../config';
+
 // Google sign-in for Drive sync. Google's popup signs the user in and hands back a one-time
 // code; the Worker (worker/index.ts) swaps it for a refresh token, kept in a cookie this page
 // can't read. From then on the Worker hands out fresh hour-long access tokens on request, with
@@ -5,9 +7,6 @@
 
 // Only the app's own hidden folder in Drive, never the rest of the user's files.
 const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
-
-/** Set in .env.local; without it the app works as before, with sync unavailable. */
-export const CLIENT_ID: string | undefined = import.meta.env.VITE_GOOGLE_CLIENT_ID || undefined;
 
 export interface AccessToken {
   value: string;
@@ -73,7 +72,7 @@ export async function signIn(loginHint?: string): Promise<AccessToken> {
   const google = await loadGoogle();
   const code = await new Promise<string>((resolve, reject) => {
     const client = google.accounts.oauth2.initCodeClient({
-      client_id: CLIENT_ID!,
+      client_id: GOOGLE_CLIENT_ID!,
       scope: SCOPE,
       ux_mode: 'popup',
       login_hint: loginHint,

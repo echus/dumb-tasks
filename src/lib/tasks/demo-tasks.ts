@@ -1,6 +1,6 @@
 import { generateKeyBetween } from 'fractional-indexing';
+import { DRIVE_AVAILABLE } from '../config';
 import { db } from '../db';
-import { CLIENT_ID } from '../sync/google-auth';
 import type { Task } from '../types';
 import { derive } from './tasks';
 
@@ -13,7 +13,7 @@ const DEMO_TASKS: { text: string; icon: string; colour: string }[] = [
   { text: 'Drag me to another list', icon: '👉', colour: 'hsl(260 100% 60%)' },
   // Builds without Google Drive (e.g. self-hosted) sync with WebDAV only
   {
-    text: CLIENT_ID ? 'Sync me with Google Drive' : 'Sync me with WebDAV',
+    text: DRIVE_AVAILABLE ? 'Sync me with Google Drive' : 'Sync me with WebDAV',
     icon: '🔄',
     colour: 'hsl(50 100% 52%)',
   },

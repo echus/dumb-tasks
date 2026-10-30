@@ -1,11 +1,13 @@
 // Google's sign-in popup and the Worker behind it (src/lib/sync/google-auth.ts), faked: who
-// is signed in to Google in this browser, and whether the Worker still holds a sign-in to
-// hand out new tokens with. A test file puts it in place of google-auth.ts with
+// is signed in to Google in this browser, whether the Worker still holds a sign-in to hand
+// out new tokens with, and whether the build has Drive at all. A test file puts it in place
+// of google-auth.ts and config.ts with
 //
 //   vi.mock('<path to src>/lib/sync/google-auth', () => google.module);
+//   vi.mock('<path to src>/lib/config', () => google.config);
 //   const google = fakeGoogle();
 //
-// which works as long as nothing the file imports up front loads google-auth.ts.
+// which works as long as nothing the file imports up front loads either.
 
 export function fakeGoogle() {
   const fresh = () => ({
@@ -28,10 +30,16 @@ export function fakeGoogle() {
     return { value, expiresAt, remembered: true };
   };
 
-  const module = {
-    get CLIENT_ID() {
+  const config = {
+    get GOOGLE_CLIENT_ID() {
       return google.clientId;
     },
+    get DRIVE_AVAILABLE() {
+      return Boolean(google.clientId);
+    },
+  };
+
+  const module = {
     loadGoogle: async () => ({}),
     signIn: async (loginHint?: string) => {
       google.signIns.push(loginHint);
@@ -49,5 +57,5 @@ export function fakeGoogle() {
     },
   };
 
-  return Object.assign(google, { module, reset: () => Object.assign(google, fresh()) });
+  return Object.assign(google, { module, config, reset: () => Object.assign(google, fresh()) });
 }
