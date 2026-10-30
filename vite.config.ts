@@ -75,6 +75,8 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ],
+  // Svelte's browser build in tests too: its server build can't mount components
+  resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
   // Not the copies of the app in other branches' worktrees
   test: {
     exclude: ['**/node_modules/**', '.claude/**'],

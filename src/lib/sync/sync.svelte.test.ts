@@ -1,77 +1,22 @@
 // @vitest-environment jsdom
 // @vitest-environment-options {"url": "https://dumbtasks.app/"}
 import 'fake-indexeddb/auto';
-import Dexie from 'dexie';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { SCHEMA_VERSION } from './data-file';
 import { FakeDav } from './fake-dav';
 import { FakeDrive } from './fake-drive';
+import { fakeGoogle } from './fake-google';
 import { serve } from './fake-server';
+import { clearDevice, openTab, setUpDevice, type Tab } from './test-device';
 
-// The sync module keeps its state per tab, so each tab here is a fresh copy of it. All tabs
-// share one database and one set of locks, as tabs on one device do.
-
-type Tab = typeof import('./sync.svelte');
-
-// Google's sign-in popup and the Worker behind it, faked: who is signed in to Google in this
-// browser, and whether the Worker still holds a sign-in to hand out new tokens with
-const { google, resetGoogle } = vi.hoisted(() => {
-  const fresh = () => ({
-    clientId: undefined as string | undefined, // undefined: a build without Drive
-    account: 'me@example.com',
-    quietSignIn: true, // a sign-in with the account named closes on its own
-    workerSignedIn: false,
-    tokens: new Map<string, { email: string; expiresAt: number }>(), // the ones Drive takes
-    issued: 0,
-    signIns: [] as (string | undefined)[], // the account named, if any, for each
-    refreshes: 0,
-    signOuts: 0,
-  });
-  const google = fresh();
-  return { google, resetGoogle: () => Object.assign(google, fresh()) };
-});
-
-vi.mock('./google-auth', () => {
-  const token = () => {
-    const value = `token${++google.issued}`;
-    const expiresAt = Date.now() + 3_600_000;
-    google.tokens.set(value, { email: google.account, expiresAt });
-    return { value, expiresAt, remembered: true };
-  };
-  return {
-    get CLIENT_ID() {
-      return google.clientId;
-    },
-    loadGoogle: async () => ({}),
-    signIn: async (loginHint?: string) => {
-      google.signIns.push(loginHint);
-      if (loginHint && !google.quietSignIn) throw new Error('Cannot open the Google sign-in.');
-      google.workerSignedIn = true;
-      return token();
-    },
-    refreshToken: async () => {
-      google.refreshes++;
-      return google.workerSignedIn ? token() : null;
-    },
-    signOut: async () => {
-      google.signOuts++;
-      google.workerSignedIn = false;
-    },
-  };
-});
+// Built when a tab first loads the sync module, after this file's top level has run
+vi.mock('./google-auth', () => google.module);
+const google = fakeGoogle();
 
 let dav: FakeDav;
 let other: FakeDav; // a second server, to switch to
 let drive: FakeDrive;
 let fetchSpy: Mock<typeof fetch>;
-
-/** A newly opened tab of the app. */
-async function openTab(): Promise<Tab> {
-  vi.resetModules();
-  const tab = await import('./sync.svelte');
-  await tab.startSync();
-  return tab;
-}
 
 /** A newly opened tab, connected to the server. */
 async function connectedTab(server = dav): Promise<Tab> {
@@ -81,27 +26,15 @@ async function connectedTab(server = dav): Promise<Tab> {
   return tab;
 }
 
-/** navigator.locks, which jsdom doesn't have: requests for a name run one at a time, in order. */
-function fakeLocks() {
-  const queues = new Map<string, Promise<unknown>>();
-  return {
-    request(name: string, fn: () => Promise<unknown>) {
-      const run = (queues.get(name) ?? Promise.resolve()).then(fn);
-      queues.set(name, run.catch(() => {}));
-      return run;
-    },
-  };
-}
-
 beforeEach(() => {
-  resetGoogle();
+  google.reset();
   dav = new FakeDav();
   other = new FakeDav('https://dav.example.org/files/', 'someone', 'other secret');
   drive = new FakeDrive();
   drive.tokens = google.tokens;
   fetchSpy = vi.fn(serve(dav, other, drive));
   vi.stubGlobal('fetch', fetchSpy);
-  Object.defineProperty(navigator, 'locks', { value: fakeLocks(), configurable: true });
+  setUpDevice();
   // No syncs every minute, only the ones asked for. Date: to let tokens run out
   vi.useFakeTimers({ toFake: ['setInterval', 'Date'] });
 });
@@ -109,7 +42,7 @@ beforeEach(() => {
 afterEach(async () => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
-  await Dexie.delete('dumb-tasks');
+  await clearDevice();
 });
 
 describe('a password the server turns down', () => {
