@@ -2,6 +2,7 @@
 // @vitest-environment-options {"url": "https://dumbtasks.app/"}
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { at, DAY, FakeDav, ROOT } from '../../helpers/fake-dav';
+import README from '../../../README.md?raw';
 import { readmeAllows } from '../../helpers/readme';
 import { serverUrl, WebDavAuthError, WebDavBackend, WebDavUnreachableError } from '../../../src/lib/sync/webdav';
 
@@ -187,8 +188,8 @@ describe('WebDavBackend', () => {
 
       const methods = new Set(dav.calls.map((call) => call.split(' ')[0]));
       expect([...methods].sort()).toEqual(['DELETE', 'GET', 'MKCOL', 'PROPFIND', 'PUT']);
-      expect([...methods].filter((m) => !readmeAllows('Methods').includes(m))).toEqual([]);
-      const allowed = readmeAllows('Headers').map((h) => h.toLowerCase());
+      expect([...methods].filter((m) => !readmeAllows(README, 'Methods').includes(m))).toEqual([]);
+      const allowed = readmeAllows(README, 'Headers').map((h) => h.toLowerCase());
       expect([...dav.headers].filter((h) => !allowed.includes(h))).toEqual([]);
     });
   });

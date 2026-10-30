@@ -113,15 +113,20 @@ npm install
 npm run dev            # http://localhost:5173
 npm test
 npm run test:servers   # WebDAV sync against Apache and Nextcloud, in Docker
+npm run test:browser   # the production build in Chrome, with the same servers
 npm run check          # type check
 npm run build
 ```
 
 The service worker runs only in production builds: `npm run build && npm run preview`.
 
-`npm run test:servers` needs Docker and the internet (for the Nextcloud WebAppPassword app). It
-sets up each server as this README says, and takes about a minute the first time. To keep the
-servers running between runs, set `KEEP_SERVERS=1`.
+`npm run test:servers` and `npm run test:browser` need Docker and the internet (for the
+Nextcloud WebAppPassword app). They set up each server as this README says, and take about a
+minute the first time. To keep the servers running between runs, set `KEEP_SERVERS=1`.
+
+`npm run test:browser` also needs Playwright's Chrome. Install it one time with
+`npx playwright install chromium`. The browser tests do not cover Google Drive, as its sign-in
+needs a real Google account. Before a release, test Google Drive sync on a staging preview.
 
 To test WebDAV sync, use a WebDAV server that allows the origin `http://localhost:5173`. The app
 accepts `http` for a server on this computer.
@@ -162,7 +167,8 @@ accepts `http` for a server on this computer.
 - `Dockerfile`, `docker-compose.yml`, `docker/nginx.conf`: the self-hosted image (WebDAV only)
 - `tests/`: the tests, in the same layout as `src/`
   - `helpers/`: fake servers, fake Google sign-in, and tabs of the app on one device
-  - `servers/`: the WebDAV servers for `npm run test:servers`
+  - `servers/`: the WebDAV servers for `npm run test:servers` and `npm run test:browser`
+  - `browser/`: the tests for `npm run test:browser`
 
 ## License
 

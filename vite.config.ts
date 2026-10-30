@@ -78,9 +78,9 @@ export default defineConfig(({ mode }) => ({
   // Svelte's browser build in tests too: its server build can't mount components
   resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
   test: {
-    // Not the copies of the app in other branches' worktrees, nor the server tests, which
-    // need Docker (npm run test:servers)
-    exclude: ['**/node_modules/**', '.claude/**', 'tests/servers/**'],
+    // Not the copies of the app in other branches' worktrees, nor the tests that need Docker
+    // (npm run test:servers) or Playwright (npm run test:browser)
+    exclude: ['**/node_modules/**', '.claude/**', 'tests/servers/**', 'tests/browser/**'],
     // As a build without Google Drive, whatever .env.local says
     env: { VITE_GOOGLE_CLIENT_ID: '' },
   },

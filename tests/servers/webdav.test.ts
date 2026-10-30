@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, inject, it } from 'vitest';
 import { WebDavAuthError, WebDavBackend } from '../../src/lib/sync/webdav';
+import README from '../../README.md?raw';
 import { readmeAllows } from '../helpers/readme';
 
 // The app's WebDAV code against each real server, set up as the README says (see setup.ts).
 // Node doesn't check CORS as browsers do, so the CORS tests ask what a browser would.
 
-const ORIGIN = 'https://tasks.example.com'; // the README's example, as the servers are set up
+const ORIGIN = inject('origin'); // the app's, which the servers allow
 
 describe.each(inject('servers'))('$name', (account) => {
   const device = (name: string, password = account.password) =>
@@ -55,8 +56,8 @@ describe.each(inject('servers'))('$name', (account) => {
   });
 
   describe('CORS', () => {
-    const methods = readmeAllows('Methods').filter((m) => m !== 'OPTIONS');
-    const headers = readmeAllows('Headers').map((h) => h.toLowerCase());
+    const methods = readmeAllows(README, 'Methods').filter((m) => m !== 'OPTIONS');
+    const headers = readmeAllows(README, 'Headers').map((h) => h.toLowerCase());
     const list = (value: string | null) => (value ?? '').split(',').map((item) => item.trim().toLowerCase());
 
     it.each(methods)('lets the browser send %s, with every header the app sends', async (method) => {
