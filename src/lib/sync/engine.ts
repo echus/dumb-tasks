@@ -23,7 +23,8 @@ export interface SyncBackend {
   /**
    * Deletes other devices' files that haven't changed for `maxAge` ms: devices no longer
    * used, whose changes every other file already has. Returns whether this device's file
-   * is there.
+   * is there. Best effort: a file it can't delete stays until the next try, and only a
+   * SignedOutError stops the sync.
    */
   removeStale(maxAge: number): Promise<{ hasOwnFile: boolean }>;
 }

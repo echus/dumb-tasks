@@ -61,6 +61,9 @@ export const sync = $state({
 let settings: Settings | null = null;
 let device = ''; // names this device's file: one per install, kept through reconnects
 let tidied = false; // stale files cleared out since the app opened
+// The WebDAV password the server last turned down: not sent again, as servers can lock out
+// an address after repeated failed sign-ins. A new one, here or from another tab, is tried.
+let rejectedPassword: string | null = null;
 let lastStart = 0;
 let running: Promise<void> | null = null;
 let again = false;
@@ -72,8 +75,9 @@ let fullSignIn = false;
 async function load(): Promise<Settings | null> {
   const [drive, webdav] = await db.settings.bulkGet(['drive', 'webdav']);
   if (webdav) return { service: 'webdav', ...JSON.parse(webdav.value) };
-  // Older versions saved fewer fields
-  if (drive) {
+  // A build without Drive (self-hosted) can't sync with it or show its Disconnect button, so
+  // it ignores the Drive row. A WebDAV connect replaces it. Older versions saved fewer fields
+  if (drive && CLIENT_ID) {
     return { service: 'drive', fileId: null, cursor: null, pushedKey: null, ...JSON.parse(drive.value) };
   }
   return null;
@@ -84,7 +88,13 @@ async function catchUp() {
   const saved = await load();
   if (saved && settings && identity(saved) === identity(settings)) Object.assign(settings, saved);
   else {
+    // Disconnected or switched: what this tab showed was about the old connection
     settings = saved;
+    tidied = false;
+    rejectedPassword = null;
+    sync.needsSignIn = false;
+    sync.needsUpdate = false;
+    sync.error = '';
     show();
   }
 }
@@ -95,11 +105,21 @@ function oneAtATime(fn: () => Promise<void>): Promise<void> {
   return navigator.locks ? navigator.locks.request('drive-sync', fn) : fn();
 }
 
+/** Saves the settings in place of any other service's. Only from within oneAtATime. */
 async function save() {
   await db.transaction('rw', db.settings, async () => {
     await db.settings.bulkDelete(['drive', 'webdav']);
     if (settings) await db.settings.put({ key: settings.service, value: JSON.stringify(settings) });
   });
+}
+
+/**
+ * save() from a click, after any sync running in another tab: else that sync, finishing
+ * late, could put back the connection this click replaced. Not around syncNow, which takes
+ * its own turn (locks don't nest).
+ */
+function saveInTurn(): Promise<void> {
+  return oneAtATime(save);
 }
 
 function show() {
@@ -135,7 +155,9 @@ async function freshToken(current: DriveSettings): Promise<string | null> {
 
 /** Where to sync. Null: sign in again first. */
 async function backendFor(current: Settings): Promise<DriveBackend | WebDavBackend | null> {
-  if (current.service === 'webdav') return new WebDavBackend(current, device);
+  if (current.service === 'webdav') {
+    return current.password === rejectedPassword ? null : new WebDavBackend(current, device);
+  }
   const token = await freshToken(current);
   return token ? new DriveBackend(token, device, current.fileId) : null;
 }
@@ -180,8 +202,10 @@ async function runOnce(retry = true): Promise<void> {
       current.token.expiresAt = 0;
       return await runOnce(false);
     }
-    if (e instanceof SignedOutError) askToSignIn();
-    else sync.error = (e as Error).message;
+    if (e instanceof SignedOutError) {
+      if (current.service === 'webdav') rejectedPassword = current.password;
+      askToSignIn();
+    } else sync.error = (e as Error).message;
   } finally {
     sync.syncing = false;
     show();
@@ -212,8 +236,9 @@ export function syncNow(): Promise<void> {
 async function start(next: Settings) {
   settings = next;
   tidied = false;
+  rejectedPassword = null;
   sync.needsSignIn = false;
-  await save();
+  await saveInTurn();
   show();
   await syncNow();
 }
@@ -247,7 +272,7 @@ export async function reconnectDrive() {
     current.token = token;
     fullSignIn = false;
     sync.needsSignIn = false;
-    await save();
+    await saveInTurn();
     show();
     await syncNow();
   } catch (e) {
@@ -281,7 +306,7 @@ export async function reconnectWebDav(password: string) {
     if (settings !== current) return; // disconnected meanwhile
     current.password = password;
     sync.needsSignIn = false;
-    await save();
+    await saveInTurn();
     await syncNow();
   } catch (e) {
     sync.error = (e as Error).message;
@@ -296,7 +321,7 @@ export async function disconnect() {
   sync.needsUpdate = false;
   sync.error = '';
   show();
-  await save();
+  await saveInTurn();
   if (was?.service === 'drive') signOut().catch(() => {});
 }
 

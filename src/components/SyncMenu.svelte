@@ -47,7 +47,7 @@
     e.preventDefault();
     tried = 'webdav';
     checking = true;
-    if (sync.needsSignIn) await reconnectWebDav(webdav.password);
+    if (sync.service === 'webdav' && sync.needsSignIn) await reconnectWebDav(webdav.password);
     else await connectWebDav(webdav.url, webdav.username, webdav.password);
     checking = false;
     if (!sync.error) {

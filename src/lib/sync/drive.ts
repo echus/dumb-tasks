@@ -9,6 +9,8 @@ const PREFIX = 'device-';
 // stale files: a device still on that version recreates it until it updates.
 const LEGACY = 'dumb-tasks.json';
 
+const TIMEOUT = 30_000; // so a request that hangs can't hold up every later sync
+
 const isDataFile = (name: string) => name.startsWith(PREFIX);
 
 /** The token has expired or been revoked: the user needs to sign in again. */
@@ -36,6 +38,7 @@ async function call(token: string, url: string, init: RequestInit = {}): Promise
   const res = await fetch(url, {
     ...init,
     headers: { ...init.headers, Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(TIMEOUT),
   }).catch(() => {
     throw new DriveUnreachableError();
   });
@@ -186,7 +189,7 @@ export class DriveBackend implements SyncBackend {
     await Promise.all(
       stale.map((f) =>
         call(this.token, `${API}/files/${f.id}`, { method: 'DELETE' }).catch((e) => {
-          if (!(e instanceof DriveNotFoundError)) throw e;
+          if (e instanceof DriveAuthError) throw e;
         }),
       ),
     );

@@ -23,7 +23,8 @@ class FakeDav {
   prefix = 'd';
   fullHrefs = false;
   etags = true;
-  failWith: number | 'offline' | null = null;
+  failWith: number | 'offline' | 'stall' | null = null;
+  failDelete: number | null = null; // e.g. 423: the file is locked
 
   add(name: string, content: string, modified = at(0)) {
     this.folder = true;
@@ -35,6 +36,9 @@ class FakeDav {
     const method = init.method ?? 'GET';
     this.calls.push(`${method} ${url.pathname.replace(FOLDER, '')}`);
     if (this.failWith === 'offline') throw new TypeError('Failed to fetch');
+    if (this.failWith === 'stall') {
+      return new Promise((_, reject) => init.signal?.addEventListener('abort', () => reject(init.signal?.reason)));
+    }
     if (this.failWith) return new Response(null, { status: this.failWith });
     expect(new Headers(init.headers).get('Authorization')).toBe(`Basic ${btoa('me:secret')}`);
     const status = (code: number) => new Response(null, { status: code });
@@ -64,6 +68,7 @@ class FakeDav {
     if (!file) return status(404);
     if (method === 'GET') return new Response(file.content);
     if (method === 'DELETE') {
+      if (this.failDelete) return status(this.failDelete);
       this.files.delete(name);
       return status(204);
     }
@@ -230,6 +235,21 @@ describe('WebDavBackend', () => {
       dav.files.clear();
       expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: false });
     });
+
+    it('leaves a file it cannot delete, without failing', async () => {
+      dav.add('device-here.json', 'mine', at(0));
+      dav.add('device-drawer.json', 'drawer', at(91));
+      dav.failDelete = 423;
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: true });
+      expect(dav.names()).toEqual(['device-drawer.json', 'device-here.json']);
+    });
+
+    it('still fails when the server turns down the sign-in', async () => {
+      dav.add('device-here.json', 'mine', at(0));
+      dav.add('device-drawer.json', 'drawer', at(91));
+      dav.failDelete = 401;
+      await expect(backend().removeStale(MAX_AGE)).rejects.toBeInstanceOf(WebDavAuthError);
+    });
   });
 
   describe('errors', () => {
@@ -241,6 +261,15 @@ describe('WebDavBackend', () => {
     it('reports being offline', async () => {
       dav.failWith = 'offline';
       await expect(backend().push('mine')).rejects.toBeInstanceOf(WebDavUnreachableError);
+    });
+
+    it('gives up on a server that stops answering', async () => {
+      const timeout = AbortSignal.timeout.bind(AbortSignal);
+      const spy = vi.spyOn(AbortSignal, 'timeout').mockImplementation(() => timeout(1));
+      dav.failWith = 'stall';
+      await expect(backend().pull(null)).rejects.toBeInstanceOf(WebDavUnreachableError);
+      expect(spy).toHaveBeenCalledWith(30_000);
+      spy.mockRestore();
     });
 
     it('reports any other failure with its status', async () => {

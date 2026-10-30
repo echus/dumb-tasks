@@ -6,6 +6,9 @@ import { SignedOutError, type RemoteFile, type SyncBackend } from './engine';
 
 const FOLDER = 'dumb-tasks/';
 const PREFIX = 'device-';
+// A server that stops answering (busy, waking a disk, a dropped connection) would hold up
+// every later sync, in every tab: give up, and try again on the next one
+const TIMEOUT = 30_000;
 
 /** Where to sync, as the user entered it. The password is best an app password. */
 export interface WebDavAccount {
@@ -115,6 +118,7 @@ export class WebDavBackend implements SyncBackend {
       ...init,
       cache: 'no-store',
       headers: { ...init.headers, Authorization: this.auth },
+      signal: AbortSignal.timeout(TIMEOUT),
     }).catch(() => {
       throw new WebDavUnreachableError();
     });
@@ -212,8 +216,9 @@ export class WebDavBackend implements SyncBackend {
     const stale = files.filter((f) => f.name !== this.name && f.modifiedAt < newest - maxAge);
     await Promise.all(
       stale.map((f) =>
+        // E.g. locked (423) or not allowed (403): tried again next time the app opens
         this.call(this.folder + f.name, { method: 'DELETE' }).catch((e) => {
-          if (!isMissing(e)) throw e;
+          if (e instanceof WebDavAuthError) throw e;
         }),
       ),
     );
