@@ -1,8 +1,8 @@
-// For tests only: Google's sign-in popup and the Worker behind it (google-auth.ts), faked:
-// who is signed in to Google in this browser, and whether the Worker still holds a sign-in
-// to hand out new tokens with. A test file puts it in place of google-auth.ts with
+// Google's sign-in popup and the Worker behind it (src/lib/sync/google-auth.ts), faked: who
+// is signed in to Google in this browser, and whether the Worker still holds a sign-in to
+// hand out new tokens with. A test file puts it in place of google-auth.ts with
 //
-//   vi.mock('./google-auth', () => google.module);
+//   vi.mock('<path to src>/lib/sync/google-auth', () => google.module);
 //   const google = fakeGoogle();
 //
 // which works as long as nothing the file imports up front loads google-auth.ts.

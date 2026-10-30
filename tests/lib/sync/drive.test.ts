@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DriveAuthError, DriveBackend, DriveUnreachableError } from './drive';
-import { at, DAY, FakeDrive } from './fake-drive';
+import { DriveAuthError, DriveBackend, DriveUnreachableError } from '../../../src/lib/sync/drive';
+import { at, DAY, FakeDrive } from '../../helpers/fake-drive';
 
 let drive: FakeDrive;
 const backend = (fileId: string | null = null) => new DriveBackend('token', 'here', fileId);

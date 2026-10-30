@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The Worker run as is, in Node: requests in, responses out. Google's token endpoint is faked.
 
-type Worker = typeof import('./index').default;
+type Worker = typeof import('../../worker/index').default;
 
 const APP = 'https://dumbtasks.app';
 
@@ -20,7 +20,7 @@ const env = (secret = 'client-secret') => ({
 async function load(clientId = 'client-id') {
   vi.stubEnv('VITE_GOOGLE_CLIENT_ID', clientId);
   vi.resetModules();
-  worker = (await import('./index')).default;
+  worker = (await import('../../worker/index')).default;
 }
 
 /** Sends the Worker a request, as Cloudflare would (without what it adds about the visitor). */

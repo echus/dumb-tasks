@@ -2,18 +2,18 @@
 // @vitest-environment-options {"url": "https://dumbtasks.app/"}
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SCHEMA_VERSION } from '../lib/sync/data-file';
-import { FakeDav } from '../lib/sync/fake-dav';
-import { FakeDrive } from '../lib/sync/fake-drive';
-import { fakeGoogle } from '../lib/sync/fake-google';
-import { serve } from '../lib/sync/fake-server';
-import { clearDevice, openTab, setUpDevice, type Tab } from '../lib/sync/test-device';
+import { SCHEMA_VERSION } from '../../src/lib/sync/data-file';
+import { FakeDav } from '../helpers/fake-dav';
+import { FakeDrive } from '../helpers/fake-drive';
+import { fakeGoogle } from '../helpers/fake-google';
+import { serve } from '../helpers/fake-server';
+import { clearDevice, openTab, setUpDevice, type Tab } from '../helpers/test-device';
 
 // The menu with the real sync module behind it, clicked through as a person would. The
 // servers and Google's sign-in are faked.
 
 // Built when a tab first loads the sync module, after this file's top level has run
-vi.mock('../lib/sync/google-auth', () => google.module);
+vi.mock('../../src/lib/sync/google-auth', () => google.module);
 const google = fakeGoogle();
 
 let dav: FakeDav;
@@ -27,7 +27,7 @@ async function openMenu(): Promise<Tab> {
   const tab = await openTab();
   // Straight after openTab, so they're this tab's
   svelte = await import('svelte');
-  const { default: SyncMenu } = await import('./SyncMenu.svelte');
+  const { default: SyncMenu } = await import('../../src/components/SyncMenu.svelte');
   target = document.body.appendChild(document.createElement('div'));
   const { mount, unmount } = svelte;
   const menu = mount(SyncMenu, { target });

@@ -1,6 +1,6 @@
 import { Gate, type FakeServer } from './fake-server';
 
-// For tests only: an in-memory WebDAV server, and dates to set its files' ages by.
+// An in-memory WebDAV server, and dates to set its files' ages by.
 
 export const DAY = 86_400_000;
 const T = Date.parse('2026-10-29T12:00:00Z');

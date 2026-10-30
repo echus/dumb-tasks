@@ -1,16 +1,16 @@
 import Dexie from 'dexie';
 import { vi } from 'vitest';
 
-// For tests only: one device with tabs of the app open. The sync module keeps its state per
-// tab, so each tab is a fresh copy of it. All tabs share one database and one set of locks,
-// as tabs on one device do. Test files also import 'fake-indexeddb/auto', for the database.
+// One device with tabs of the app open. The sync module keeps its state per tab, so each
+// tab is a fresh copy of it. All tabs share one database and one set of locks, as tabs on
+// one device do. Test files also import 'fake-indexeddb/auto', for the database.
 
-export type Tab = typeof import('./sync.svelte');
+export type Tab = typeof import('../../src/lib/sync/sync.svelte');
 
 /** A newly opened tab of the app. Modules imported straight after it are this tab's too. */
 export async function openTab(): Promise<Tab> {
   vi.resetModules();
-  const tab = await import('./sync.svelte');
+  const tab = await import('../../src/lib/sync/sync.svelte');
   await tab.startSync();
   return tab;
 }

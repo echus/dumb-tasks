@@ -13,5 +13,5 @@
     "noUnusedParameters": true,
     "moduleDetection": "force"
   },
-  "include": ["worker/**/*.ts"]
+  "include": ["worker/**/*.ts", "tests/worker/**/*.ts"]
 }

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 // @vitest-environment-options {"url": "https://dumbtasks.app/"}
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { at, DAY, FakeDav, ROOT } from './fake-dav';
-import { serverUrl, WebDavAuthError, WebDavBackend, WebDavUnreachableError } from './webdav';
+import { at, DAY, FakeDav, ROOT } from '../../helpers/fake-dav';
+import { serverUrl, WebDavAuthError, WebDavBackend, WebDavUnreachableError } from '../../../src/lib/sync/webdav';
 
 let dav: FakeDav;
 const backend = () => new WebDavBackend({ url: ROOT, username: 'me', password: 'secret' }, 'here');

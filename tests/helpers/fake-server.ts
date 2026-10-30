@@ -1,4 +1,4 @@
-// For tests only: what the fake servers (fake-dav.ts, fake-drive.ts) have in common.
+// What the fake servers (fake-dav.ts, fake-drive.ts) have in common.
 
 export interface FakeServer {
   root: string; // every address the server answers starts with this

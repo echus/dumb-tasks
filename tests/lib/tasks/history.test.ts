@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db } from '../db';
-import { history, redo, track, undo } from './history.svelte';
-import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from './tasks';
+import { db } from '../../../src/lib/db';
+import { history, redo, track, undo } from '../../../src/lib/tasks/history.svelte';
+import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from '../../../src/lib/tasks/tasks';
 
 const active = async () => (await db.tasks.toArray()).filter(isActive).map((t) => t.text);
 

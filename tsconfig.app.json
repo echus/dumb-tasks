@@ -17,5 +17,7 @@
     "checkJs": true,
     "moduleDetection": "force"
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "tests/**/*.ts"],
+  // Checked with the Worker's types, in tsconfig.worker.json
+  "exclude": ["tests/worker/**"]
 }
