@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { sync } from '../../lib/sync/sync.svelte';
+  import { sync } from '$lib/sync/sync.svelte';
 
   // The connected account, and how syncing with it goes
 

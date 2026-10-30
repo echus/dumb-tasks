@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
-import { NewerVersionError, parseDataFile, SCHEMA_VERSION } from '../../../src/lib/sync/data-file';
+import { NewerVersionError, parseDataFile, SCHEMA_VERSION } from '$lib/sync/data-file';
 
 const file = (data: object) => JSON.stringify({ tasks: [], ...data });
 

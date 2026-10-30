@@ -2,7 +2,7 @@
 // @vitest-environment-options {"url": "https://dumbtasks.app/"}
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { SCHEMA_VERSION } from '../../../src/lib/sync/data-file';
+import { SCHEMA_VERSION } from '$lib/sync/data-file';
 import { FakeDav } from '../../helpers/fake-dav';
 import { FakeDrive } from '../../helpers/fake-drive';
 import { fakeGoogle } from '../../helpers/fake-google';
@@ -10,8 +10,8 @@ import { serve } from '../../helpers/fake-server';
 import { clearDevice, openTab, setUpDevice, type Tab } from '../../helpers/test-device';
 
 // Built when a tab first loads the sync module, after this file's top level has run
-vi.mock('../../../src/lib/sync/google-auth', () => google.module);
-vi.mock('../../../src/lib/config', () => google.config);
+vi.mock('$lib/sync/google-auth', () => google.module);
+vi.mock('$lib/config', () => google.config);
 const google = fakeGoogle();
 
 let dav: FakeDav;
@@ -90,7 +90,7 @@ describe('a build without Google Drive', () => {
   it('ignores Drive settings saved by a build with it, until a WebDAV connect replaces them', async () => {
     expect(google.clientId).toBeUndefined();
     vi.resetModules();
-    const { db } = await import('../../../src/lib/db');
+    const { db } = await import('$lib/db');
     const token = { value: 'token', expiresAt: Date.now() + 3_600_000 };
     await db.settings.put({ key: 'drive', value: JSON.stringify({ email: 'me@example.com', token }) });
 

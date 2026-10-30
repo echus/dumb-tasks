@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { guessIcon } from '../../../src/lib/tasks/guess-icon';
+import { guessIcon } from '$lib/tasks/guess-icon';
 
 describe('guessIcon', () => {
   it.each([

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, inject, it } from 'vitest';
-import { WebDavAuthError, WebDavBackend } from '../../src/lib/sync/webdav';
+import { WebDavAuthError, WebDavBackend } from '$lib/sync/webdav';
 import README from '../../README.md?raw';
 import { readmeAllows } from '../helpers/readme';
 

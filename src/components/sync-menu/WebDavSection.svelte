@@ -2,8 +2,8 @@
   import Icon from '../Icon.svelte';
   import Status from './Status.svelte';
   import SyncNowButton from './SyncNowButton.svelte';
-  import { connectWebDav, disconnect, reconnectWebDav, sync } from '../../lib/sync/sync.svelte';
-  import * as ui from '../../lib/ui/icons';
+  import { connectWebDav, disconnect, reconnectWebDav, sync } from '$lib/sync/sync.svelte';
+  import * as ui from '$lib/ui/icons';
 
   interface Props {
     showError: boolean; // sync's error is about WebDAV

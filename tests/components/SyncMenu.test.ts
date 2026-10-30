@@ -2,7 +2,7 @@
 // @vitest-environment-options {"url": "https://dumbtasks.app/"}
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SCHEMA_VERSION } from '../../src/lib/sync/data-file';
+import { SCHEMA_VERSION } from '$lib/sync/data-file';
 import { FakeDav } from '../helpers/fake-dav';
 import { FakeDrive } from '../helpers/fake-drive';
 import { fakeGoogle } from '../helpers/fake-google';
@@ -13,8 +13,8 @@ import { clearDevice, openTab, setUpDevice, type Tab } from '../helpers/test-dev
 // servers and Google's sign-in are faked.
 
 // Built when a tab first loads the sync module, after this file's top level has run
-vi.mock('../../src/lib/sync/google-auth', () => google.module);
-vi.mock('../../src/lib/config', () => google.config);
+vi.mock('$lib/sync/google-auth', () => google.module);
+vi.mock('$lib/config', () => google.config);
 const google = fakeGoogle();
 
 let dav: FakeDav;

@@ -5,12 +5,12 @@
   import HistoryButtons from './components/HistoryButtons.svelte';
   import SyncMenu from './components/SyncMenu.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
-  import { db } from './lib/db';
-  import { sync } from './lib/sync/sync.svelte';
-  import { isDemoTask } from './lib/tasks/demo-tasks';
-  import { byPosition, isActive } from './lib/tasks/tasks';
-  import { BUCKETS, type Bucket, type Task } from './lib/types';
-  import { drag } from './lib/ui/state.svelte';
+  import { db } from '$lib/db';
+  import { sync } from '$lib/sync/sync.svelte';
+  import { isDemoTask } from '$lib/tasks/demo-tasks';
+  import { byPosition, isActive } from '$lib/tasks/tasks';
+  import { BUCKETS, type Bucket, type Task } from '$lib/types';
+  import { drag } from '$lib/ui/state.svelte';
 
   // Re-runs whenever the tasks table changes, from any tab.
   const tasks = liveQuery(() => db.tasks.toArray());

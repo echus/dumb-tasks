@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import { describe, expect, it } from 'vitest';
-import { db, isDatabaseNewer } from '../../src/lib/db';
+import { db, isDatabaseNewer } from '$lib/db';
 
 describe('isDatabaseNewer', () => {
   it('is false for the version this app declares', async () => {

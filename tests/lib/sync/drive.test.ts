@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DriveAuthError, DriveBackend, DriveUnreachableError } from '../../../src/lib/sync/drive';
+import { DriveAuthError, DriveBackend, DriveUnreachableError } from '$lib/sync/drive';
 import { at, DAY, FakeDrive } from '../../helpers/fake-drive';
 
 let drive: FakeDrive;

@@ -3,9 +3,9 @@
   import BackupSection from './sync-menu/BackupSection.svelte';
   import DriveSection from './sync-menu/DriveSection.svelte';
   import WebDavSection from './sync-menu/WebDavSection.svelte';
-  import { loadGoogle } from '../lib/sync/google-auth';
-  import { sync } from '../lib/sync/sync.svelte';
-  import * as ui from '../lib/ui/icons';
+  import { loadGoogle } from '$lib/sync/google-auth';
+  import { sync } from '$lib/sync/sync.svelte';
+  import * as ui from '$lib/ui/icons';
 
   // The sync and backup menu: a button in the header, and a panel with a section for each
   // service and the backup (sync-menu/), and which version this is

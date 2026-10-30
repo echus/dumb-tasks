@@ -1,8 +1,8 @@
 <script lang="ts">
   import Icon from '../Icon.svelte';
-  import { exportData, importData, parseDataFile } from '../../lib/sync/data-file';
-  import { localChanged } from '../../lib/sync/local-changes';
-  import * as ui from '../../lib/ui/icons';
+  import { exportData, importData, parseDataFile } from '$lib/sync/data-file';
+  import { localChanged } from '$lib/sync/local-changes';
+  import * as ui from '$lib/ui/icons';
 
   // Save all tasks to a file, or restore them from one: merged in, like a sync
 

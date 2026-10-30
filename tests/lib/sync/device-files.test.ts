@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deviceFileName, isDeviceFile, staleFiles } from '../../../src/lib/sync/device-files';
+import { deviceFileName, isDeviceFile, staleFiles } from '$lib/sync/device-files';
 
 const DAY = 86_400_000;
 

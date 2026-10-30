@@ -75,8 +75,11 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ],
-  // Svelte's browser build in tests too: its server build can't mount components
-  resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
+  resolve: {
+    alias: { $lib: resolve(import.meta.dirname, 'src/lib') },
+    // Svelte's browser build in tests too: its server build can't mount components
+    ...(process.env.VITEST && { conditions: ['browser'] }),
+  },
   // The tests in tests/ (the browser tests have their own runner, Playwright)
   test: {
     projects: [

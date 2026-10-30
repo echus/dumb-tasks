@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { at, DAY, FakeDav, ROOT } from '../../helpers/fake-dav';
 import README from '../../../README.md?raw';
 import { readmeAllows } from '../../helpers/readme';
-import { serverUrl, WebDavAuthError, WebDavBackend, WebDavUnreachableError } from '../../../src/lib/sync/webdav';
+import { serverUrl, WebDavAuthError, WebDavBackend, WebDavUnreachableError } from '$lib/sync/webdav';
 
 let dav: FakeDav;
 let now = Date.parse('2026-10-29T12:00:00Z');
