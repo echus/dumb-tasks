@@ -9,6 +9,11 @@ const PREFIX = 'device-';
 // A server that stops answering (busy, waking a disk, a dropped connection) would hold up
 // every later sync, in every tab: give up, and try again on the next one
 const TIMEOUT = 30_000;
+// Nextcloud keeps a file's ETag when it's written again within the same second at the same
+// size, so other devices would miss that write: writes to this device's file wait this long
+const WRITE_GAP = 1_100;
+
+let lastWrite = 0; // when this tab last wrote this device's file
 
 /** Where to sync, as the user entered it. The password is best an app password. */
 export interface WebDavAccount {
@@ -190,6 +195,8 @@ export class WebDavBackend implements SyncBackend {
   }
 
   async push(json: string) {
+    const wait = lastWrite + WRITE_GAP - Date.now();
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
     const put = () =>
       this.call(this.folder + this.name, {
         method: 'PUT',
@@ -205,6 +212,8 @@ export class WebDavBackend implements SyncBackend {
         if (!(e instanceof StatusError && e.status === 405)) throw e;
       });
       await put();
+    } finally {
+      lastWrite = Date.now(); // the server dates the file once the write is done
     }
   }
 

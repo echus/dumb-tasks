@@ -5,15 +5,20 @@ import { at, DAY, FakeDav, ROOT } from '../../helpers/fake-dav';
 import { serverUrl, WebDavAuthError, WebDavBackend, WebDavUnreachableError } from '../../../src/lib/sync/webdav';
 
 let dav: FakeDav;
+let now = Date.parse('2026-10-29T12:00:00Z');
 const backend = () => new WebDavBackend({ url: ROOT, username: 'me', password: 'secret' }, 'here');
 const jsons = (files: { json: string }[]) => files.map((f) => f.json).sort();
 
 beforeEach(() => {
   dav = new FakeDav();
   vi.stubGlobal('fetch', dav.fetch);
+  // A minute on from the last test, so its writes don't hold up this one's (see push)
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime((now += 60_000));
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -110,6 +115,17 @@ describe('WebDavBackend', () => {
       await backend().push('new');
       expect(dav.files.get('device-here.json')?.content).toBe('new');
       expect(dav.calls).toEqual(['PUT device-here.json']);
+    });
+
+    it('writes again only a second later, so the server can tell the writes apart', async () => {
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout'] });
+      await backend().push('one');
+      const again = backend().push('two');
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(dav.files.get('device-here.json')?.content).toBe('one');
+      await vi.advanceTimersByTimeAsync(100);
+      await again;
+      expect(dav.files.get('device-here.json')?.content).toBe('two');
     });
   });
 
