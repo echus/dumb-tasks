@@ -77,12 +77,30 @@ export default defineConfig(({ mode }) => ({
   ],
   // Svelte's browser build in tests too: its server build can't mount components
   resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
+  // The tests in tests/ (the browser tests have their own runner, Playwright)
   test: {
-    // Not the copies of the app in other branches' worktrees, nor the tests that need Docker
-    // (npm run test:servers) or Playwright (npm run test:browser)
-    exclude: ['**/node_modules/**', '.claude/**', 'tests/servers/**', 'tests/browser/**'],
-    // As a build without Google Drive, whatever .env.local says
-    env: { VITE_GOOGLE_CLIENT_ID: '' },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit', // npm test
+          include: ['tests/**/*.test.ts'],
+          exclude: ['tests/servers/**', 'tests/browser/**'],
+          // As a build without Google Drive, whatever .env.local says
+          env: { VITE_GOOGLE_CLIENT_ID: '' },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          // npm run test:servers: apart from the others, as they need Docker and take a minute
+          name: 'servers',
+          include: ['tests/servers/**/*.test.ts'],
+          globalSetup: ['tests/servers/setup.ts'],
+          testTimeout: 20_000,
+        },
+      },
+    ],
   },
   // Lets `npm run preview` be reached through a Cloudflare quick tunnel for phone testing
   preview: {

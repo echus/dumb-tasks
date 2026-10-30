@@ -24,7 +24,6 @@
     "tests/browser/**/*.ts",
     "tests/servers/servers.ts",
     "tests/servers/setup.ts",
-    "tests/servers/vitest.config.ts",
     "tests/servers/provided.d.ts"
   ]
 }

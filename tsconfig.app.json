@@ -23,7 +23,6 @@
     "tests/worker/**",
     "tests/browser/**",
     "tests/servers/servers.ts",
-    "tests/servers/setup.ts",
-    "tests/servers/vitest.config.ts"
+    "tests/servers/setup.ts"
   ]
 }
