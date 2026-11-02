@@ -255,7 +255,7 @@ describe('demo tasks', () => {
     expect(await db.tasks.get(sync.id)).toEqual(sync);
     await editText(sync.id, 'Sync with Google Drive', later(2));
     await refreshColours(later(3));
-    expect((await db.tasks.get(sync.id))!.icon).toBe('📅');
+    expect((await db.tasks.get(sync.id))!.icon).toBe('⌨️');
   });
 
   it('leaves their colours as refreshColours would pick them', async () => {

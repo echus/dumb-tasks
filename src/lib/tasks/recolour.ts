@@ -40,7 +40,7 @@ export async function refreshColours(now = new Date()) {
 }
 
 // Bump to recolour existing tasks again after the colour or icon rules change.
-const COLOURS_VERSION = '3'; // ⭐ for unmatched tasks, on any hue
+const COLOURS_VERSION = '4'; // icons guessed by strong and weak words
 
 /**
  * After the first sync, once per bump of COLOURS_VERSION: brings older tasks up to the

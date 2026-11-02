@@ -87,12 +87,25 @@ Parsed from the task text — there is no deadline field in the UI.
 Chosen automatically; never asked of the user. Each task shows an **emoji** in a circle tinted
 with a fluoro colour of its own; the circle is also the checkbox (hovering shows a tick).
 
-- `guessIcon(text) → emoji` picks one of 44 emoji. The AI can pick any emoji.
-- **Keyword matching:** a hand-written table of keywords and word stems, with nouns ranked
-  above verbs ("buy birthday present" → 🎂, not 🛒).
-- **Typos and abbreviations** count as near misses ("plumbr", "groc"), tried only when no
-  exact keyword matches.
+- `guessIcon(text) → emoji` picks one of 49 emoji. The AI can pick any emoji.
+- **A wrong icon is worse than none:** it says something false about the task, while ⭐
+  says nothing. So when in doubt, no guess.
+- **Keyword matching:** a hand-written table of keywords and word stems. Strong words say
+  what a task is about ("dentist", "groceries"); weak ones are verbs and words with other
+  meanings ("buy", "sync", "garage") and decide only when nothing strong matches. Between
+  equals the later word wins, as the thing comes after the verb ("email Sarah about the
+  invoice" → 🧾).
+- **Phrases first,** standing in for their words: "tip run" → 🗑️, "oil change" → 🚗, "get
+  the bike running" → nothing. A few first words are verbs with a noun meaning elsewhere:
+  "book flights" is booking, "read a good book" is reading.
+- **Typing slips** of long words count ("plumbr", "groceires": a letter left out, added or
+  swapped), tried only when no keyword matches. Not changed letters ("change" isn't
+  "charge"), and no guessing from the start of a word ("super" isn't "supermarket").
+- **Checked on everyday tasks** (`tests/lib/tasks/icon-examples.ts`): at least 90% right and
+  at most 3% wrong icons. Add tasks there when a guess goes wrong.
 - **No match → a ⭐ star**, on any hue (faint on greens, but the colours stay varied).
+- **Better rules reach old tasks:** bumping `COLOURS_VERSION` in `recolour.ts` re-guesses
+  every open task's icon once per device.
 - **Guessed once, then stored:** the icon is picked when a task is added and re-picked
   whenever its text is edited; otherwise the stored pick is shown. The AI can replace the
   pick with its own; that holds until the user next edits the text (like deadlines).
