@@ -61,6 +61,13 @@ days, then dropped like deleted ones (see Tombstone purge).
   connected, the other says to disconnect it first), and "Save backup" / "Restore" for a full
   JSON backup.
   Restoring merges like sync does; it never deletes.
+- **Install:** how to install the app shows in an outline pill under the intro (so while
+  it's new), kept short so the intro isn't a wall of grey text, and in full as the last
+  section of that menu, until it runs installed (`ui/install.svelte.ts`). Chrome and Edge,
+  on Android and computers, get an "Install app" button that opens their own prompt.
+  Browsers without one get the steps: iPhone and iPad (Share → Add to Home Screen, in any
+  browser), Safari 17+ on a Mac (File → Add to Dock), and other Android browsers (⋮ menu,
+  shown as its icon → Add to Home screen). The pill starts "Install app:". Firefox on a computer can't install apps, so it gets nothing.
 
 ## Deadlines
 

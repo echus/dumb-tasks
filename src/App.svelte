@@ -3,6 +3,7 @@
   import BucketList from './components/BucketList.svelte';
   import BucketName from './components/BucketName.svelte';
   import HistoryButtons from './components/HistoryButtons.svelte';
+  import InstallPill from './components/InstallPill.svelte';
   import SyncMenu from './components/SyncMenu.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from '$lib/db';
@@ -70,6 +71,8 @@
     {sync.driveAvailable ? 'Google Drive or ' : ''}your WebDAV server.
     {#if sync.driveAvailable}<a href="/privacy">Privacy</a>{/if}
   </p>
+  <!-- How to install it, while the app is new: afterwards it's in the sync menu -->
+  <InstallPill />
 {/if}
 
 <div class="bar" bind:clientHeight={barHeight}>

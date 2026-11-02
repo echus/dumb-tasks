@@ -2,13 +2,14 @@
   import Icon from './Icon.svelte';
   import BackupSection from './sync-menu/BackupSection.svelte';
   import DriveSection from './sync-menu/DriveSection.svelte';
+  import InstallSection from './sync-menu/InstallSection.svelte';
   import WebDavSection from './sync-menu/WebDavSection.svelte';
   import { loadGoogle } from '$lib/sync/google-auth';
   import { sync } from '$lib/sync/sync.svelte';
   import * as ui from '$lib/ui/icons';
 
   // The sync and backup menu: a button in the header, and a panel with a section for each
-  // service and the backup (sync-menu/), and which version this is
+  // service, the backup and installing the app (sync-menu/), and which version this is
 
   let open = $state(false);
   let menu: HTMLElement;
@@ -61,6 +62,7 @@
       {/if}
       <WebDavSection showError={errorIn === 'webdav'} ontry={() => (tried = 'webdav')} />
       <BackupSection />
+      <InstallSection />
 
       <footer>
         <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
