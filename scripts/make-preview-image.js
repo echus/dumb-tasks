@@ -39,7 +39,7 @@ const THEMES = {
     muted: '#5f6269',
     onText: '#ffffff',
     edge: '0 0 0 1px rgb(0 0 0 / 0.1)',
-    // The README's devices: a darker backdrop, framed like a window bar (dots for buttons)
+    // The README's screens: a darker backdrop, and a window bar (dots for buttons) on the desktop
     backdrop: '#e1e2e6',
     frame: '#cfd0d5',
     dots: '#a9abb1',
@@ -215,9 +215,7 @@ for (const [name, theme] of Object.entries(THEMES)) {
         left: 1130px;
         top: 140px;
         width: 380px;
-        border: 10px solid ${theme.frame}; /* same as the desktop's window bar */
-        border-bottom: none;
-        border-radius: 44px 44px 0 0;
+        border-radius: 12px 12px 0 0;
         box-shadow: ${theme.lift};
       }
     </style>
