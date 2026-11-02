@@ -15,7 +15,7 @@
 :root {
   /* Grey lists on a black page */
   --bg: #000000;
-  --surface: #3a3a3c;
+  --surface: #2f2f31;
   --text: #e3e4e6;
   --muted: #888b92;
   --border-strong: #5c5e64;
