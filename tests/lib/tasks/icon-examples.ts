@@ -136,7 +136,9 @@ export const ICON_EXAMPLES: [text: string, right: string][] = [
   ['Apply for jobs', '💼'],
   ['Prep for job interview', '💼'],
   ['Write quarterly report', '💼✏️'],
-  ['Send sensor specs and logo to Ana', '⭐✉️💼'],
+  ['Send sensor specs and logo to Ana', '💻✉️💼'],
+  ['Solder the prototype board', '💻🔧'],
+  ['Flash firmware on the Arduino', '💻⌨️'],
   ['Publish dataset DOI (waiting on Jo\'s reply)', '⭐💼⌨️✉️'],
   ['Brainstorm app ideas', '💡'],
   // Building an app

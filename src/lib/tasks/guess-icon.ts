@@ -40,7 +40,7 @@ const RULES: [emoji: string, words: string][] = [
   ['📅', 'meeting meetings standup 1:1 agenda | schedule'],
   ['⌨️', 'code bug bugs deploy pr refactor github api coding programming server app website webdav nextcloud button feature css ui ux frontend backend repo click drag | review release sync field hack'],
   ['💼', 'work client boss manager report deadline project interview cv job jobs office colleague colleagues hr linkedin resume quarterly | team'],
-  ['💻', 'laptop computer backup password passwords pc mac software wifi router printer tech charger | update'],
+  ['💻', 'laptop computer backup password passwords pc mac software wifi router printer tech charger electronics sensor sensors pcb circuit arduino raspberry solder soldering firmware prototype | update'],
   ['🎓', 'exam exams assignment homework essay revise uni university college lecture thesis dissertation tafe | study class'],
   ['🎵', 'music song guitar piano playlist gig concert band songs spotify album | practice'],
   ['📷', 'photo photos camera film video pictures pics prints photoshoot lens | picture'],
