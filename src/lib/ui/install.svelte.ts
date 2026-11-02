@@ -29,21 +29,11 @@ export function stepsFor(userAgent: string, touchPoints: number): InstallWay {
 
 type StepsWay = Exclude<InstallWay, 'prompt' | null>;
 
-/** What to do, for the ways without a prompt: in full for the sync menu... */
+/** What to do, for the ways without a prompt, in the sync menu. */
 export const STEPS: Record<StepsWay, string> = {
   ios: 'To install Dumb Tasks, open the Share menu and tap Add to Home Screen.',
   'mac-safari': 'To install Dumb Tasks, choose File > Add to Dock.',
   android: 'To install Dumb Tasks, open the browser menu and tap Add to Home screen.',
-};
-
-/**
- * ...and in short for the pill under the intro, after "Install app:": where to look, then
- * what to choose there. Null: the browser's ⋮ menu, which the pill shows as its icon.
- */
-export const SHORT_STEPS: Record<StepsWay, [where: string | null, choose: string]> = {
-  ios: ['Share', 'Add to Home Screen'],
-  'mac-safari': ['File', 'Add to Dock'],
-  android: [null, 'Add to Home screen'],
 };
 
 function runsInstalled(): boolean {

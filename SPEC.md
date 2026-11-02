@@ -61,18 +61,14 @@ days, then dropped like deleted ones (see Tombstone purge).
   connected, the other says to disconnect it first), and "Save backup" / "Restore" for a full
   JSON backup.
   Restoring merges like sync does; it never deletes.
-- **Install:** how to install the app shows in an outline pill under the intro (so while
-  it's new), kept short so the intro isn't a wall of grey text, and in full as the last
-  section of that menu, until it runs installed (`ui/install.svelte.ts`). Chrome and Edge,
-  on Android and computers, get an "Install app" button that opens their own prompt.
-  Browsers without one get the steps: iPhone and iPad (Share → Add to Home Screen, in any
-  browser), Safari 17+ on a Mac (File → Add to Dock), and other Android browsers (⋮ menu,
-  shown as its icon → Add to Home screen). The pill starts "Install app:". Firefox on a computer can't install apps, so it gets nothing.
-
-## Deadlines
-
-Parsed from the task text — there is no deadline field in the UI.
-
+- **Install:** an "Install app" pill under the intro (so while the app is new), the same
+  in every browser so the intro stays short, and an "install app" section at the end of
+  that menu, until the app runs installed (`ui/install.svelte.ts`). In Chrome and Edge, on
+  Android and computers, both open the browser's own install prompt. Elsewhere the menu
+  gives the steps, and the pill opens the menu there, outlining the section for a moment:
+  iPhone and iPad (Share menu, Add to Home Screen, in any browser), Safari 17+ on a Mac
+  (File > Add to Dock), and other Android browsers (browser menu, Add to Home screen).
+  Firefox on a computer can't install apps, so it gets nothing.
 - Use an offline natural-language date parser (chrono-node, English only).
 - **Resolve to an absolute date at creation** (and on edit). Never re-parse daily, or
   "by friday" would drift forever.

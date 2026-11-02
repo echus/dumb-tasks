@@ -1,23 +1,23 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { install, promptInstall, SHORT_STEPS } from '$lib/ui/install.svelte';
+  import { install, promptInstall } from '$lib/ui/install.svelte';
   import * as ui from '$lib/ui/icons';
+  import { menu } from '$lib/ui/state.svelte';
 
-  // How to install the app, in a pill under the intro: short, so the intro isn't a wall of
-  // grey text. The sync menu says it in full.
+  // "Install app" in a pill under the intro, the same in every browser so the intro stays
+  // short. It opens the browser's install prompt where there is one; elsewhere it opens the
+  // sync menu at the install steps, which also shows where to find them later.
+
+  function onclick(e: MouseEvent) {
+    if (install.way === 'prompt') return promptInstall();
+    e.stopPropagation(); // else this click, reaching the window, would close the menu again
+    menu.open = true;
+    menu.highlight = 'install';
+  }
 </script>
 
-{#if install.way === 'prompt'}
-  <button class="pill" onclick={promptInstall}><Icon svg={ui.install} size={14} />Install app</button>
-{:else if install.way}
-  {@const [where, choose] = SHORT_STEPS[install.way]}
-  <p class="pill">
-    <Icon svg={ui.install} size={14} /><strong>Install app:</strong>
-    {#if where}{where}{:else}<span class="menu" role="img" aria-label="browser menu"
-        ><Icon svg={ui.browserMenu} size={14} /></span
-      >{/if}
-    → {choose}
-  </p>
+{#if install.way}
+  <button class="pill" {onclick}><Icon svg={ui.install} size={14} />Install app</button>
 {/if}
 
 <style>
@@ -35,26 +35,11 @@
     box-shadow: inset 0 0 0 1px var(--border-strong);
     color: var(--text);
     font-size: 0.9em;
-  }
-
-  button.pill {
     font-weight: 600;
     cursor: pointer;
   }
 
-  button.pill:hover {
+  .pill:hover {
     box-shadow: inset 0 0 0 1px var(--accent);
-  }
-
-  strong {
-    font-weight: 600;
-  }
-
-  /* The ⋮ menu button, drawn as a key to press */
-  .menu {
-    display: inline-grid;
-    padding: 1px 0;
-    border-radius: 4px;
-    box-shadow: inset 0 0 0 1px var(--border-strong);
   }
 </style>

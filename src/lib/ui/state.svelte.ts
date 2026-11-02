@@ -21,6 +21,12 @@ export const drag = $state<{
   overTab: Bucket | null; // phone tab under the pointer: drops go to the end of that list
 }>({ id: null, overTab: null });
 
+/**
+ * The sync menu: open from its button, or from the install pill, which also asks it to point
+ * out the install steps.
+ */
+export const menu = $state<{ open: boolean; highlight: 'install' | null }>({ open: false, highlight: null });
+
 export function endDrag() {
   drag.id = null;
   drag.overTab = null;

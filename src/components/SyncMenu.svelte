@@ -7,11 +7,11 @@
   import { loadGoogle } from '$lib/sync/google-auth';
   import { sync } from '$lib/sync/sync.svelte';
   import * as ui from '$lib/ui/icons';
+  import { menu as shared } from '$lib/ui/state.svelte';
 
   // The sync and backup menu: a button in the header, and a panel with a section for each
   // service, the backup and installing the app (sync-menu/), and which version this is
 
-  let open = $state(false);
   let menu: HTMLElement;
   // The service last tried, so a failed connect shows its error in that service's section
   let tried = $state<'drive' | 'webdav' | null>(null);
@@ -24,19 +24,22 @@
     !connected ? 'Sync and backup' : attention ? 'Sync needs attention' : `Synced with ${service}`,
   );
 
+  // Google's script has to be loaded before the click that opens its popup.
+  $effect(() => {
+    if (shared.open && sync.driveAvailable && sync.service !== 'webdav') loadGoogle().catch(() => {});
+  });
+
   function toggle() {
-    open = !open;
-    // Google's script has to be loaded before the click that opens its popup.
-    if (open && sync.driveAvailable && sync.service !== 'webdav') loadGoogle().catch(() => {});
+    shared.open = !shared.open;
   }
 
   function onwindowclick(e: MouseEvent) {
     // The path as clicked: a button that swaps itself out (Connect WebDAV) has left the menu by now
-    if (open && !e.composedPath().includes(menu)) open = false;
+    if (shared.open && !e.composedPath().includes(menu)) shared.open = false;
   }
 
   function onkeydown(e: KeyboardEvent) {
-    if (open && e.key === 'Escape') open = false;
+    if (shared.open && e.key === 'Escape') shared.open = false;
   }
 </script>
 
@@ -49,14 +52,14 @@
     class:attention
     aria-label={label}
     title={label}
-    aria-expanded={open}
+    aria-expanded={shared.open}
     onclick={toggle}
   >
     <Icon svg={ui.sync} size={18} />
   </button>
 
-  {#if open}
-    <div class="panel" role="dialog" aria-label="Sync and backup">
+  {#if shared.open}
+    <div class="panel" role="dialog" aria-label="Sync, backup and install">
       {#if sync.driveAvailable}
         <DriveSection showError={errorIn === 'drive'} ontry={() => (tried = 'drive')} />
       {/if}
