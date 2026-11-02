@@ -1,5 +1,7 @@
 # Dumb Tasks
 
+[![Dumb Tasks: a really simple todo list](public/og-image.png)](https://dumbtasks.app)
+
 A simple, local-first, open source task list. You can sync tasks with Google Drive or with a
 WebDAV server.
 

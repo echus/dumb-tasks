@@ -53,7 +53,12 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       // Fonts too, so the app looks right offline.
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'] },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globIgnores: ['og-image.png'], // for link previews and the README, not the installed app
+        // The text pages are their own HTML, not routes in the app
+        navigateFallbackDenylist: [/^\/(privacy|pricing|terms|refunds)(\.html)?$/],
+      },
       manifest: {
         name: 'Dumb Tasks',
         short_name: 'Dumb Tasks',

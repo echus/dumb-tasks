@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /auth/
+
+Sitemap: https://dumbtasks.app/sitemap.xml

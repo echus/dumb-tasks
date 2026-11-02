@@ -10,7 +10,35 @@
       content="Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync between your devices."
     />
     <meta name="theme-color" content="#000000" />
-    <title>Dumb Tasks</title>
+    <title>Dumb Tasks - a really simple todo list</title>
+    <!-- For search engines, and the preview card when someone shares the link. Self-hosted
+         copies point here too: this is the app's home. -->
+    <link rel="canonical" href="https://dumbtasks.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dumbtasks.app/" />
+    <meta property="og:site_name" content="Dumb Tasks" />
+    <meta property="og:title" content="Dumb Tasks - a really simple todo list" />
+    <meta
+      property="og:description"
+      content="Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync between your devices."
+    />
+    <meta property="og:image" content="https://dumbtasks.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dumb Tasks: a list of tasks for today, each with an emoji icon" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Dumb Tasks",
+        "url": "https://dumbtasks.app/",
+        "description": "Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync between your devices.",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript"
+      }
+    </script>
     <script>
       // Apply a saved theme before first paint so the page doesn't flash
       try {
