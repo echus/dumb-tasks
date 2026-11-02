@@ -69,6 +69,11 @@ days, then dropped like deleted ones (see Tombstone purge).
   iPhone and iPad (Share menu, Add to Home Screen, in any browser), Safari 17+ on a Mac
   (File > Add to Dock), and other Android browsers (browser menu, Add to Home screen).
   Firefox on a computer can't install apps, so it gets nothing.
+
+## Deadlines
+
+Parsed from the task text — there is no deadline field in the UI.
+
 - Use an offline natural-language date parser (chrono-node, English only).
 - **Resolve to an absolute date at creation** (and on edit). Never re-parse daily, or
   "by friday" would drift forever.
