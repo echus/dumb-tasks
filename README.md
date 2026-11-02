@@ -1,16 +1,15 @@
 # Dumb Tasks
 
+A really simple local-first task list. Sync with WebDAV or Google Drive.
+
+Live at [dumbtasks.app](https://dumbtasks.app) or [self host your own](#self-host-with-docker).
+
 <a href="https://dumbtasks.app">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/preview-dark.png" />
     <img src="docs/preview.png" alt="Dumb Tasks on a computer and a phone: lists for today, week, month and later" />
   </picture>
 </a>
-
-A simple, local-first, open source task list. You can sync tasks with Google Drive or with a
-WebDAV server.
-
-Live at [dumbtasks.app](https://dumbtasks.app).
 
 ## Self-host with Docker
 
