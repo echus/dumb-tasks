@@ -1,6 +1,11 @@
 # Dumb Tasks
 
-[![Dumb Tasks: a really simple todo list](public/og-image.png)](https://dumbtasks.app)
+<a href="https://dumbtasks.app">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/og-image-dark.png" />
+    <img src="public/og-image.png" alt="Dumb Tasks: a really simple todo list" />
+  </picture>
+</a>
 
 A simple, local-first, open source task list. You can sync tasks with Google Drive or with a
 WebDAV server.
