@@ -2,8 +2,8 @@
 
 <a href="https://dumbtasks.app">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/og-image-dark.png" />
-    <img src="public/og-image.png" alt="Dumb Tasks: a really simple todo list" />
+    <source media="(prefers-color-scheme: dark)" srcset="docs/preview-dark.png" />
+    <img src="docs/preview.png" alt="Dumb Tasks on a computer and a phone: lists for today, week, month and later" />
   </picture>
 </a>
 
