@@ -38,7 +38,12 @@ const THEMES = {
     muted: '#5f6269',
     onText: '#ffffff',
     edge: '0 0 0 1px rgb(0 0 0 / 0.1)',
-    lift: '0 0 0 1px rgb(0 0 0 / 0.1), 0 16px 48px rgb(0 0 0 / 0.16)',
+    // The README's devices: a darker backdrop, a window bar and a phone bezel
+    backdrop: '#e1e2e6',
+    frame: '#cfd0d5',
+    dots: '#a9abb1',
+    bezel: '#1b1c1f',
+    lift: '0 0 0 1px rgb(0 0 0 / 0.12), 0 16px 48px rgb(0 0 0 / 0.18)',
   },
   dark: {
     bg: '#000000',
@@ -46,7 +51,11 @@ const THEMES = {
     muted: '#888b92',
     onText: '#121314',
     edge: '0 0 0 1px rgb(255 255 255 / 0.14), 0 0 48px rgb(255 255 255 / 0.08)',
-    lift: '0 0 0 1px rgb(255 255 255 / 0.2), 0 16px 48px rgb(0 0 0 / 0.8)',
+    backdrop: '#1c1d20',
+    frame: '#323337',
+    dots: '#5c5e64',
+    bezel: '#46474c',
+    lift: '0 0 0 1px rgb(255 255 255 / 0.12), 0 16px 48px rgb(0 0 0 / 0.7)',
   },
 };
 
@@ -144,27 +153,33 @@ ${html}`);
 
 const MARK = `<svg class="mark" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" /><path d="M4.5 8.3 7 10.8 11.5 5.5" /></svg>`;
 
-// The link card: logo and tagline on one line, the desktop layout below running off the bottom
+// The link card: logo, tagline and what sets the app apart, the desktop layout below running
+// off the bottom
 const light = await screenshots('light');
 await render(
   `<style>
     header {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
-      padding: 56px 64px 0;
+      padding: 48px 64px 0;
+      text-align: right;
     }
     h1 { margin: 0; font-size: 64px; font-weight: 700; letter-spacing: -0.02em; }
-    p { margin: 0; color: ${THEMES.light.muted}; font-size: 40px; font-weight: 500; }
+    p { margin: 0; font-size: 38px; font-weight: 500; }
+    .sub { margin-top: 6px; color: ${THEMES.light.muted}; font-size: 26px; }
     .window {
       left: 64px;
       right: 64px;
-      top: 170px;
+      top: 168px;
       border-radius: 16px 16px 0 0;
       box-shadow: ${THEMES.light.edge};
     }
   </style>
-  <header><h1>${MARK}dumb tasks</h1><p>A really simple todo list</p></header>
+  <header>
+    <h1>${MARK}dumb tasks</h1>
+    <div><p>A really simple todo list</p><p class="sub">Local-first · works offline · no account</p></div>
+  </header>
   <div class="window"><img src="${light.card}" /></div>`,
   THEMES.light,
   1200,
@@ -180,22 +195,36 @@ for (const [name, theme] of Object.entries(THEMES)) {
     `<style>
       .desktop {
         left: 80px;
-        top: 72px;
+        top: 64px;
         width: 1120px;
-        border-radius: 16px 16px 0 0;
-        box-shadow: ${theme.edge};
+        border-radius: 12px 12px 0 0;
+        background: ${theme.frame};
+        box-shadow: ${theme.lift};
+      }
+      .bar {
+        display: flex;
+        gap: 8px;
+        padding: 12px 14px;
+      }
+      .bar i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: ${theme.dots};
       }
       .phone {
-        left: 1140px;
-        top: 150px;
+        left: 1130px;
+        top: 140px;
         width: 380px;
-        border-radius: 28px 28px 0 0;
+        border: 10px solid ${theme.bezel};
+        border-bottom: none;
+        border-radius: 44px 44px 0 0;
         box-shadow: ${theme.lift};
       }
     </style>
-    <div class="window desktop"><img src="${shots.desktop}" /></div>
+    <div class="window desktop"><div class="bar"><i></i><i></i><i></i></div><img src="${shots.desktop}" /></div>
     <div class="window phone"><img src="${shots.phone}" /></div>`,
-    theme,
+    { ...theme, bg: theme.backdrop },
     1600,
     600,
     `docs/preview${name === 'light' ? '' : '-dark'}.png`,
