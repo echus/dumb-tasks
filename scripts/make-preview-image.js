@@ -24,10 +24,11 @@ const TASKS = {
     'Send invoice due today',
     'Call mum',
     'Book dentist',
+    'Pick up the dry cleaning',
   ],
-  Week: ['Get groceries', 'Water the plants', 'Fix bike tyre'],
+  Week: ['Get groceries', 'Water the plants', 'Fix bike tyre', "Plan Sam's party"],
   Month: ['Renew passport by 14 dec', 'Book flights to Perth', 'Clean out the garage'],
-  Later: ['Learn to make sourdough', 'Repaint the bedroom'],
+  Later: ['Learn to make sourdough', 'Repaint the bedroom', 'Read a novel'],
 };
 
 // The app's colours for each theme (src/app.css)
@@ -38,11 +39,10 @@ const THEMES = {
     muted: '#5f6269',
     onText: '#ffffff',
     edge: '0 0 0 1px rgb(0 0 0 / 0.1)',
-    // The README's devices: a darker backdrop, a window bar and a phone bezel
+    // The README's devices: a darker backdrop, framed like a window bar (dots for buttons)
     backdrop: '#e1e2e6',
     frame: '#cfd0d5',
     dots: '#a9abb1',
-    bezel: '#1b1c1f',
     lift: '0 0 0 1px rgb(0 0 0 / 0.12), 0 16px 48px rgb(0 0 0 / 0.18)',
   },
   dark: {
@@ -54,7 +54,6 @@ const THEMES = {
     backdrop: '#1c1d20',
     frame: '#323337',
     dots: '#5c5e64',
-    bezel: '#46474c',
     lift: '0 0 0 1px rgb(255 255 255 / 0.12), 0 16px 48px rgb(0 0 0 / 0.7)',
   },
 };
@@ -216,7 +215,7 @@ for (const [name, theme] of Object.entries(THEMES)) {
         left: 1130px;
         top: 140px;
         width: 380px;
-        border: 10px solid ${theme.bezel};
+        border: 10px solid ${theme.frame}; /* same as the desktop's window bar */
         border-bottom: none;
         border-radius: 44px 44px 0 0;
         box-shadow: ${theme.lift};
@@ -226,7 +225,7 @@ for (const [name, theme] of Object.entries(THEMES)) {
     <div class="window phone"><img src="${shots.phone}" /></div>`,
     { ...theme, bg: theme.backdrop },
     1600,
-    600,
+    560,
     `docs/preview${name === 'light' ? '' : '-dark'}.png`,
   );
 }
