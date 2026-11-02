@@ -6,17 +6,12 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2026-10-01",
   "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/auth/*"] },
-  // Cloudflare makes the DNS record and certificate. www redirects here via a Redirect Rule.
-  "routes": [{ "pattern": "dumbtasks.app", "custom_domain": true }],
-  "env": {
-    // A separate Worker. Workers Builds deploys each push to a branch other than main here, so
-    // the latest build wins. The Vite plugin picks the environment at build time, so the
-    // preview build command is `CLOUDFLARE_ENV=staging npm run build`, and the Preview command
-    // is `npx wrangler deploy`.
-    // Set its secret with `wrangler secret put GOOGLE_CLIENT_SECRET --name dumb-tasks-staging`.
-    "staging": {
-      "name": "dumb-tasks-staging",
-      "routes": [{ "pattern": "staging.dumbtasks.app", "custom_domain": true }]
-    }
-  }
+  // Cloudflare makes the DNS records and certificates. www redirects here via a Redirect Rule.
+  // Previews get <name>.dumbtasks.app. Workers Builds deploys each push to a branch other than
+  // main as the Preview "staging" (Preview command: `npx wrangler preview --name staging`), so
+  // the latest build is at staging.dumbtasks.app.
+  "routes": [{ "pattern": "dumbtasks.app", "custom_domain": true, "previews_enabled": true }],
+  // Required by `wrangler preview`, even empty. Previews don't get production's secrets: set the
+  // staging one with `wrangler preview secret put GOOGLE_CLIENT_SECRET --name staging`.
+  "previews": {}
 }

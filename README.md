@@ -139,9 +139,9 @@ accepts `http` for a server on this computer.
 - Deploy: a Cloudflare Worker serves the app and the sign-in helper. `wrangler.jsonc` has the
   name and routes. In Workers Builds, set `VITE_GOOGLE_CLIENT_ID` as a build variable and
   `GOOGLE_CLIENT_SECRET` as a secret.
-- Staging: each push to a branch other than `main` deploys to `staging.dumbtasks.app`, a
-  separate Worker (`dumb-tasks-staging`). `wrangler.jsonc` has the Preview command for Workers
-  Builds. Set the staging Worker's `GOOGLE_CLIENT_SECRET` separately.
+- Staging: each push to a branch other than `main` deploys to `staging.dumbtasks.app`, the
+  Preview named `staging`. `wrangler.jsonc` has the Preview command for Workers Builds. Set the
+  Preview's `GOOGLE_CLIENT_SECRET` separately.
 
 ## Layout
 
