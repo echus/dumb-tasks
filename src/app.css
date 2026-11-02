@@ -161,7 +161,7 @@ input:focus-visible {
   outline-offset: 1px;
 }
 
-/* Dragging a task: a copy of its row follows the pointer (see dnd.ts) */
+/* Dragging a task: a copy of its row follows the pointer (see drag-and-drop.ts) */
 .drag-preview {
   position: fixed;
   top: 0;

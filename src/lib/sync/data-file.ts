@@ -18,7 +18,7 @@ export const SCHEMA_VERSION = MIGRATIONS.length + 1;
 /** The file is from a newer version of the app, so this one can't merge it safely. */
 export class NewerVersionError extends Error {
   constructor() {
-    super('This backup is from a newer version of Dumb Tasks. Reload to update the app, then try again.');
+    super('This backup is from a newer version of Dumb Tasks. Reload the app to update it. Then try again.');
   }
 }
 
@@ -43,7 +43,7 @@ export function parseDataFile(json: string): DataFile {
   const data = JSON.parse(json) as Partial<DataFile> | null;
   const version = data?.schemaVersion ?? 0;
   if (!data || !Number.isInteger(version) || version < 1 || !Array.isArray(data.tasks)) {
-    throw new Error("This doesn't look like a Dumb Tasks backup.");
+    throw new Error('This file is not a Dumb Tasks backup.');
   }
   if (version > SCHEMA_VERSION) throw new NewerVersionError();
   for (let v = version; v < SCHEMA_VERSION; v++) MIGRATIONS[v - 1](data);

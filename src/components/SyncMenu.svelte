@@ -1,62 +1,37 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { exportData, importData, parseDataFile } from '../lib/sync/data-file';
-  import { loadGoogle } from '../lib/sync/google-auth';
-  import { localChanged } from '../lib/sync/local-changes';
-  import { connect, disconnect, reconnect, sync, syncNow } from '../lib/sync/drive-sync.svelte';
-  import * as ui from '../lib/ui/icons';
+  import BackupSection from './sync-menu/BackupSection.svelte';
+  import DriveSection from './sync-menu/DriveSection.svelte';
+  import WebDavSection from './sync-menu/WebDavSection.svelte';
+  import { loadGoogle } from '$lib/sync/google-auth';
+  import { sync } from '$lib/sync/sync.svelte';
+  import * as ui from '$lib/ui/icons';
+
+  // The sync and backup menu: a button in the header, and a panel with a section for each
+  // service and the backup (sync-menu/), and which version this is
 
   let open = $state(false);
   let menu: HTMLElement;
-  let fileInput = $state<HTMLInputElement>();
-  let backupMessage = $state('');
+  // The service last tried, so a failed connect shows its error in that service's section
+  let tried = $state<'drive' | 'webdav' | null>(null);
+  const errorIn = $derived(sync.error ? (sync.service ?? tried) : null);
 
-  const attention = $derived(sync.connected && (sync.needsSignIn || Boolean(sync.error)));
+  const connected = $derived(sync.service !== null);
+  const service = $derived(sync.service === 'webdav' ? 'WebDAV' : 'Google Drive');
+  const attention = $derived(connected && (sync.needsSignIn || Boolean(sync.error)));
   const label = $derived(
-    !sync.connected ? 'Sync and backup' : attention ? 'Sync needs attention' : 'Synced with Google Drive',
+    !connected ? 'Sync and backup' : attention ? 'Sync needs attention' : `Synced with ${service}`,
   );
 
   function toggle() {
     open = !open;
-    backupMessage = '';
     // Google's script has to be loaded before the click that opens its popup.
-    if (open && sync.available) loadGoogle().catch(() => {});
-  }
-
-  function ago(iso: string): string {
-    const mins = Math.round((Date.now() - Date.parse(iso)) / 60_000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins} min ago`;
-    const hours = Math.round(mins / 60);
-    if (hours < 24) return `${hours} h ago`;
-    return new Date(iso).toLocaleDateString();
-  }
-
-  async function download() {
-    const data = await exportData();
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dumb-tasks-${data.exportedAt.slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function upload() {
-    const file = fileInput?.files?.[0];
-    if (fileInput) fileInput.value = '';
-    if (!file) return;
-    try {
-      const { added } = await importData(parseDataFile(await file.text()));
-      backupMessage = `Restored. ${added} new task${added === 1 ? '' : 's'}.`;
-      localChanged();
-    } catch (e) {
-      backupMessage = e instanceof SyntaxError ? "That file isn't a Dumb Tasks backup." : (e as Error).message;
-    }
+    if (open && sync.driveAvailable && sync.service !== 'webdav') loadGoogle().catch(() => {});
   }
 
   function onwindowclick(e: MouseEvent) {
-    if (open && !menu.contains(e.target as Node)) open = false;
+    // The path as clicked: a button that swaps itself out (Connect WebDAV) has left the menu by now
+    if (open && !e.composedPath().includes(menu)) open = false;
   }
 
   function onkeydown(e: KeyboardEvent) {
@@ -81,53 +56,18 @@
 
   {#if open}
     <div class="panel" role="dialog" aria-label="Sync and backup">
-      <section>
-        <h2><span class="icon"><Icon svg={ui.sync} size={14} /></span>Google Drive sync</h2>
-        {#if !sync.available}
-          <p>Sync isn't set up on this copy of the app.</p>
-        {:else if !sync.connected}
-          <p>Sync your tasks to Google Drive to access them on all your devices.</p>
-          <button class="action" onclick={connect}>Connect Google Drive</button>
-        {:else}
-          <p class="account">{sync.email}</p>
-          {#if sync.needsSignIn}
-            <p>Google signed this device out. Sign in again to keep syncing.</p>
-          {:else if sync.syncing}
-            <p>Syncing…</p>
-          {:else if sync.lastSyncedAt}
-            <p>Synced {ago(sync.lastSyncedAt)}</p>
-          {/if}
-          <div class="actions">
-            {#if sync.needsSignIn}
-              <button class="action" onclick={reconnect}>Sign in again</button>
-            {:else if sync.needsUpdate}
-              <button class="action" onclick={() => location.reload()}>Reload</button>
-            {:else}
-              <button class="action" disabled={sync.syncing} onclick={syncNow}>Sync now</button>
-            {/if}
-            <button class="action" onclick={disconnect}>Disconnect</button>
-          </div>
-        {/if}
-        {#if sync.error}
-          <p class="error">{sync.error}</p>
-        {/if}
-      </section>
-
-      <section>
-        <h2><span class="icon"><Icon svg={ui.download} size={14} /></span>Backup</h2>
-        <div class="actions">
-          <button class="action" onclick={download}>Save backup</button>
-          <button class="action" onclick={() => fileInput?.click()}>Restore…</button>
-        </div>
-        <input type="file" accept=".json,application/json" hidden bind:this={fileInput} onchange={upload} />
-        {#if backupMessage}
-          <p class="result">{backupMessage}</p>
-        {/if}
-      </section>
+      {#if sync.driveAvailable}
+        <DriveSection showError={errorIn === 'drive'} ontry={() => (tried = 'drive')} />
+      {/if}
+      <WebDavSection showError={errorIn === 'webdav'} ontry={() => (tried = 'webdav')} />
+      <BackupSection />
 
       <footer>
         <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
-        <a href="/privacy">Privacy</a>
+        <!-- Self-hosted builds (no Drive) have no privacy page: see vite.config.ts -->
+        {#if sync.driveAvailable}
+          <a href="/privacy">Privacy</a>
+        {/if}
       </footer>
     </div>
   {/if}
@@ -200,16 +140,17 @@
       0 1px 4px rgb(0 0 0 / 0.1);
   }
 
-  section {
+  /* The sections (sync-menu/) share these, so they are kept here, for the whole panel */
+  .panel :global(section) {
     padding: 14px 16px;
   }
 
-  section + section {
+  .panel :global(section + section) {
     border-top: 1px solid var(--glow-ring);
   }
 
   /* Icon and name laid out like the bucket names (BucketName) */
-  h2 {
+  .panel :global(h2) {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -221,41 +162,75 @@
     text-transform: lowercase;
   }
 
-  h2 .icon {
+  .panel :global(h2 .icon) {
     display: inline-grid;
     color: var(--muted);
     transform: translateY(0.05em);
   }
 
-  p {
+  .panel :global(p) {
     margin: 0 0 10px;
     color: var(--muted);
     font-size: 0.9em;
   }
 
-  .account {
+  .panel :global(.account) {
     color: var(--text);
     margin-bottom: 2px;
     overflow-wrap: anywhere;
   }
 
-  .error,
-  .result {
+  .panel :global(label) {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 0.9em;
+  }
+
+  /* Outlined like the buttons. 16px, so phones don't zoom in on focus */
+  .panel :global(input) {
+    min-width: 0;
+    padding: 6px 8px;
+    border: none;
+    border-radius: var(--radius);
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    color: var(--text);
+    font: inherit;
+    font-size: 16px;
+  }
+
+  .panel :global(input:focus) {
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .panel :global(p a) {
+    color: inherit;
+  }
+
+  .panel :global(.nowrap) {
+    white-space: nowrap;
+  }
+
+  .panel :global(.error),
+  .panel :global(.result) {
     margin: 10px 0 0;
   }
 
-  .error {
+  .panel :global(.error) {
     color: var(--due-soon-ink);
   }
 
-  .actions {
+  .panel :global(.actions) {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
 
   /* Outlined: a solid ink button would outweigh everything else in the app */
-  .action {
+  .panel :global(.action) {
     padding: 6px 12px;
     border: none;
     border-radius: var(--radius);
@@ -267,17 +242,17 @@
     cursor: pointer;
   }
 
-  .action:hover:not(:disabled) {
+  .panel :global(.action:hover:not(:disabled)) {
     box-shadow: inset 0 0 0 1px var(--accent);
   }
 
-  .action:disabled {
+  .panel :global(.action:disabled) {
     opacity: 0.5;
     cursor: default;
   }
 
   /* Small print under the sections: which version this is (to check a device has updated),
-     and where Play and Google expect a privacy link */
+     and where Play and Google expect a privacy link (only on the public instance) */
   footer {
     display: flex;
     justify-content: space-between;

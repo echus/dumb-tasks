@@ -13,7 +13,7 @@ if (typeof document !== 'undefined') {
 }
 
 /**
- * A task being dragged between and within buckets (see dnd.ts). Kept in one place so every
+ * A task being dragged between and within buckets (see drag-and-drop.ts). Kept in one place so every
  * highlight clears the moment a drag ends, wherever it ends.
  */
 export const drag = $state<{

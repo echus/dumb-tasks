@@ -1,10 +1,10 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { exportData, importData, parseDataFile } from '../sync/data-file';
-import { db } from '../db';
-import { mergeTask } from '../sync/merge';
-import { addDemoTasks, isDemoTask } from './demo-tasks';
-import { refreshColours } from './recolour';
+import { exportData, importData, parseDataFile } from '$lib/sync/data-file';
+import { db } from '$lib/db';
+import { mergeTask } from '$lib/sync/merge';
+import { addDemoTasks, isDemoTask } from '$lib/tasks/demo-tasks';
+import { refreshColours } from '$lib/tasks/recolour';
 import {
   addTask,
   byPosition,
@@ -14,8 +14,8 @@ import {
   editText,
   isActive,
   moveTask,
-} from './tasks';
-import type { Bucket } from '../types';
+} from '$lib/tasks/tasks';
+import type { Bucket } from '$lib/types';
 
 const t0 = new Date(2026, 9, 26, 9, 0);
 const later = (mins: number) => new Date(t0.getTime() + mins * 60_000);
@@ -213,7 +213,7 @@ describe('demo tasks', () => {
     await addDemoTasks(t0);
     expect(await texts('today')).toEqual([
       'Drag me to another list',
-      'Sync me with Google Drive',
+      'Sync me with WebDAV',
       'Add some tasks today',
       'Repot plants by end of next month',
     ]);
@@ -249,7 +249,7 @@ describe('demo tasks', () => {
 
   it('keeps their hand-picked icons and colours until the text is edited', async () => {
     await addDemoTasks(t0);
-    const sync = (await db.tasks.toArray()).find((t) => t.text === 'Sync me with Google Drive')!;
+    const sync = (await db.tasks.toArray()).find((t) => t.text === 'Sync me with WebDAV')!;
     expect(sync.icon).toBe('🔄');
     await refreshColours(later(1));
     expect(await db.tasks.get(sync.id)).toEqual(sync);

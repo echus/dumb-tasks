@@ -1,20 +1,18 @@
-import type { RemoteFile, SyncBackend } from './engine';
+import { deviceFileName, isDeviceFile, REQUEST_TIMEOUT, staleFiles } from './device-files';
+import { SignedOutError, type RemoteFile, type SyncBackend } from './engine';
 
 // Each device's data file lives in the app's hidden folder in the user's Google Drive.
 
 const API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
-const PREFIX = 'device-';
 // The one file every device shared before each had its own. Ignored, and deleted with the
 // stale files: a device still on that version recreates it until it updates.
 const LEGACY = 'dumb-tasks.json';
 
-const isDataFile = (name: string) => name.startsWith(PREFIX);
-
 /** The token has expired or been revoked: the user needs to sign in again. */
-export class DriveAuthError extends Error {
+export class DriveAuthError extends SignedOutError {
   constructor() {
-    super('Signed out of Google Drive.');
+    super('Google Drive signed out this device.');
   }
 }
 
@@ -28,7 +26,7 @@ class DriveNotFoundError extends Error {
 /** Drive couldn't be reached at all (offline, or the request was cut off): try again later. */
 export class DriveUnreachableError extends Error {
   constructor() {
-    super("Couldn't reach Google Drive. Will try again.");
+    super('Cannot connect to Google Drive. The app will try again.');
   }
 }
 
@@ -36,12 +34,13 @@ async function call(token: string, url: string, init: RequestInit = {}): Promise
   const res = await fetch(url, {
     ...init,
     headers: { ...init.headers, Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT),
   }).catch(() => {
     throw new DriveUnreachableError();
   });
   if (res.status === 401) throw new DriveAuthError();
   if (res.status === 404) throw new DriveNotFoundError();
-  if (!res.ok) throw new Error(`Google Drive replied ${res.status}.`);
+  if (!res.ok) throw new Error(`Google Drive sent error ${res.status}.`);
   return res;
 }
 
@@ -66,7 +65,7 @@ export class DriveBackend implements SyncBackend {
     device: string,
     public fileId: string | null,
   ) {
-    this.name = `${PREFIX}${device}.json`;
+    this.name = deviceFileName(device);
   }
 
   private async get<T>(url: string): Promise<T> {
@@ -87,7 +86,7 @@ export class DriveBackend implements SyncBackend {
 
   /** Every device's data file, this one's included. */
   private async listData(): Promise<DriveFile[]> {
-    return (await this.list()).filter((f) => isDataFile(f.name));
+    return (await this.list()).filter((f) => isDeviceFile(f.name));
   }
 
   /** Other devices' files changed since `cursor`, and the cursor after them. */
@@ -108,7 +107,7 @@ export class DriveBackend implements SyncBackend {
         newStartPageToken?: string;
       }>(`${API}/changes?${params}`);
       for (const { fileId, removed, file } of res.changes) {
-        if (!removed && file && !file.trashed && isDataFile(file.name) && file.name !== this.name) {
+        if (!removed && file && !file.trashed && isDeviceFile(file.name) && file.name !== this.name) {
           changed.set(fileId, { ...file, id: fileId });
         }
       }
@@ -173,20 +172,17 @@ export class DriveBackend implements SyncBackend {
     this.fileId = (await res.json()).id;
   }
 
-  // Ages are measured back from the newest file, by Drive's clock, so a device whose own
-  // clock is far ahead can't sweep away files still in use.
   async removeStale(maxAge: number) {
     const all = await this.list();
-    const files = all.filter((f) => isDataFile(f.name));
-    const newest = Math.max(...files.map((f) => Date.parse(f.modifiedTime)));
+    const files = all.filter((f) => isDeviceFile(f.name));
     const stale = [
-      ...files.filter((f) => f.name !== this.name && Date.parse(f.modifiedTime) < newest - maxAge),
+      ...staleFiles(files, this.name, maxAge, (f) => Date.parse(f.modifiedTime)),
       ...all.filter((f) => f.name === LEGACY),
     ];
     await Promise.all(
       stale.map((f) =>
         call(this.token, `${API}/files/${f.id}`, { method: 'DELETE' }).catch((e) => {
-          if (!(e instanceof DriveNotFoundError)) throw e;
+          if (e instanceof DriveAuthError) throw e;
         }),
       ),
     );

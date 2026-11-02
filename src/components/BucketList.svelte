@@ -2,7 +2,7 @@
   import AddTask from './AddTask.svelte';
   import BucketName from './BucketName.svelte';
   import TaskRow from './TaskRow.svelte';
-  import type { Bucket, Task } from '../lib/types';
+  import type { Bucket, Task } from '$lib/types';
 
   interface Props {
     bucket: Bucket;

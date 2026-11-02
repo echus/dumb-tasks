@@ -1,0 +1,40 @@
+# Real WebDAV servers for the server tests (npm run test:servers), which start and stop them.
+# Only reachable from this computer.
+name: dumb-tasks-test-servers
+
+services:
+  apache:
+    image: httpd:2.4
+    ports:
+      - "127.0.0.1:${APACHE_PORT:-8081}:80"
+    volumes:
+      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      # Written by setup.ts, from the README
+      - ./apache/readme-server.conf:/usr/local/apache2/conf/readme-server.conf:ro
+      - ./apache/readme-folder.conf:/usr/local/apache2/conf/readme-folder.conf:ro
+    working_dir: /usr/local/apache2
+    # The password file and the folders the README's setup names
+    command: >
+      sh -c "mkdir -p /path/to && htpasswd -cbB /path/to/htpasswd me secret &&
+             mkdir -p webdav /var/lib/apache2/dav &&
+             chown daemon:daemon webdav /var/lib/apache2/dav &&
+             exec httpd-foreground"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/80"]
+      interval: 1s
+      retries: 30
+
+  nextcloud:
+    image: nextcloud:35-apache
+    ports:
+      - "127.0.0.1:${NEXTCLOUD_PORT:-8082}:80"
+    environment:
+      SQLITE_DATABASE: nextcloud
+      NEXTCLOUD_ADMIN_USER: me
+      NEXTCLOUD_ADMIN_PASSWORD: test-only-admin-password
+      NEXTCLOUD_TRUSTED_DOMAINS: localhost
+    healthcheck:
+      # Answers before it has finished installing
+      test: ["CMD-SHELL", "curl -fs http://localhost/status.php | grep -q '\"installed\":true'"]
+      interval: 3s
+      retries: 100

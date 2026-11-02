@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysUntil, deadlineHeat, describeDeadline, parseDeadline } from './deadline';
+import { daysUntil, deadlineHeat, describeDeadline, parseDeadline } from '$lib/tasks/deadline';
 
 // Monday 26 October 2026
 const ref = new Date(2026, 9, 26, 10, 0);

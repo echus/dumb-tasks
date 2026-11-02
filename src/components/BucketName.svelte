@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { bucketIcons } from '../lib/ui/icons';
-  import { BUCKET_LABELS, type Bucket } from '../lib/types';
+  import { bucketIcons } from '$lib/ui/icons';
+  import { BUCKET_LABELS, type Bucket } from '$lib/types';
 
   // A bucket's icon and name, for the desktop headings and the phone tabs
   let { bucket }: { bucket: Bucket } = $props();

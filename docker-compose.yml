@@ -1,0 +1,12 @@
+# Self-hosted Dumb Tasks, with WebDAV sync. See "Self-host with Docker" in the README.
+services:
+  dumb-tasks:
+    build:
+      context: .
+      args:
+        # Shown in the sync menu: COMMIT_SHA=$(git rev-parse --short HEAD) docker compose up -d --build
+        COMMIT_SHA: ${COMMIT_SHA:-unknown}
+    image: dumb-tasks
+    ports:
+      - "8080:80"
+    restart: unless-stopped

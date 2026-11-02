@@ -56,8 +56,10 @@ days, then dropped like deleted ones (see Tombstone purge).
 - **Undo / redo:** buttons in the header (and ⌘Z / ⇧⌘Z, Ctrl+Z / Ctrl+Y) step back and forward
   through adds, edits, completions, deletions and moves made this session. An undo is written
   as a fresh edit, so it syncs like any other change.
-- **Sync and backup:** a sync button (circling arrows) in the header opens a small menu: connect / disconnect
-  Google Drive, sync status, and "Save backup" / "Restore…" for a full JSON backup.
+- **Sync and backup:** a sync button (circling arrows) in the header opens a small menu: a
+  section each for Google Drive and WebDAV (connect / disconnect, sync status; while one is
+  connected, the other says to disconnect it first), and "Save backup" / "Restore" for a full
+  JSON backup.
   Restoring merges like sync does; it never deletes.
 
 ## Deadlines
@@ -211,9 +213,9 @@ writes only that one. A sync reads the files other devices changed, merges them 
 rewrites this device's file if that left it out of date.
 
 - **Backends:** **Google Drive first** — it's what regular people already have, and the MCP
-  server depends on it. WebDAV / Nextcloud comes later as a bonus for self-hosters. A backend
-  is `pull(cursor)`, `push(json)` and `removeStale(maxAge)` (`SyncBackend` in
-  `sync/engine.ts`).
+  server depends on it. WebDAV (Nextcloud, Apache) as a bonus for self-hosters who want no
+  cloud at all. One at a time per device. A backend is `pull(cursor)`, `push(json)` and
+  `removeStale(maxAge)` (`SyncBackend` in `sync/engine.ts`).
 - **Drive:** a `device-<id>.json` per install in the hidden app folder (`drive.appdata`
   scope), never full Drive access. The id is made once per install and kept through
   reconnects. Drive's Changes API says which files changed since the last sync, so a sync with
@@ -230,6 +232,15 @@ rewrites this device's file if that left it out of date.
   merge into another account by accident. No tasks pass
   through the Worker. Disconnect forgets this device's cookie without revoking Google's grant,
   which would sign out every device.
+- **WebDAV:** the same `device-<id>.json` files, in a `dumb-tasks` folder inside the folder the
+  user gives, made on first push. The browser talks to the server directly, with Basic auth
+  (ideally an app password), so the server has to allow the app's origin (CORS; setup in the
+  README). Nothing goes through the Worker: a proxy would reach hosted servers that can't be
+  configured, but would see passwords and tasks. A sync lists the folder (one `PROPFIND`) and
+  downloads only files whose ETag changed since the last; the cursor is those ETags. The
+  address, username and password are stored on the device like the Drive token. A wrong
+  password shows "Sign in again" with a password field; a different server or user means
+  disconnecting first.
 - **Merge:** last-write-wins **per field** using `fieldUpdatedAt`, so editing text on one
   device and moving the task on another both survive. Deletes are tombstones. (Built, and
   already used by backup import.) An edit is stamped just after the task's last edit when
@@ -270,7 +281,7 @@ itself has no chat and needs no API key.
 - **Hosted by the project, backed by Google Drive.** The user adds the connector to their AI
   client and signs in with Google; the server reads and writes their data file in Drive using
   the same merge logic as the app. It is just another sync client.
-- **So MCP requires Google Drive sync.** Local-only and (later) WebDAV users don't get MCP.
+- **So MCP requires Google Drive sync.** Local-only and WebDAV users don't get MCP.
   No self-hosted MCP server at this stage.
 - **Stores almost nothing.** Google sign-in is the identity; tasks live only in the user's
   Drive. The server keeps just the connector's auth grants (encrypted Google tokens) in a small
@@ -333,9 +344,10 @@ Later: MCP TypeScript SDK.
    keyword icons, JSON export/import (UI removed for now), installable and offline. *Built.*
 2. ~~**Redesign**~~ — industrial look, light/dark theme switch. *Built.*
 3. ~~**Sync**~~ — Google Drive backend on top of the existing merge logic, plus a settings place
-   for sync and backup export / import. *Built.*
+   for sync and backup export / import. *Built.* WebDAV backend too, pulled forward from
+   Release. *Built.*
 4. **MCP server** — hosted, Drive-backed; tools and morning-planning prompt.
-5. **Release** — Play Store wrapper, docs site, Docker image, WebDAV backend.
+5. **Release** — Play Store wrapper, docs site. (Docker image built, with WebDAV sync only.)
 6. **Decide on more AI** — after daily use of the MCP planner, revisit the later options above.
 
 ## Non-goals

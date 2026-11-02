@@ -1,0 +1,10 @@
+node_modules
+dist
+dev-dist
+.git
+.wrangler
+.claude
+mockups
+# Local secrets and settings: a Google client ID would turn on Drive sync, which needs the Worker
+*.local
+.dev.vars

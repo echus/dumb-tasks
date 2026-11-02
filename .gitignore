@@ -32,3 +32,8 @@ mockups
 # Wrangler local state and secrets
 .wrangler
 .dev.vars
+
+# Written by the server tests (tests/servers/setup.ts)
+tests/servers/apache/readme-*.conf
+test-results
+playwright-report

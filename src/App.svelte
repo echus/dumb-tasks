@@ -5,11 +5,12 @@
   import HistoryButtons from './components/HistoryButtons.svelte';
   import SyncMenu from './components/SyncMenu.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
-  import { db } from './lib/db';
-  import { isDemoTask } from './lib/tasks/demo-tasks';
-  import { byPosition, isActive } from './lib/tasks/tasks';
-  import { BUCKETS, type Bucket, type Task } from './lib/types';
-  import { drag } from './lib/ui/state.svelte';
+  import { db } from '$lib/db';
+  import { sync } from '$lib/sync/sync.svelte';
+  import { isDemoTask } from '$lib/tasks/demo-tasks';
+  import { byPosition, isActive } from '$lib/tasks/tasks';
+  import { BUCKETS, type Bucket, type Task } from '$lib/types';
+  import { drag } from '$lib/ui/state.svelte';
 
   // Re-runs whenever the tasks table changes, from any tab.
   const tasks = liveQuery(() => db.tasks.toArray());
@@ -65,14 +66,15 @@
 
 {#if showIntro}
   <p class="intro">
-    Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync to your
-    Google Drive. <a href="/privacy">Privacy</a>
+    Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync through
+    {sync.driveAvailable ? 'Google Drive or ' : ''}your WebDAV server.
+    {#if sync.driveAvailable}<a href="/privacy">Privacy</a>{/if}
   </p>
 {/if}
 
 <div class="bar" bind:clientHeight={barHeight}>
   <!-- Dropping a dragged task on a tab sends it to the end of that list, without switching
-       tabs; holding it there opens the tab (see dnd.ts) -->
+       tabs; holding it there opens the tab (see drag-and-drop.ts) -->
   <div class="tabs" role="tablist" aria-label="Buckets">
     {#each BUCKETS as bucket (bucket)}
       <button

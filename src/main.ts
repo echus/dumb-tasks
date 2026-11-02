@@ -4,12 +4,12 @@ import '@fontsource/inter/latin-600.css';
 import './app.css';
 import App from './App.svelte';
 import Outdated from './components/Outdated.svelte';
-import { db, isDatabaseNewer } from './lib/db';
-import { handleShareTarget, requestPersistentStorage } from './lib/startup';
-import { dropOldTasks } from './lib/sync/data-file';
-import { startSync } from './lib/sync/drive-sync.svelte';
-import { addDemoTasks } from './lib/tasks/demo-tasks';
-import { refreshColoursOnce } from './lib/tasks/recolour';
+import { db, isDatabaseNewer } from '$lib/db';
+import { handleShareTarget, requestPersistentStorage } from '$lib/startup';
+import { dropOldTasks } from '$lib/sync/data-file';
+import { startSync } from '$lib/sync/sync.svelte';
+import { addDemoTasks } from '$lib/tasks/demo-tasks';
+import { refreshColoursOnce } from '$lib/tasks/recolour';
 
 // The service worker only belongs to production builds. Remove any left over from an
 // earlier dev setup, which would keep serving stale pages.

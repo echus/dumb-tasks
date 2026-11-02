@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
-import { NewerVersionError, parseDataFile, SCHEMA_VERSION } from './data-file';
+import { NewerVersionError, parseDataFile, SCHEMA_VERSION } from '$lib/sync/data-file';
 
 const file = (data: object) => JSON.stringify({ tasks: [], ...data });
 
@@ -19,7 +19,7 @@ describe('parseDataFile', () => {
 
   it("refuses something that isn't a data file", () => {
     for (const json of ['null', '[]', file({}), file({ schemaVersion: 0 }), file({ schemaVersion: 1.5 })]) {
-      expect(() => parseDataFile(json)).toThrow("doesn't look like a Dumb Tasks backup");
+      expect(() => parseDataFile(json)).toThrow('is not a Dumb Tasks backup');
     }
   });
 });

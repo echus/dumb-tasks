@@ -9,15 +9,19 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json && tsc -p tsconfig.worker.json",
-    "test": "vitest run"
+    "test": "vitest run --project unit",
+    "test:servers": "vitest run --project servers",
+    "test:browser": "playwright test --config tests/browser/playwright.config.ts"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.65.0",
     "@cloudflare/workers-types": "^5.20261027.1",
+    "@playwright/test": "1.64.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tsconfig/svelte": "^5.0.8",
     "@types/node": "^24.19.2",
     "fake-indexeddb": "^6.2.6",
+    "jsdom": "^29.1.1",
     "svelte": "^5.57.2",
     "svelte-check": "^4.7.7",
     "typescript": "~6.0.3",

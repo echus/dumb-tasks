@@ -1,3 +1,5 @@
+import { GOOGLE_CLIENT_ID } from '../config';
+
 // Google sign-in for Drive sync. Google's popup signs the user in and hands back a one-time
 // code; the Worker (worker/index.ts) swaps it for a refresh token, kept in a cookie this page
 // can't read. From then on the Worker hands out fresh hour-long access tokens on request, with
@@ -5,9 +7,6 @@
 
 // Only the app's own hidden folder in Drive, never the rest of the user's files.
 const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
-
-/** Set in .env.local; without it the app works as before, with sync unavailable. */
-export const CLIENT_ID: string | undefined = import.meta.env.VITE_GOOGLE_CLIENT_ID || undefined;
 
 export interface AccessToken {
   value: string;
@@ -58,7 +57,7 @@ export function loadGoogle(): Promise<Gis> {
     script.onerror = () => {
       loading = null;
       script.remove();
-      reject(new Error("Couldn't reach Google."));
+      reject(new Error('Cannot connect to Google.'));
     };
     document.head.append(script);
   });
@@ -73,7 +72,7 @@ export async function signIn(loginHint?: string): Promise<AccessToken> {
   const google = await loadGoogle();
   const code = await new Promise<string>((resolve, reject) => {
     const client = google.accounts.oauth2.initCodeClient({
-      client_id: CLIENT_ID!,
+      client_id: GOOGLE_CLIENT_ID!,
       scope: SCOPE,
       ux_mode: 'popup',
       login_hint: loginHint,
@@ -87,14 +86,14 @@ export async function signIn(loginHint?: string): Promise<AccessToken> {
       error_callback: (e) =>
         reject(
           new Error(
-            e.type === 'popup_closed' ? 'Sign-in was cancelled.' : "Couldn't open Google sign-in.",
+            e.type === 'popup_closed' ? 'You cancelled the sign-in.' : 'Cannot open the Google sign-in.',
           ),
         ),
     });
     client.requestCode();
   });
   const token = await callWorker('/auth/exchange', { code });
-  if (!token) throw new Error("Google didn't accept the sign-in.");
+  if (!token) throw new Error('Google did not accept the sign-in.');
   if (!token.remembered) console.warn('No refresh token from Google: this sign-in lasts an hour.');
   return token;
 }
@@ -110,7 +109,7 @@ export async function signOut(): Promise<void> {
 }
 
 async function callWorker(path: string, body?: object): Promise<AccessToken | null> {
-  const unreachable = new Error("Couldn't reach Google. Will try again.");
+  const unreachable = new Error('Cannot connect to Google. The app will try again.');
   const res = await fetch(path, {
     method: 'POST',
     headers: body && { 'Content-Type': 'application/json' },
@@ -119,7 +118,7 @@ async function callWorker(path: string, body?: object): Promise<AccessToken | nu
     throw unreachable;
   });
   if (res.status === 400 || res.status === 401) return null;
-  if (res.status === 501) throw new Error("Sync isn't fully set up on the server.");
+  if (res.status === 501) throw new Error('Sync is not fully set up on the server.');
   if (!res.ok) throw unreachable;
   const { value, expiresIn, remembered } = await res.json();
   return { value, expiresAt: Date.now() + expiresIn * 1000, remembered };

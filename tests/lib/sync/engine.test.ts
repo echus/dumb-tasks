@@ -1,12 +1,12 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db } from '../db';
-import { addDemoTasks, isDemoTask } from '../tasks/demo-tasks';
-import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from '../tasks/tasks';
-import type { DataFile, Task } from '../types';
-import { SCHEMA_VERSION } from './data-file';
-import { startFrom, syncWith, type Skipped, type SyncBackend, type SyncState } from './engine';
-import { onLocalChange } from './local-changes';
+import { db } from '$lib/db';
+import { addDemoTasks, isDemoTask } from '$lib/tasks/demo-tasks';
+import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from '$lib/tasks/tasks';
+import type { DataFile, Task } from '$lib/types';
+import { SCHEMA_VERSION } from '$lib/sync/data-file';
+import { startFrom, syncWith, type Skipped, type SyncBackend, type SyncState } from '$lib/sync/engine';
+import { onLocalChange } from '$lib/sync/local-changes';
 
 const t0 = new Date(2026, 9, 26, 9, 0);
 const later = (mins: number) => new Date(t0.getTime() + mins * 60_000);
