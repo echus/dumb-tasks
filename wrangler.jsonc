@@ -7,12 +7,16 @@
   "compatibility_date": "2026-10-01",
   "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/auth/*"] },
   // Cloudflare makes the DNS record and certificate. www redirects here via a Redirect Rule.
-  // Branch previews (`wrangler preview`) get <branch>.staging.dumbtasks.app; production
-  // isn't served there.
-  "routes": [
-    { "pattern": "dumbtasks.app", "custom_domain": true },
-    { "pattern": "staging.dumbtasks.app", "custom_domain": true, "previews_enabled": true, "enabled": false }
-  ],
-  // Required by `wrangler preview`, even empty. Previews don't get production's secrets.
-  "previews": {}
+  "routes": [{ "pattern": "dumbtasks.app", "custom_domain": true }],
+  "env": {
+    // A separate Worker. Workers Builds deploys each push to a branch other than main here, so
+    // the latest build wins. The Vite plugin picks the environment at build time, so the
+    // preview build command is `CLOUDFLARE_ENV=staging npm run build`, and the Preview command
+    // is `npx wrangler deploy`.
+    // Set its secret with `wrangler secret put GOOGLE_CLIENT_SECRET --name dumb-tasks-staging`.
+    "staging": {
+      "name": "dumb-tasks-staging",
+      "routes": [{ "pattern": "staging.dumbtasks.app", "custom_domain": true }]
+    }
+  }
 }
