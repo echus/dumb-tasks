@@ -1,4 +1,4 @@
-import { generateKeyBetween } from 'fractional-indexing';
+import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing';
 import { ulid } from 'ulid';
 import { db } from '../db';
 import { localChanged } from '../sync/local-changes';
@@ -136,12 +136,27 @@ export async function dismissDeadline(id: string, now = new Date()) {
 export async function moveTask(id: string, bucket: Bucket, beforeId: string | null, now = new Date()) {
   await db.transaction('rw', db.tasks, async () => {
     const siblings = (await activeIn(bucket)).filter((t) => t.id !== id);
-    const i = beforeId ? siblings.findIndex((t) => t.id === beforeId) : -1;
-    const before = i >= 0 ? siblings[i] : null;
-    const after = i >= 0 ? (siblings[i - 1] ?? null) : (siblings.at(-1) ?? null);
-    const position = generateKeyBetween(after?.position ?? null, before?.position ?? null);
+    const found = beforeId ? siblings.findIndex((t) => t.id === beforeId) : -1;
+    const i = found >= 0 ? found : siblings.length;
+    const after = siblings[i - 1]?.position ?? null;
+    const before = siblings[i]?.position ?? null;
+    if (after === null || before === null || after < before) {
+      const position = generateKeyBetween(after, before);
+      await updateTask(id, { bucket, position, sorted: true }, now);
+      return;
+    }
 
-    await updateTask(id, { bucket, position, sorted: true }, now);
+    // Two devices can each add a task at the same place, giving both the same position, and
+    // no key fits between equal ones. Space out that run of equal positions, with the task in it.
+    let start = i - 1;
+    while (start > 0 && siblings[start - 1].position === after) start--;
+    let end = i;
+    while (end < siblings.length && siblings[end].position === after) end++;
+    const run = [...siblings.slice(start, i).map((t) => t.id), id, ...siblings.slice(i, end).map((t) => t.id)];
+    const keys = generateNKeysBetween(siblings[start - 1]?.position ?? null, siblings[end]?.position ?? null, run.length);
+    for (const [k, runId] of run.entries()) {
+      await updateTask(runId, runId === id ? { bucket, position: keys[k], sorted: true } : { position: keys[k] }, now);
+    }
   });
 }
 
