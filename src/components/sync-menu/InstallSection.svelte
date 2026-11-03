@@ -5,7 +5,7 @@
   import { menu } from '$lib/ui/state.svelte';
 
   // Install the app, so it opens like any other app: shown until it runs installed. The
-  // install pill opens the menu here, outlined for a moment so the eye finds it.
+  // install pill opens the menu here, highlighted for a moment so the eye finds it.
 
   let section = $state<HTMLElement>();
   let pointedOut = $state(false);
@@ -33,16 +33,19 @@
 {/if}
 
 <style>
-  /* An ink outline that fades out */
+  /* A highlighter yellow that holds, then fades */
   .pointed-out {
-    animation: point-out 1.6s ease-in forwards;
+    animation: point-out 2s ease-out forwards;
   }
 
   @keyframes point-out {
-    from {
-      box-shadow: inset 0 0 0 2px var(--accent);
+    0%,
+    35% {
+      background: var(--highlight);
+      box-shadow: inset 0 0 0 2px var(--highlight-edge);
     }
-    to {
+    100% {
+      background: transparent;
       box-shadow: inset 0 0 0 2px transparent;
     }
   }
