@@ -10,12 +10,15 @@ import { dropOldTasks } from '$lib/sync/data-file';
 import { startSync } from '$lib/sync/sync.svelte';
 import { addDemoTasks } from '$lib/tasks/demo-tasks';
 import { refreshColoursOnce } from '$lib/tasks/recolour';
+import { watchInstall } from '$lib/ui/install.svelte';
 
 // The service worker only belongs to production builds. Remove any left over from an
 // earlier dev setup, which would keep serving stale pages.
 if (import.meta.env.DEV && 'serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
 }
+
+watchInstall(); // straight away, as the browser's install prompt can arrive early
 
 const target = document.getElementById('app')!;
 

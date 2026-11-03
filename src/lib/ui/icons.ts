@@ -18,6 +18,7 @@ export { default as download } from '@phosphor-icons/core/assets/bold/download-s
 export { default as drive } from '@phosphor-icons/core/assets/bold/google-drive-logo-bold.svg?raw';
 export { default as server } from '@phosphor-icons/core/assets/bold/hard-drives-bold.svg?raw';
 export { default as enter } from '@phosphor-icons/core/assets/bold/arrow-elbow-down-left-bold.svg?raw';
+export { default as install } from '@phosphor-icons/core/assets/bold/device-mobile-bold.svg?raw';
 
 // Phosphor's arrow-right with the shaft stretched, so it's 1.5× as wide
 const longArrow =

@@ -31,6 +31,10 @@
   --due-later-ink: var(--due-later);
   --due-near-ink: var(--due-near);
   --due-soon-ink: var(--due-soon);
+  /* A highlighter, to point something out. Yellow washed over dark turns olive, so here it's
+     a faint wash inside a bright edge; on white, the wash alone */
+  --highlight: color-mix(in srgb, var(--due-near) 18%, transparent);
+  --highlight-edge: var(--due-near);
 
   /* A faint light edge and haze around the panels */
   --glow-ring: rgb(255 255 255 / 0.14);
@@ -73,6 +77,8 @@
     --due-later-ink: color-mix(in srgb, var(--due-later) 70%, black);
     --due-near-ink: #d69e00;
     --due-soon-ink: color-mix(in srgb, var(--due-soon) 92%, black);
+    --highlight: color-mix(in srgb, var(--due-near) 40%, transparent);
+    --highlight-edge: transparent;
     --glow-ring: rgb(0 0 0 / 0.1);
     --glow: transparent; /* no shadow on white: the edge is enough */
     --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
@@ -95,6 +101,8 @@
   --due-later-ink: color-mix(in srgb, var(--due-later) 70%, black);
   --due-near-ink: #d69e00;
   --due-soon-ink: color-mix(in srgb, var(--due-soon) 92%, black);
+  --highlight: color-mix(in srgb, var(--due-near) 40%, transparent);
+  --highlight-edge: transparent;
   --glow-ring: rgb(0 0 0 / 0.1);
   --glow: transparent; /* no shadow on white: the edge is enough */
   --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
