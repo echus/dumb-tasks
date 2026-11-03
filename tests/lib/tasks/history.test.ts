@@ -43,6 +43,17 @@ describe('undo / redo', () => {
     expect(history.canUndo).toBe(false);
   });
 
+  it('undoes only what the action changed', async () => {
+    const id = (await addTask('call mum'))!;
+    await track([id], () => editText(id, 'call dad'));
+    await moveTask(id, 'week', null); // from sync or another tab: not an undo step
+
+    await undo();
+    expect(await db.tasks.get(id)).toMatchObject({ text: 'call mum', bucket: 'week' });
+    await redo();
+    expect(await db.tasks.get(id)).toMatchObject({ text: 'call dad', bucket: 'week' });
+  });
+
   it('clears redo after a new action', async () => {
     const id = (await addTask('a'))!;
     await track([id], () => editText(id, 'b'));

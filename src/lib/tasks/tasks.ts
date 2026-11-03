@@ -169,15 +169,20 @@ export async function deleteTask(id: string, now = new Date()) {
 }
 
 /**
- * Puts a task's fields back to a saved copy, or tombstones it if there was no copy (it
+ * Puts `fields` of a task back to a saved copy, or tombstones it if there was no copy (it
  * didn't exist yet). Written as a fresh edit, so sync treats an undo like any other change.
  */
-export async function applySnapshot(id: string, snapshot: Task | undefined, now = new Date()) {
+export async function applySnapshot(
+  id: string,
+  snapshot: Task | undefined,
+  fields: readonly MergedField[] = MERGED_FIELDS,
+  now = new Date(),
+) {
   const current = await db.tasks.get(id);
   if (!current) return;
   const target: Task = snapshot ?? { ...current, deletedAt: now.toISOString() };
   const patch: Partial<Pick<Task, MergedField>> = {};
-  for (const field of MERGED_FIELDS) {
+  for (const field of fields) {
     if (JSON.stringify(current[field]) !== JSON.stringify(target[field])) {
       Object.assign(patch, { [field]: target[field] });
     }
