@@ -39,5 +39,13 @@
     "dexie": "^4.4.7",
     "fractional-indexing": "^4.0.0",
     "ulid": "^3.0.2"
+  },
+  "overrides": {
+    "workbox-build": {
+      "glob": "^14.0.3"
+    },
+    "filelist": {
+      "minimatch": "^11.0.4"
+    }
   }
 }
