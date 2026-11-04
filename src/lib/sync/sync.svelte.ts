@@ -105,6 +105,14 @@ async function freshToken(current: DriveSettings): Promise<string | null> {
     askToSignIn();
     return null;
   }
+  // The Worker's sign-in should be this account's, but check before syncing with it
+  const email = await fetchEmail(token.value);
+  if (settings !== current) return null;
+  if (email !== current.email) {
+    signOut().catch(() => {});
+    askToSignIn();
+    return null;
+  }
   sync.needsSignIn = false;
   current.token = token;
   await saveSettings(settings);

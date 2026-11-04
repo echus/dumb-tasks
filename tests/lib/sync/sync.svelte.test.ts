@@ -210,6 +210,17 @@ describe('Google Drive', () => {
     expect(drive.calls).toEqual([]);
   });
 
+  it("won't sync with a new token for another account, and signs that one out", async () => {
+    const tab = await driveTab();
+    google.account = 'someone@example.com'; // as if another sign-in took the Worker's place
+    anHourLater();
+    drive.calls = [];
+    await tab.syncNow();
+    expect(tab.sync.needsSignIn).toBe(true);
+    expect(google.signOuts).toBe(1);
+    expect(drive.calls.filter((c) => !c.includes('/about'))).toEqual([]);
+  });
+
   it('gets one new token when Drive ends the old one early', async () => {
     const tab = await driveTab();
     google.tokens.clear();

@@ -96,8 +96,9 @@ describe('/auth/exchange', () => {
     const res = await send(exchange('code'));
     expect(await res.json()).toEqual({ value: 'access', expiresIn: 3599, remembered: true });
     expect(res.headers.get('Set-Cookie')).toBe(
-      'drive_session=refresh; Path=/auth/; Max-Age=34560000; HttpOnly; SameSite=Strict; Secure',
+      '__Host-drive_session=refresh; Path=/; Max-Age=34560000; HttpOnly; SameSite=Strict; Secure',
     );
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
     expect(Object.fromEntries(sentToGoogle[0])).toEqual({
       client_id: 'client-id',
       client_secret: 'client-secret',
@@ -135,9 +136,10 @@ describe('/auth/token', () => {
   });
 
   it('gets a new token with the refresh token, and keeps the cookie going', async () => {
-    const res = await send(auth('token', { cookie: 'other=1; drive_session=refresh' }));
+    const res = await send(auth('token', { cookie: 'other=1; __Host-drive_session=refresh' }));
     expect(await res.json()).toEqual({ value: 'access', expiresIn: 3599, remembered: true });
-    expect(res.headers.get('Set-Cookie')).toContain('drive_session=refresh; Path=/auth/; Max-Age=34560000');
+    expect(res.headers.get('Set-Cookie')).toContain('__Host-drive_session=refresh; Path=/; Max-Age=34560000');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
     expect(Object.fromEntries(sentToGoogle[0])).toMatchObject({
       grant_type: 'refresh_token',
       refresh_token: 'refresh',
@@ -146,14 +148,14 @@ describe('/auth/token', () => {
 
   it('signs out, and clears the cookie, once Google says the sign-in was revoked', async () => {
     googleReplies = Response.json({ error: 'invalid_grant' }, { status: 400 });
-    const res = await send(auth('token', { cookie: 'drive_session=refresh' }));
+    const res = await send(auth('token', { cookie: '__Host-drive_session=refresh' }));
     expect(res.status).toBe(401);
-    expect(res.headers.get('Set-Cookie')).toContain('drive_session=; Path=/auth/; Max-Age=0');
+    expect(res.headers.get('Set-Cookie')).toContain('__Host-drive_session=; Path=/; Max-Age=0');
   });
 
   it("keeps the sign-in when Google fails for another reason, which isn't the user's to fix", async () => {
     googleReplies = Response.json({ error: 'invalid_client' }, { status: 401 });
-    const res = await send(auth('token', { cookie: 'drive_session=refresh' }));
+    const res = await send(auth('token', { cookie: '__Host-drive_session=refresh' }));
     expect(res.status).toBe(502);
     expect(res.headers.get('Set-Cookie')).toBeNull();
   });
@@ -161,9 +163,9 @@ describe('/auth/token', () => {
 
 describe('/auth/signout', () => {
   it('clears the cookie', async () => {
-    const res = await send(auth('signout', { cookie: 'drive_session=refresh' }));
+    const res = await send(auth('signout', { cookie: '__Host-drive_session=refresh' }));
     expect(res.status).toBe(204);
-    expect(res.headers.get('Set-Cookie')).toContain('drive_session=; Path=/auth/; Max-Age=0');
+    expect(res.headers.get('Set-Cookie')).toContain('__Host-drive_session=; Path=/; Max-Age=0');
   });
 });
 
@@ -172,6 +174,37 @@ describe('the cookie', () => {
     googleReplies = tokens('refresh');
     const local = 'http://localhost:5173';
     const res = await send(auth('exchange', { body: '{"code":"c"}', origin: local, app: local }));
-    expect(res.headers.get('Set-Cookie')).not.toContain('Secure');
+    expect(res.headers.get('Set-Cookie')).toBe('drive_session=refresh; Path=/auth/; Max-Age=34560000; HttpOnly; SameSite=Strict');
+    googleReplies = tokens();
+    const again = await send(auth('token', { cookie: 'drive_session=refresh', origin: local, app: local }));
+    expect(again.status).toBe(200);
+  });
+
+  it("can't be stood in for by one another subdomain set", async () => {
+    // Sent first: a cookie for the whole domain, with a more specific path
+    await send(auth('token', { cookie: 'drive_session=planted; __Host-drive_session=refresh' }));
+    expect(sentToGoogle[0].get('refresh_token')).toBe('refresh');
+  });
+
+  it("doesn't count a plain one from before over https, and clears it on signing in again", async () => {
+    const old = await send(auth('token', { cookie: 'drive_session=refresh' }));
+    expect(old.status).toBe(401);
+    expect(sentToGoogle).toEqual([]);
+
+    googleReplies = tokens('new');
+    const res = await send(auth('exchange', { body: '{"code":"c"}', cookie: 'drive_session=refresh' }));
+    expect(res.headers.getSetCookie()).toEqual([
+      '__Host-drive_session=new; Path=/; Max-Age=34560000; HttpOnly; SameSite=Strict; Secure',
+      'drive_session=; Path=/auth/; Max-Age=0; HttpOnly; SameSite=Strict; Secure',
+    ]);
+  });
+
+  it('is never cached, nor any other /auth/ answer', async () => {
+    googleReplies = Response.json({ error: 'invalid_grant' }, { status: 400 });
+    for (const request of [auth('token'), auth('signout'), auth('elsewhere')]) {
+      const res = await send(request);
+      expect(res.headers.get('Cache-Control')).toBe('no-store');
+      expect(res.headers.get('Pragma')).toBe('no-cache');
+    }
   });
 });
