@@ -5,7 +5,7 @@
   import { PLAIN_ICON } from '$lib/tasks/circle-colours';
   import * as ui from '$lib/ui/icons';
   import { completeTask, deleteTask, dismissDeadline, editText, moveTask, shiftTask } from '$lib/tasks/tasks';
-  import { track } from '$lib/tasks/history.svelte';
+  import { track, trackMove } from '$lib/tasks/history.svelte';
   import { BUCKET_LABELS, BUCKETS, type Bucket, type Task } from '$lib/types';
   import { clickOffset } from '$lib/ui/caret';
   import { dragTask } from '$lib/ui/drag-and-drop';
@@ -120,14 +120,14 @@
 
   async function moveTo(bucket: Bucket) {
     closeMenu();
-    await track([task.id], () => moveTask(task.id, bucket, null));
+    await trackMove(task.id, bucket, () => moveTask(task.id, bucket, null));
   }
 
   // The menu stays open till the row has moved, keeping its buttons showing: focus lost as
   // the row moved can go back to the Move button, so the next move is one key away
   async function shift(by: -1 | 1) {
     try {
-      await track([task.id], () => shiftTask(task.id, by));
+      await trackMove(task.id, task.bucket, () => shiftTask(task.id, by));
       await tick();
       menuButton?.focus();
     } finally {

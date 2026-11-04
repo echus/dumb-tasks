@@ -1,5 +1,5 @@
 import { tick } from 'svelte';
-import { track } from '../tasks/history.svelte';
+import { trackMove } from '../tasks/history.svelte';
 import { moveTask } from '../tasks/tasks';
 import { BUCKET_LABELS } from '../types';
 import {
@@ -127,7 +127,7 @@ export function dragTask(node: HTMLElement, task: { id: string }) {
       await new Promise((r) => setTimeout(r, SETTLE_MS));
       if (!stays) {
         const beforeId = others[to.slot]?.dataset.taskId ?? null;
-        await track([id], () => moveTask(id, to.bucket, beforeId));
+        await trackMove(id, to.bucket, () => moveTask(id, to.bucket, beforeId));
         await landed(id, to); // so the rows don't jump back before the list redraws
       }
     } finally {

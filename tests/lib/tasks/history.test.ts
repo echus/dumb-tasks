@@ -1,8 +1,9 @@
 import 'fake-indexeddb/auto';
+import Dexie from 'dexie';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '$lib/db';
-import { history, redo, track, undo } from '$lib/tasks/history.svelte';
-import { addTask, completeTask, deleteTask, editText, isActive, moveTask } from '$lib/tasks/tasks';
+import { history, redo, track, trackMove, undo } from '$lib/tasks/history.svelte';
+import { activeIn, addTask, completeTask, deleteTask, editText, isActive, moveTask } from '$lib/tasks/tasks';
 
 const active = async () => (await db.tasks.toArray()).filter(isActive).map((t) => t.text);
 
@@ -52,6 +53,34 @@ describe('undo / redo', () => {
     expect(await db.tasks.get(id)).toMatchObject({ text: 'call mum', bucket: 'week' });
     await redo();
     expect(await db.tasks.get(id)).toMatchObject({ text: 'call dad', bucket: 'week' });
+  });
+
+  it('undoes a move that made room among tasks sharing a position', async () => {
+    // As when two devices each added a task at the same place before syncing
+    const [a, b] = [(await addTask('a'))!, (await addTask('b'))!];
+    await db.tasks.where('id').anyOf(a, b).modify({ position: 'a0' });
+    const c = (await addTask('c'))!;
+    await db.tasks.update(c, { position: 'a1' });
+    const order = async () => (await activeIn('today')).map((t) => t.text);
+    const before = await order();
+
+    const second = (await activeIn('today'))[1].id;
+    await trackMove(c, 'today', () => moveTask(c, 'today', second));
+    expect(await order()).not.toEqual(before);
+    await undo();
+    expect(await order()).toEqual(before);
+  });
+
+  it("doesn't take an edit made during a move for part of the move", async () => {
+    const [a, b] = [(await addTask('a'))!, (await addTask('b'))!]; // b above a
+    let edit!: Promise<void>;
+    await trackMove(b, 'today', async () => {
+      edit = Dexie.ignoreTransaction(() => editText(a, 'a edited')); // from sync, or another tab
+      await moveTask(b, 'today', null); // b to the end
+    });
+    await edit;
+    await undo();
+    expect((await activeIn('today')).map((t) => t.text)).toEqual(['b', 'a edited']);
   });
 
   it('clears redo after a new action', async () => {
