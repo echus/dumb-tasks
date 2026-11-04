@@ -1,6 +1,5 @@
 import { db } from '../db';
 import { isUneditedDemo } from '../tasks/demo-tasks';
-import { lastEdited } from '../tasks/tasks';
 import type { DataFile, Task } from '../types';
 import { exportData, importData, KEEP_DAYS, NewerVersionError, parseDataFile } from './data-file';
 import { mergeTask } from './merge';
@@ -73,34 +72,25 @@ function combine(files: DataFile[]): DataFile {
   return { ...newest, tasks: [...tasks.values()] };
 }
 
-/**
- * Local tasks to drop when reading every file finds that no other device has them. Only
- * files written after `after` count: a device that wrote one had read this device's file
- * first, so lacks a task only if it dropped it. An older file may just predate the task.
- */
+/** Local tasks to drop when reading every file finds that no other device has them. */
 export interface DropMissing {
   matches: (t: Task) => boolean;
-  after: number; // ms
 }
 
 /**
  * Where a sync starts reading, and which local tasks it drops if no other device has them.
- * A first sync reads everything, and drops the demo tasks for an account's own. So does one
- * after more than KEEP_DAYS away, dropping tasks unchanged since: the other devices have
- * dropped them by now, as deleted or completed long ago, and this one never heard.
+ * A first sync reads everything, and drops the demo tasks for an account's own. One after
+ * more than KEEP_DAYS away reads everything again too, rather than trust a cursor that old,
+ * but drops nothing: a task another device deleted and has since dropped comes back, which
+ * is safer than guessing which tasks the others dropped and deleting one they never had.
  */
 export function startFrom(
   lastSyncedAt: string | null,
   cursor: string | null,
   now = new Date(),
 ): { cursor: string | null; dropMissing?: DropMissing } {
-  if (lastSyncedAt === null) {
-    return { cursor: null, dropMissing: { matches: isUneditedDemo, after: -Infinity } };
-  }
-  const since = Date.parse(lastSyncedAt);
-  if (now.getTime() - since > KEEP_DAYS * 86_400_000) {
-    return { cursor: null, dropMissing: { matches: (t) => lastEdited(t) < since, after: since } };
-  }
+  if (lastSyncedAt === null) return { cursor: null, dropMissing: { matches: isUneditedDemo } };
+  if (now.getTime() - Date.parse(lastSyncedAt) > KEEP_DAYS * 86_400_000) return { cursor: null };
   return { cursor };
 }
 
@@ -142,9 +132,8 @@ export async function syncWith(
 
   // A file left out may hold the very tasks the others lack
   const complete = !skipped.newer && !skipped.unreadable;
-  const witnesses = data.filter((f) => dropMissing && f.modifiedAt > dropMissing.after);
-  if (dropMissing && state.cursor === null && complete && witnesses.length) {
-    const ids = new Set(witnesses.flatMap((f) => f.data.tasks.map((t) => t.id)));
+  if (dropMissing && state.cursor === null && complete && data.length) {
+    const ids = new Set(data.flatMap((f) => f.data.tasks.map((t) => t.id)));
     await db.tasks.filter((t) => dropMissing.matches(t) && !ids.has(t.id)).delete();
   }
 

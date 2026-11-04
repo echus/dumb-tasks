@@ -6,6 +6,7 @@ import { mergeTask } from '$lib/sync/merge';
 import { addDemoTasks, isDemoTask } from '$lib/tasks/demo-tasks';
 import { refreshColours } from '$lib/tasks/recolour';
 import {
+  activeIn,
   addTask,
   byPosition,
   completeTask,
@@ -14,6 +15,7 @@ import {
   editText,
   isActive,
   moveTask,
+  shiftTask,
 } from '$lib/tasks/tasks';
 import type { Bucket } from '$lib/types';
 
@@ -94,6 +96,38 @@ describe('tasks', () => {
     expect(await texts('today')).toEqual(['c', 'b', 'a']);
     await moveTask(b, 'today', c, later(5));
     expect(await texts('today')).toEqual(['b', 'c', 'a']);
+  });
+
+  it('moves a task one place up or down', async () => {
+    const a = (await addTask('a', t0))!;
+    const c = (await addTask('c', later(2)))!;
+    await addTask('b', later(1));
+    await moveTask(c, 'today', null, later(3));
+    expect(await texts('today')).toEqual(['b', 'a', 'c']);
+
+    await shiftTask(a, -1, later(4));
+    expect(await texts('today')).toEqual(['a', 'b', 'c']);
+    await shiftTask(a, 1, later(5));
+    expect(await texts('today')).toEqual(['b', 'a', 'c']);
+    await shiftTask(a, 1, later(6));
+    expect(await texts('today')).toEqual(['b', 'c', 'a']);
+    await shiftTask(a, 1, later(7)); // already last
+    expect(await texts('today')).toEqual(['b', 'c', 'a']);
+  });
+
+  it('moves a task between tasks that share a position', async () => {
+    // As when two devices each added a task at the top before syncing
+    const a = (await addTask('a', t0))!;
+    const b = (await addTask('b', later(1)))!;
+    const c = (await addTask('c', later(2)))!;
+    const d = (await addTask('d', later(3)))!;
+    await db.tasks.where('id').anyOf(a, b, c).modify({ position: 'a0' });
+    const [first, second, third] = (await activeIn('today')).filter((t) => t.id !== d).map((t) => t.id);
+
+    await moveTask(d, 'today', second, later(4));
+    const order = (await activeIn('today')).map((t) => t.id);
+    expect(order).toEqual([first, d, second, third]);
+    expect(new Set((await db.tasks.toArray()).map((t) => t.position)).size).toBe(4);
   });
 
   it('re-derives deadline and icon on edit', async () => {

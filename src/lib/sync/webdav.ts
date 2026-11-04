@@ -10,7 +10,27 @@ const FOLDER = 'dumb-tasks/';
 // size, so other devices would miss that write: writes to this device's file wait this long
 const WRITE_GAP = 1_100;
 
-let lastWrite = 0; // when this tab last wrote this device's file
+// When this device last wrote its file. Kept where its other tabs see it too: they take
+// turns to sync (see oneAtATime), but each has its own copy of this module.
+const LAST_WRITE = 'webdav-last-write';
+let lastWrite = 0; // this tab's, for when storage is blocked
+
+function lastWritten(): number {
+  try {
+    return Math.max(lastWrite, Number(localStorage.getItem(LAST_WRITE)) || 0);
+  } catch {
+    return lastWrite;
+  }
+}
+
+function wrote(at: number) {
+  lastWrite = at;
+  try {
+    localStorage.setItem(LAST_WRITE, String(at));
+  } catch {
+    // Storage blocked: this tab still waits
+  }
+}
 
 /** Where to sync, as the user entered it. The password is best an app password. */
 export interface WebDavAccount {
@@ -192,7 +212,7 @@ export class WebDavBackend implements SyncBackend {
   }
 
   async push(json: string) {
-    const wait = lastWrite + WRITE_GAP - Date.now();
+    const wait = lastWritten() + WRITE_GAP - Date.now();
     if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
     const put = () =>
       this.call(this.folder + this.name, {
@@ -210,7 +230,7 @@ export class WebDavBackend implements SyncBackend {
       });
       await put();
     } finally {
-      lastWrite = Date.now(); // the server dates the file once the write is done
+      wrote(Date.now()); // the server dates the file once the write is done
     }
   }
 

@@ -1,5 +1,6 @@
+import { generateKeyBetween } from 'fractional-indexing';
 import { db } from '../db';
-import type { DataFile, Task } from '../types';
+import { BUCKETS, type DataFile, type Task } from '../types';
 import { mergeTask } from './merge';
 
 const EPOCH = new Date(0).toISOString();
@@ -47,6 +48,12 @@ export function parseDataFile(json: string): DataFile {
   }
   if (version > SCHEMA_VERSION) throw new NewerVersionError();
   for (let v = version; v < SCHEMA_VERSION; v++) MIGRATIONS[v - 1](data);
+  // All or nothing: one bad task stored would break the lists on every load
+  const valid =
+    data.tasks.every(isTask) &&
+    (data.memory === undefined || typeof data.memory === 'string') &&
+    (data.memoryUpdatedAt === undefined || isTime(data.memoryUpdatedAt));
+  if (!valid) throw new Error('This backup is damaged. Nothing changed.');
   return {
     schemaVersion: SCHEMA_VERSION,
     exportedAt: data.exportedAt ?? EPOCH,
@@ -54,6 +61,50 @@ export function parseDataFile(json: string): DataFile {
     memory: data.memory ?? '',
     memoryUpdatedAt: data.memoryUpdatedAt ?? EPOCH,
   };
+}
+
+const isTime = (v: unknown) => typeof v === 'string' && Number.isFinite(Date.parse(v));
+const isTimeOrNull = (v: unknown) => v === null || isTime(v);
+const isBucket = (v: unknown) => (BUCKETS as readonly unknown[]).includes(v);
+const isStrings = (v: unknown) => Array.isArray(v) && v.every((s) => typeof s === 'string');
+
+function isPosition(v: unknown): boolean {
+  if (typeof v !== 'string') return false;
+  try {
+    generateKeyBetween(v, null); // throws for a malformed key
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Whether a task from a file has this version's shape, so the app can show and merge it. */
+function isTask(t: any): t is Task {
+  if (!t || typeof t !== 'object') return false;
+  const d = t.deadline;
+  return (
+    typeof t.id === 'string' &&
+    t.id !== '' &&
+    typeof t.text === 'string' &&
+    isBucket(t.bucket) &&
+    isPosition(t.position) &&
+    isTime(t.createdAt) &&
+    Array.isArray(t.bucketHistory) &&
+    t.bucketHistory.every((h: any) => h && isBucket(h.bucket) && isTime(h.at)) &&
+    typeof t.sorted === 'boolean' &&
+    isTimeOrNull(t.completedAt) &&
+    isTimeOrNull(t.deletedAt) &&
+    (d === null ||
+      (d && typeof d.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.date) &&
+        (d.phrase === null || typeof d.phrase === 'string'))) &&
+    (t.dismissedPhrases === undefined || isStrings(t.dismissedPhrases)) &&
+    (t.icon === null || typeof t.icon === 'string') &&
+    typeof t.colour === 'string' &&
+    typeof t.aiNote === 'string' &&
+    t.fieldUpdatedAt &&
+    typeof t.fieldUpdatedAt === 'object' &&
+    Object.values(t.fieldUpdatedAt).every(isTime)
+  );
 }
 
 /** Removes tasks deleted or completed more than KEEP_DAYS ago. */

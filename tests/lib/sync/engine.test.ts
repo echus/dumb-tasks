@@ -287,42 +287,20 @@ describe('sync', () => {
       await sync();
     });
 
-    it('drops tasks the other devices have since dropped, and keeps new ones', async () => {
+    it('reads every file again, and keeps every task, even ones the others have dropped', async () => {
       remote.edit('phone', (data) => {
         data.tasks = data.tasks.filter((t) => t.text !== 'gone elsewhere');
       });
       await addTask('added while away', daysAgo(10));
+      expect(startFrom(lastSynced.toISOString(), state.cursor)).toEqual({ cursor: null });
 
       await comeBack();
-      expect(await ids()).toEqual(['added while away', 'kept elsewhere']);
-      expect(remote.texts()).toEqual(['added while away', 'kept elsewhere']);
+      expect(await ids()).toEqual(['added while away', 'gone elsewhere', 'kept elsewhere']);
+      expect(remote.texts()).toEqual(['added while away', 'gone elsewhere', 'kept elsewhere']);
     });
 
-    it('keeps everything when no other device has a file', async () => {
-      await comeBack();
-      expect(await ids()).toEqual(['gone elsewhere', 'kept elsewhere']);
-    });
-
-    it("keeps tasks missing only from files older than this device's last sync", async () => {
-      // The phone last wrote before this device's last sync, so never had the newest task
-      remote.edit('phone', (data) => {
-        data.tasks = data.tasks.filter((t) => t.text !== 'gone elsewhere');
-      }, daysAgo(121));
-      await addTask('added before going', daysAgo(120));
-
-      await comeBack();
-      expect(await ids()).toEqual(['added before going', 'gone elsewhere', 'kept elsewhere']);
-    });
-
-    it("doesn't apply after a shorter time away", async () => {
-      remote.edit('phone', (data) => {
-        data.tasks = data.tasks.filter((t) => t.text !== 'gone elsewhere');
-      });
-      const plan = startFrom(daysAgo(30).toISOString(), state.cursor);
-      expect(plan).toEqual({ cursor: state.cursor });
-      state = { ...state, cursor: null }; // even reading every file
-      await sync({ dropMissing: plan.dropMissing });
-      expect(await ids()).toEqual(['gone elsewhere', 'kept elsewhere']);
+    it('reads on from where it was after a shorter time away', async () => {
+      expect(startFrom(daysAgo(30).toISOString(), state.cursor)).toEqual({ cursor: state.cursor });
     });
   });
 
@@ -379,7 +357,7 @@ describe('sync', () => {
       });
       state = { ...state, cursor: null };
 
-      await sync({ dropMissing: { matches: () => true, after: -Infinity } });
+      await sync({ dropMissing: { matches: () => true } });
       expect(await activeTexts()).toEqual(['buy milk', 'pay rent']);
     });
   });

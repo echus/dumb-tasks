@@ -129,6 +129,19 @@ describe('WebDavBackend', () => {
       await again;
       expect(dav.files.get('device-here.json')?.content).toBe('two');
     });
+
+    it('waits after a write from another tab too', async () => {
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout'] });
+      await backend().push('one');
+      vi.resetModules();
+      const tab = await import('$lib/sync/webdav'); // another tab has its own copy
+      const again = new tab.WebDavBackend({ url: ROOT, username: 'me', password: 'secret' }, 'here').push('two');
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(dav.files.get('device-here.json')?.content).toBe('one');
+      await vi.advanceTimersByTimeAsync(100);
+      await again;
+      expect(dav.files.get('device-here.json')?.content).toBe('two');
+    });
   });
 
   describe('removeStale', () => {

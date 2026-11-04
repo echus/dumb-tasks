@@ -1,5 +1,5 @@
 import { tick } from 'svelte';
-import { track } from '../tasks/history.svelte';
+import { trackMove } from '../tasks/history.svelte';
 import { moveTask } from '../tasks/tasks';
 import { BUCKET_LABELS } from '../types';
 import {
@@ -123,13 +123,16 @@ export function dragTask(node: HTMLElement, task: { id: string }) {
 
     const others = to.ul ? rowsIn(to.ul).filter((li) => li !== node) : [];
     const stays = to.ul === node.closest('ul') && to.slot === rowsIn(to.ul!).indexOf(node);
-    await new Promise((r) => setTimeout(r, SETTLE_MS));
-    if (!stays) {
-      const beforeId = others[to.slot]?.dataset.taskId ?? null;
-      await track([id], () => moveTask(id, to.bucket, beforeId));
-      await landed(id, to); // so the rows don't jump back before the list redraws
+    try {
+      await new Promise((r) => setTimeout(r, SETTLE_MS));
+      if (!stays) {
+        const beforeId = others[to.slot]?.dataset.taskId ?? null;
+        await trackMove(id, to.bucket, () => moveTask(id, to.bucket, beforeId));
+        await landed(id, to); // so the rows don't jump back before the list redraws
+      }
+    } finally {
+      if (preview) reset(); // already done if the row went to another list (see destroy)
     }
-    if (preview) reset(); // already done if the row went to another list (see destroy)
   }
 
   /** Back to normal: rows unshifted, the task's own row showing, no copy. */
