@@ -1,18 +1,20 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import Icon from './Icon.svelte';
   import { daysUntil, deadlineHeat, describeDeadline } from '$lib/tasks/deadline';
   import { PLAIN_ICON } from '$lib/tasks/circle-colours';
   import * as ui from '$lib/ui/icons';
-  import { completeTask, deleteTask, dismissDeadline, editText } from '$lib/tasks/tasks';
+  import { completeTask, deleteTask, dismissDeadline, editText, moveTask, shiftTask } from '$lib/tasks/tasks';
   import { track } from '$lib/tasks/history.svelte';
-  import type { Task } from '$lib/types';
+  import { BUCKET_LABELS, BUCKETS, type Bucket, type Task } from '$lib/types';
   import { clickOffset } from '$lib/ui/caret';
   import { dragTask } from '$lib/ui/drag-and-drop';
   import { clock, drag } from '$lib/ui/state.svelte';
 
-  let { task }: { task: Task } = $props();
+  let { task, first, last }: { task: Task; first: boolean; last: boolean } = $props();
 
-  // Clicking a task turns it into a text field. Moving between buckets is by dragging.
+  // Clicking a task turns it into a text field. Moving between buckets is by dragging, or
+  // with the Move menu, for a keyboard or for anyone who can't drag.
   let editing = $state(false);
   let draft = $state('');
   let caret = 0;
@@ -70,12 +72,76 @@
     editing = false;
     await track([task.id], () => deleteTask(task.id));
   }
+
+  let menu = $state<HTMLElement>();
+  let menuButton = $state<HTMLElement>();
+  let menuOpen = $state(false);
+
+  /** The menu sits in the top layer, so the list's edge can't cut it off: put it by its button. */
+  function placeMenu() {
+    if (!menu || !menuButton) return;
+    const button = menuButton.getBoundingClientRect();
+    const below = innerHeight - button.bottom >= menu.offsetHeight + 8;
+    menu.style.top = `${below ? button.bottom + 4 : button.top - menu.offsetHeight - 4}px`;
+    menu.style.left = `${Math.max(8, button.right - menu.offsetWidth)}px`;
+  }
+
+  function toggled(e: ToggleEvent) {
+    menuOpen = e.newState === 'open';
+    if (!menuOpen) return;
+    placeMenu();
+    menu?.querySelector('button')?.focus();
+  }
+
+  // It follows its button as the page or a list scrolls, or a phone's keyboard goes away
+  $effect(() => {
+    if (!menuOpen) return;
+    const options = { capture: true, passive: true };
+    addEventListener('scroll', placeMenu, options);
+    addEventListener('resize', placeMenu, options);
+    return () => {
+      removeEventListener('scroll', placeMenu, options);
+      removeEventListener('resize', placeMenu, options);
+    };
+  });
+
+  /** Up and down arrows step through the menu, as in the system's menus. */
+  function menuKeys(e: KeyboardEvent) {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const items = [...menu!.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+    const i = items.indexOf(document.activeElement as HTMLButtonElement);
+    items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus();
+  }
+
+  function closeMenu() {
+    if (menu?.matches(':popover-open')) menu.hidePopover();
+  }
+
+  async function moveTo(bucket: Bucket) {
+    closeMenu();
+    await track([task.id], () => moveTask(task.id, bucket, null));
+  }
+
+  // The menu stays open till the row has moved, keeping its buttons showing: focus lost as
+  // the row moved can go back to the Move button, so the next move is one key away
+  async function shift(by: -1 | 1) {
+    try {
+      await track([task.id], () => shiftTask(task.id, by));
+      await tick();
+      menuButton?.focus();
+    } finally {
+      closeMenu();
+    }
+  }
 </script>
+
 
 <li
   data-task-id={task.id}
   use:dragTask={{ id: task.id }}
   class:dragging={drag.id !== null}
+  class:menu-open={menuOpen}
 >
   <div class="row">
     <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
@@ -134,6 +200,34 @@
             <Icon svg={ui.calendarX} size={14} />
           </button>
         {/if}
+        <button
+          aria-label="Move"
+          title="Move"
+          bind:this={menuButton}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          popovertarget="move-{task.id}"
+          onpointerdown={keepFocus}
+        >
+          <Icon svg={ui.move} size={14} />
+        </button>
+        <div
+          id="move-{task.id}"
+          class="menu"
+          role="menu"
+          tabindex="-1"
+          popover="auto"
+          bind:this={menu}
+          ontoggle={toggled}
+          onkeydown={menuKeys}
+        >
+          {#each BUCKETS.filter((b) => b !== task.bucket) as bucket (bucket)}
+            <button role="menuitem" onclick={() => moveTo(bucket)}>Move to {BUCKET_LABELS[bucket]}</button>
+          {/each}
+          <hr />
+          <button role="menuitem" disabled={first} onclick={() => shift(-1)}>Move up</button>
+          <button role="menuitem" disabled={last} onclick={() => shift(1)}>Move down</button>
+        </div>
         <button aria-label="Delete" onpointerdown={keepFocus} onclick={remove}>
           <Icon svg={ui.x} size={14} />
         </button>
@@ -295,7 +389,8 @@
   }
 
   li:not(.dragging):hover .badge,
-  li:not(.dragging):focus-within .badge {
+  li:not(.dragging):focus-within .badge,
+  li.menu-open .badge {
     visibility: hidden;
   }
 
@@ -306,11 +401,12 @@
   }
 
   li:not(.dragging):hover .actions,
-  li:not(.dragging):focus-within .actions {
+  li:not(.dragging):focus-within .actions,
+  li.menu-open .actions {
     visibility: visible;
   }
 
-  .actions button {
+  .actions > button {
     display: grid;
     place-items: center;
     width: 24px;
@@ -323,7 +419,53 @@
     cursor: pointer;
   }
 
-  .actions button:hover {
+  .actions > button:hover {
     color: var(--accent);
+  }
+
+  /* Placed by placeMenu, below the Move button or, near the bottom of the window, above it */
+  .menu {
+    /* Even while .actions is hidden: as focus leaves the Move button for the menu, the row
+       briefly has none, and a hidden menu couldn't take it */
+    visibility: visible;
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 4px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.15);
+  }
+
+  .menu button {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    border-radius: calc(var(--radius) / 2);
+    background: none;
+    color: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .menu button:hover:not(:disabled),
+  .menu button:focus-visible {
+    background: var(--bg);
+  }
+
+  .menu button:disabled {
+    color: var(--muted);
+    cursor: default;
+  }
+
+  .menu hr {
+    margin: 4px 6px;
+    border: none;
+    border-top: 1px solid var(--bg);
   }
 </style>

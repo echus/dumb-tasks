@@ -15,6 +15,7 @@ import {
   editText,
   isActive,
   moveTask,
+  shiftTask,
 } from '$lib/tasks/tasks';
 import type { Bucket } from '$lib/types';
 
@@ -94,6 +95,23 @@ describe('tasks', () => {
     await moveTask(a, 'today', null, later(4)); // a to the end
     expect(await texts('today')).toEqual(['c', 'b', 'a']);
     await moveTask(b, 'today', c, later(5));
+    expect(await texts('today')).toEqual(['b', 'c', 'a']);
+  });
+
+  it('moves a task one place up or down', async () => {
+    const a = (await addTask('a', t0))!;
+    const c = (await addTask('c', later(2)))!;
+    await addTask('b', later(1));
+    await moveTask(c, 'today', null, later(3));
+    expect(await texts('today')).toEqual(['b', 'a', 'c']);
+
+    await shiftTask(a, -1, later(4));
+    expect(await texts('today')).toEqual(['a', 'b', 'c']);
+    await shiftTask(a, 1, later(5));
+    expect(await texts('today')).toEqual(['b', 'a', 'c']);
+    await shiftTask(a, 1, later(6));
+    expect(await texts('today')).toEqual(['b', 'c', 'a']);
+    await shiftTask(a, 1, later(7)); // already last
     expect(await texts('today')).toEqual(['b', 'c', 'a']);
   });
 

@@ -26,8 +26,8 @@
       <!-- New tasks land at the top of a list, so the row to write one sits there -->
       <AddTask {bucket} autofocus={bucket === 'today'} />
       <ul>
-        {#each tasks as task (task.id)}
-          <TaskRow {task} />
+        {#each tasks as task, i (task.id)}
+          <TaskRow {task} first={i === 0} last={i === tasks.length - 1} />
         {/each}
       </ul>
     </div>

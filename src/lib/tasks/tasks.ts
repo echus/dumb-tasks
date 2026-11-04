@@ -160,6 +160,20 @@ export async function moveTask(id: string, bucket: Bucket, beforeId: string | nu
   });
 }
 
+/** Moves a task one place up (-1) or down (1) in its bucket: for the Move menu. */
+export async function shiftTask(id: string, by: -1 | 1, now = new Date()) {
+  await db.transaction('rw', db.tasks, async () => {
+    const task = await db.tasks.get(id);
+    if (!task) return;
+    const siblings = await activeIn(task.bucket);
+    const i = siblings.findIndex((t) => t.id === id);
+    if (i < 0 || !siblings[i + by]) return;
+    // Before the task above it, or before the one after the task below it
+    const before = by < 0 ? siblings[i - 1] : siblings[i + 2];
+    await moveTask(id, task.bucket, before?.id ?? null, now);
+  });
+}
+
 export async function completeTask(id: string, now = new Date()) {
   await updateTask(id, { completedAt: now.toISOString() }, now);
 }
