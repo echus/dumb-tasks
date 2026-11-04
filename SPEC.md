@@ -281,12 +281,12 @@ rewrites this device's file if that left it out of date.
 - **Tombstone purge:** deleted and completed tasks go for good 90 days after the delete or
   completion.
 - **Coming back after 90 days away:** the other devices may have purged tasks this one never
-  heard were deleted or completed. So its first sync back reads every file and drops local
-  tasks that haven't changed here since its last sync and that no file written after that
-  sync has (a device writing one had read this device's file first, so a task is missing
-  only if it dropped it). Tasks added or edited while away are kept. Skipped when no such
-  file exists, or when any file couldn't be read. A first sync does the same with the demo
-  tasks, so an account with data replaces them.
+  heard were deleted or completed. Its first sync back reads every file but drops nothing,
+  so those tasks come back on every device. Telling them from tasks the others never had
+  needs more bookkeeping than this rare case is worth, and a wrong guess would lose a task.
+- **First sync, with demo tasks:** reads every file and drops the demo tasks no file has,
+  untouched since they were added, so an account with data replaces them. Skipped when no
+  file exists, or when any file couldn't be read.
 - **A file that can't be read** (from a newer version, or damaged) is skipped, and the rest
   still sync; the sync menu says so. A newer-version file is read again once this device has
   updated.
