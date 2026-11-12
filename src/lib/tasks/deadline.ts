@@ -11,13 +11,17 @@ interface ParsedDeadline {
 // Words that, placed right before a date, make it clearly a deadline.
 const TRIGGER = /\b(by|due|on|before|until|till|for)\s*$/i;
 
-// Shorthand durations ("3d", "2h") that chrono reads as "from now". On their own they're
-// far more often part of something else, like "3d printing".
-const SHORTHAND = /^\d+(?!st|nd|rd|th)[a-z]{1,3}$/i;
+// A bare length ("3d", "12 hr", "a day", "for 2 weeks") that chrono reads as "from now", or a
+// bare ordinal ("12th"). On their own they're far more often part of something else:
+// "3d printing", "bathurst 12 hr", "take a day off", "21st birthday".
+const BARE =
+  /^(?:for\s+)?(?:\d+|an?)\s*(?:s|secs?|seconds?|m|mins?|minutes?|h|hrs?|hours?|d|days?|w|wks?|weeks?|mos?|months?|y|yrs?|years?|st|nd|rd|th)$/i;
 
-// "on the 14th" — chrono doesn't pick up a bare ordinal day.
+// "on the 14th", "by 12th" — chrono doesn't pick up an ordinal day on its own.
+// Not a street, though: "on 12th st".
 const ordinalDay: chrono.Parser = {
-  pattern: () => /\bthe\s+(\d{1,2})(?:st|nd|rd|th)\b/i,
+  pattern: () =>
+    /\b(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)\b(?!\s+(?:st|street|ave|avenue|rd|road)\b)/i,
   extract: (ctx, match) => {
     const day = parseInt(match[1], 10);
     if (day < 1 || day > 31) return null;
@@ -65,7 +69,7 @@ export function parseDeadline(
     if (!hasDay && !hasMonth) continue; // time-only, year-only
     const triggered = TRIGGER.test(text.slice(0, r.index));
     if (!hasDay && !triggered) continue;
-    if (SHORTHAND.test(r.text) && !triggered) continue;
+    if (BARE.test(r.text) && !triggered) continue;
     if (ignore.some((p) => p.toLowerCase() === r.text.toLowerCase())) continue;
 
     return { date: toISODate(s.date()), phrase: r.text };

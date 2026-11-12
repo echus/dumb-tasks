@@ -79,7 +79,8 @@ Parsed from the task text — there is no deadline field in the UI.
   "by friday" would drift forever.
 - Only accept clear date signals: "by …", "due …", "on the 14th", weekday names, explicit dates.
   Prefer missing a deadline over inventing one ("read 1984", "call May", "march for climate").
-  Bare shorthand like "3d" or "2h" only counts after a trigger word ("3d printing" isn't a date).
+  A bare length or ordinal ("3d", "12 hr", "a day", "12th") only counts after a trigger word:
+  "by 12th" is a deadline, "3d printing", "bathurst 12 hr" and "21st birthday" aren't.
 - Day/month order follows device locale, with a setting to override.
 - Display: subtly underline the parsed phrase and show a badge (e.g. `3 days left`) at a
   fixed spot on the right of the task, so badges line up and long text wraps before them.

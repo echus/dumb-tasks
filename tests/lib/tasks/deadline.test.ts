@@ -23,13 +23,37 @@ describe('parseDeadline', () => {
     },
   );
 
-  it.each(['3d printing', 'buy 3d printer', 'call mum 2h'])('ignores shorthand in %s', (text) => {
+  it.each([
+    '3d printing',
+    'buy 3d printer',
+    'call mum 2h',
+    'bathurst 12 hr',
+    'le mans 24 hours',
+    'bake bread 3 days',
+    'take a day off',
+    'rest for 2 weeks',
+    'plan 21st birthday',
+    'cafe on 12th st',
+  ])('ignores a bare length or ordinal in %s', (text) => {
     expect(parseDeadline(text, ref, 'dmy')).toBeNull();
     expect(parseDeadline(text, ref, 'mdy')).toBeNull();
   });
 
-  it('still reads shorthand after a trigger word', () => {
+  it('still reads them after a trigger word', () => {
     expect(parseDeadline('report due 3d', ref, 'mdy')?.date).toBe('2026-10-29');
+    expect(parseDeadline('print robyn flange by 12th', ref, 'dmy')).toEqual({
+      date: '2026-11-12',
+      phrase: '12th',
+    });
+    expect(parseDeadline('pay rent before 1st', ref, 'mdy')?.date).toBe('2026-11-01');
+  });
+
+  it.each([
+    ['finish essay in 3 days', '2026-10-29'],
+    ['dentist 12th nov', '2026-11-12'],
+    ['bins on the 28th', '2026-10-28'],
+  ])('still reads %s untriggered', (text, date) => {
+    expect(parseDeadline(text, ref, 'dmy')?.date).toBe(date);
   });
 
   it('skips phrases the user dismissed, and looks further on', () => {
