@@ -284,7 +284,8 @@
     margin-bottom: 10px;
     padding: 6px 12px;
     border-radius: var(--radius);
-    background: var(--text);
+    /* Softened a little towards the page, so it is not a block of solid black */
+    background: color-mix(in srgb, var(--text) 75%, var(--bg));
     color: var(--bg);
     font-size: 1.125em; /* the same size as the buttons above */
     font-weight: 600;
@@ -292,7 +293,7 @@
   }
 
   footer .donate:hover {
-    background: color-mix(in srgb, var(--text) 85%, var(--bg));
+    background: color-mix(in srgb, var(--text) 65%, var(--bg));
     color: var(--bg);
   }
 
