@@ -209,6 +209,8 @@ Code outside `src/lib/` imports it as `$lib/...`.
 
 Open an issue on GitHub, or send an email to contact@dumbtasks.app.
 
+To support the app, [buy a nap on Ko-fi](https://ko-fi.com/echus).
+
 ## License
 
 Copyright © 2026 Varvara Efremova, under the [AGPL-3.0](LICENSE). The license does not cover the
