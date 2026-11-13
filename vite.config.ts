@@ -56,8 +56,8 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         globIgnores: ['og-image.png'], // for link previews, not the installed app
-        // The text pages are their own HTML, not routes in the app
-        navigateFallbackDenylist: [/^\/(privacy|pricing|terms|refunds)(\.html)?$/],
+        // The privacy page is its own HTML, not a route in the app
+        navigateFallbackDenylist: [/^\/privacy(\.html)?$/],
       },
       manifest: {
         name: 'Dumb Tasks',
