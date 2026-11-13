@@ -25,7 +25,7 @@ class MemoryBackend implements SyncBackend {
     const since = cursor === null ? -1 : Number(cursor);
     const files = [...this.files]
       .filter(([device, f]) => device !== 'here' && f.seq > since)
-      .map(([, { json, modifiedAt }]) => ({ json, modifiedAt }));
+      .map(([name, { json, modifiedAt }]) => ({ name, json, modifiedAt }));
     return { files, cursor: String(this.seq) };
   }
 
@@ -34,13 +34,16 @@ class MemoryBackend implements SyncBackend {
     this.pushes++;
   }
 
-  // As Drive's: measured back from the newest file
+  // As Drive's: measured back from the newest file. After the pull has read, as it runs
+  // alongside, so it may read a file this deletes.
   async removeStale(maxAge: number) {
+    await null;
     const newest = Math.max(...[...this.files.values()].map((f) => f.modifiedAt));
-    for (const [device, f] of this.files) {
-      if (device !== 'here' && f.modifiedAt < newest - maxAge) this.files.delete(device);
-    }
-    return { hasOwnFile: this.files.has('here') };
+    const stale = [...this.files]
+      .filter(([device, f]) => device !== 'here' && f.modifiedAt < newest - maxAge)
+      .map(([device]) => device);
+    for (const device of stale) this.files.delete(device);
+    return { stale, hasOwnFile: this.files.has('here') };
   }
 
   data(device = 'here'): DataFile {

@@ -21,17 +21,18 @@ export interface SyncBackend {
   push(json: string): Promise<void>;
   /**
    * Deletes other devices' files that haven't changed for `maxAge` ms: devices no longer
-   * used, whose changes every other file already has. Returns whether this device's file
-   * is there. Best effort: a file it can't delete stays until the next try, and only a
-   * SignedOutError stops the sync.
+   * used, whose changes every other file already has. Returns the names of the files it found
+   * stale, and whether this device's file is there. Best effort: a file it can't delete stays
+   * until the next try, and only a SignedOutError stops the sync.
    */
-  removeStale(maxAge: number): Promise<{ hasOwnFile: boolean }>;
+  removeStale(maxAge: number): Promise<{ stale: string[]; hasOwnFile: boolean }>;
 }
 
 /** The backend no longer accepts this device's sign-in: the user needs to sign in again. */
 export class SignedOutError extends Error {}
 
 export interface RemoteFile {
+  name: string;
   json: string;
   modifiedAt: number; // ms, by the backend's clock
 }
@@ -103,22 +104,24 @@ export interface Skipped {
 /**
  * One full sync. `dropMissing` applies when reading every file (a null cursor), all of them
  * could be read and at least one counts: the local tasks it matches that none of them has
- * are deleted outright, not tombstoned. `tidy` first clears out other devices' stale files,
- * so they aren't read.
+ * are deleted outright, not tombstoned. `tidy` also clears out other devices' stale files,
+ * alongside the pull rather than before it, and leaves them out of what it takes in.
  */
 export async function syncWith(
   backend: SyncBackend,
   state: SyncState,
   { dropMissing, tidy = false }: { dropMissing?: DropMissing; tidy?: boolean } = {},
 ): Promise<SyncState & { pushed: boolean; skipped: Skipped }> {
+  const [tidied, { files, cursor: pulled }] = await Promise.all([
+    tidy ? backend.removeStale(KEEP_DAYS * 86_400_000) : null,
+    backend.pull(state.cursor),
+  ]);
   // Swept away as stale while this device was away, or removed by hand: write it again
-  let pushedKey = state.pushedKey;
-  if (tidy && !(await backend.removeStale(KEEP_DAYS * 86_400_000)).hasOwnFile) pushedKey = null;
-
-  const { files, cursor: pulled } = await backend.pull(state.cursor);
+  const pushedKey = tidied && !tidied.hasOwnFile ? null : state.pushedKey;
+  const stale = new Set(tidied?.stale);
   const skipped: Skipped = { newer: 0, unreadable: 0 };
   const data: (RemoteFile & { data: DataFile })[] = [];
-  for (const file of files) {
+  for (const file of files.filter((f) => !stale.has(f.name))) {
     try {
       data.push({ ...file, data: parseDataFile(file.json) });
     } catch (e) {

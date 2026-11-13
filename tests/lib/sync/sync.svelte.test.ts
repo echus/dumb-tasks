@@ -86,6 +86,31 @@ describe('a password the server turns down', () => {
   });
 });
 
+describe('a local edit', () => {
+  const synced = (text: string) => [...dav.files.values()].some((f) => f.content.includes(text));
+
+  it('is pushed straight away when it adds a task', async () => {
+    const tab = await connectedTab();
+    const { addTask } = await import('$lib/tasks/tasks'); // this tab's
+    await addTask('buy milk');
+    expect(tab.sync.changesWaiting).toBe(false);
+    // Not the 3 s other edits wait, only the gap WebDAV leaves between writes
+    await vi.waitFor(() => expect(synced('buy milk')).toBe(true), { timeout: 2_500 });
+  });
+
+  it('shows as syncing while it waits for the next sync', async () => {
+    const tab = await connectedTab();
+    const { addTask, editText } = await import('$lib/tasks/tasks');
+    const id = (await addTask('buy milk'))!;
+    await tab.syncNow();
+    await editText(id, 'buy oat milk');
+    expect(tab.sync.changesWaiting).toBe(true);
+    await tab.syncNow();
+    expect(tab.sync.changesWaiting).toBe(false);
+    expect(synced('buy oat milk')).toBe(true);
+  });
+});
+
 describe('a build without Google Drive', () => {
   it('ignores Drive settings saved by a build with it, until a WebDAV connect replaces them', async () => {
     expect(google.clientId).toBeUndefined();
@@ -201,6 +226,9 @@ describe('Google Drive', () => {
     expect(google).toMatchObject({ refreshes: 1, signIns: [undefined] });
     expect(tab.sync).toMatchObject({ needsSignIn: false, error: '' });
     expect(drive.calls).not.toEqual([]);
+
+    await tab.syncNow(); // with the new token, kept
+    expect(google.refreshes).toBe(1);
   });
 
   it('asks to sign in again when the Worker has no sign-in left, without asking Drive', async () => {
@@ -218,7 +246,18 @@ describe('Google Drive', () => {
     await tab.syncNow();
     expect(tab.sync.needsSignIn).toBe(true);
     expect(google.signOuts).toBe(1);
-    expect(drive.calls.filter((c) => !c.includes('/about'))).toEqual([]);
+    expect(drive.calls.filter((c) => !c.startsWith('GET'))).toEqual([]); // reads only
+  });
+
+  it('says it is another account even when reading with its token fails', async () => {
+    const tab = await driveTab();
+    google.account = 'someone@example.com';
+    anHourLater();
+    const fetchDrive = drive.fetch;
+    drive.fetch = async (input, init) =>
+      String(input).includes('/about') ? fetchDrive(input, init) : new Response(null, { status: 500 });
+    await tab.syncNow();
+    expect(tab.sync).toMatchObject({ needsSignIn: true, error: '' });
   });
 
   it('gets one new token when Drive ends the old one early', async () => {

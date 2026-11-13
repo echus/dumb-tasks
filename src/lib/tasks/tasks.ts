@@ -97,7 +97,7 @@ export async function addTask(
       ...fields,
     });
   });
-  localChanged();
+  localChanged(true);
   return id;
 }
 

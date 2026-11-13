@@ -152,7 +152,7 @@ describe('WebDavBackend', () => {
       dav.add('device-phone.json', 'phone', at(89));
       dav.add('device-drawer.json', 'drawer', at(91));
       dav.add('notes.txt', 'something else', at(300));
-      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: true });
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ stale: ['device-drawer.json'], hasOwnFile: true });
       expect(dav.names()).toEqual(['device-here.json', 'device-phone.json', 'notes.txt']);
     });
 
@@ -166,19 +166,27 @@ describe('WebDavBackend', () => {
     it("never deletes this device's own file, and says when it's missing", async () => {
       dav.add('device-here.json', 'mine', at(200));
       dav.add('device-phone.json', 'phone', at(0));
-      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: true });
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ stale: [], hasOwnFile: true });
       expect(dav.names()).toContain('device-here.json');
 
       dav.files.clear();
-      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: false });
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ stale: [], hasOwnFile: false });
     });
 
     it('leaves a file it cannot delete, without failing', async () => {
       dav.add('device-here.json', 'mine', at(0));
       dav.add('device-drawer.json', 'drawer', at(91));
       dav.failDelete = 423;
-      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: true });
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ stale: ['device-drawer.json'], hasOwnFile: true });
       expect(dav.names()).toEqual(['device-drawer.json', 'device-here.json']);
+    });
+
+    it('shares one listing with the pull that runs alongside it', async () => {
+      dav.add('device-here.json', 'mine', at(0));
+      dav.add('device-phone.json', 'phone', at(0));
+      const b = backend();
+      await Promise.all([b.removeStale(MAX_AGE), b.pull(null)]);
+      expect(dav.calls.filter((call) => call.startsWith('PROPFIND'))).toHaveLength(1);
     });
 
     it('still fails when the server turns down the sign-in', async () => {

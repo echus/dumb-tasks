@@ -178,8 +178,17 @@ export class WebDavBackend implements SyncBackend {
     }
   }
 
-  /** Every device's data file, this one's included. */
-  private async list(): Promise<Entry[]> {
+  private listing?: Promise<Entry[]>;
+
+  /**
+   * Every device's data file, this one's included. Listed once per backend (one per sync),
+   * so tidying and pulling share one request.
+   */
+  private list(): Promise<Entry[]> {
+    return (this.listing ??= this.listFiles());
+  }
+
+  private async listFiles(): Promise<Entry[]> {
     try {
       const res = await this.propfind(this.folder, '1');
       return parseListing(await res.text()).filter((f) => isDeviceFile(f.name));
@@ -192,7 +201,7 @@ export class WebDavBackend implements SyncBackend {
   private async download(file: Entry): Promise<RemoteFile | null> {
     try {
       const res = await this.call(this.folder + file.name);
-      return { json: await res.text(), modifiedAt: file.modifiedAt };
+      return { name: file.name, json: await res.text(), modifiedAt: file.modifiedAt };
     } catch (e) {
       if (isMissing(e)) return null; // removed since it was listed
       throw e;
@@ -245,6 +254,6 @@ export class WebDavBackend implements SyncBackend {
         }),
       ),
     );
-    return { hasOwnFile: files.some((f) => f.name === this.name) };
+    return { stale: stale.map((f) => f.name), hasOwnFile: files.some((f) => f.name === this.name) };
   }
 }
