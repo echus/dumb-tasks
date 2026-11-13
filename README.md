@@ -13,7 +13,8 @@ Live at [dumbtasks.app](https://dumbtasks.app) or [self host your own](#self-hos
 
 ## Self-host with Docker
 
-The Docker image serves the app with nginx. The self-hosted image syncs with WebDAV only.
+The Docker image serves the app with nginx. The self-hosted image syncs with WebDAV only. For
+Google Drive sync, [self-host on Cloudflare](#self-host-on-cloudflare).
 
 ### Start the app
 
@@ -49,6 +50,24 @@ COMMIT_SHA=$(git rev-parse --short HEAD) docker compose up -d --build
 2. Build and start the container again: `docker compose up -d --build`.
 
 Installed apps get the new version the next time they open.
+
+## Self-host on Cloudflare
+
+A Cloudflare Worker serves the app and the sign-in helper for Google Drive sync. The free plan
+is enough.
+
+1. Fork this repository.
+2. In Google Cloud, make an OAuth client:
+   - Turn on the Google Drive API.
+   - On the OAuth consent screen, add the `drive.appdata` scope. Publish the app. In *Testing*,
+     Google stops the sign-in after 7 days.
+   - Make a client of type *Web application*. Add the address of your app to its JavaScript
+     origins.
+3. In `wrangler.jsonc`, change `routes` to your domain, or remove `routes` to use a
+   `workers.dev` address.
+4. In Cloudflare, make a Worker from your fork with Workers Builds. Set `VITE_GOOGLE_CLIENT_ID`
+   as a build variable and `GOOGLE_CLIENT_SECRET` as a secret.
+5. Push to `main`. Each push deploys the app again.
 
 ## Set up WebDAV sync
 
@@ -139,12 +158,9 @@ accepts `http` for a server on this computer.
 
 ### Google Drive and Cloudflare
 
-- Google Drive sync needs a Google OAuth client: *Web application*, Drive API, `drive.appdata`
-  scope. Add each app origin to its JavaScript origins.
-- Local: `VITE_GOOGLE_CLIENT_ID` in `.env.local`, `GOOGLE_CLIENT_SECRET` in `.dev.vars`.
-- Deploy: a Cloudflare Worker serves the app and the sign-in helper. `wrangler.jsonc` has the
-  name and routes. In Workers Builds, set `VITE_GOOGLE_CLIENT_ID` as a build variable and
-  `GOOGLE_CLIENT_SECRET` as a secret.
+- Setup and deploy: see [Self-host on Cloudflare](#self-host-on-cloudflare).
+- Local: `VITE_GOOGLE_CLIENT_ID` in `.env.local`, `GOOGLE_CLIENT_SECRET` in `.dev.vars`. Add
+  `http://localhost:5173` to the client's JavaScript origins.
 - Staging: each push to a branch other than `main` deploys to `staging.dumbtasks.app`, the
   Preview named `staging`. `wrangler.jsonc` has the Preview command for Workers Builds. Set the
   Preview's `GOOGLE_CLIENT_SECRET` separately.
