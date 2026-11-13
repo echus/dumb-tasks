@@ -1,9 +1,9 @@
 # Dumb Tasks — Spec
 
-*Status: draft, 2026-10-26. Milestone 1 built.*
+*Status: draft, 2026-10-26. Milestones 1–3 built; release next.*
 
-A deliberately simple, local-first task list. You brain-dump one-line tasks, drop them into
-Today / Week / Month / Later, and optionally plan your day by talking to the AI you already use.
+A deliberately simple, local-first task list. You brain-dump one-line tasks and drop them into
+Today / Week / Month / Later.
 
 ## Who it's for
 
@@ -16,8 +16,8 @@ are not the primary audience and don't drive design decisions.
 
 - **One field.** A task is a line of text. No groups, tags, priorities or forms.
 - **Local-first.** Works fully offline with no account. Sync is optional.
-- **AI is optional.** The app is complete without it. When used, it plugs into the user's
-  existing AI (via MCP) rather than requiring an API key.
+- **No AI in the app.** The app is complete without it. If an AI connector comes (see Maybe
+  later), it plugs into the AI the user already has, outside the app.
 - **Nothing moves on its own.** Tasks change bucket only by the user or by the AI.
 - **Open source, self-hostable static app.**
 
@@ -234,8 +234,7 @@ Optional and pluggable. Each device has its own data file holding everything it 
 writes only that one. A sync reads the files other devices changed, merges them in, and
 rewrites this device's file if that left it out of date.
 
-- **Backends:** **Google Drive first** — it's what regular people already have, and the MCP
-  server depends on it. WebDAV (Nextcloud, Apache) as a bonus for self-hosters who want no
+- **Backends:** **Google Drive first** — it's what regular people already have. WebDAV (Nextcloud, Apache) as a bonus for self-hosters who want no
   cloud at all. One at a time per device. A backend is `pull(cursor)`, `push(json)` and
   `removeStale(maxAge)` (`SyncBackend` in `sync/engine.ts`).
 - **Drive:** a `device-<id>.json` per install in the hidden app folder (`drive.appdata`
@@ -243,8 +242,9 @@ rewrites this device's file if that left it out of date.
   reconnects. Drive's Changes API says which files changed since the last sync, so a sync with
   nothing to do is one small request. The file `dumb-tasks.json`, which every device shared
   before, is ignored and deleted with the stale files; a device still on that version
-  recreates it until it updates, and its changes reach the others only once it has. The app folder belongs to the OAuth client: check the
-  MCP server can share it before milestone 4 (it would be one more device, with its own file).
+  recreates it until it updates, and its changes reach the others only once it has. The app
+  folder belongs to the OAuth client, so anything else that syncs it (e.g. an MCP connector)
+  must use the same client, as one more device with its own file.
 - **Sign-in:** Google Identity Services' popup gives a one-time code; a small Worker
   (`worker/index.ts`, beside the static files) swaps it for a refresh token, which needs the
   client secret, and keeps it in an HttpOnly cookie. When the hour-long access token runs out,
@@ -298,71 +298,17 @@ rewrites this device's file if that left it out of date.
 - **Google verification:** brand verification passed and the OAuth app is published
   (October 2026), so anyone can connect Drive.
 
-## AI integration — MCP connector
-
-"Put the app inside the AI." An MCP server exposes the task list to the user's AI client
-(e.g. Claude), so planning happens there, on the subscription they already pay for. The app
-itself has no chat and needs no API key.
-
-- **Hosted by the project, backed by Google Drive.** The user adds the connector to their AI
-  client and signs in with Google; the server reads and writes their data file in Drive using
-  the same merge logic as the app. It is just another sync client.
-- **So MCP requires Google Drive sync.** Local-only and WebDAV users don't get MCP.
-  No self-hosted MCP server at this stage.
-- **Stores almost nothing.** Google sign-in is the identity; tasks live only in the user's
-  Drive. The server keeps just the connector's auth grants (encrypted Google tokens) in a small
-  key-value store. No accounts or task database of our own.
-- **Cheap to run.** The AI's thinking happens on the user's subscription; the server only
-  does a couple of small Drive reads/writes per tool call. A serverless host (e.g. Cloudflare
-  Workers) should cost nothing to a few dollars a month even at thousands of daily users.
-  Prefer a free tier that stops serving at its limit over one that bills for overage.
-
-**Tools:**
-
-| Tool | Purpose |
-|------|---------|
-| `list_tasks(bucket?, include_completed_since?)` | Read the bank |
-| `add_task(text, bucket?)` | Add (defaults to Today) |
-| `update_task_text(id, text)` | Rephrase / split helper |
-| `move_task(id, bucket, before_id?)` | Sort and prioritise |
-| `complete_task(id)` / `delete_task(id)` | |
-| `set_deadline(id, date \| null)` | Correct parsing |
-| `set_icon(id, emoji)` | Override the guess with any emoji (a new icon gets a new colour) |
-| `set_task_note(id, note)` | Hidden per-task context |
-| `get_memory()` / `update_memory(text)` | User preferences |
-
-**Suggested morning flow** (encoded as an MCP prompt): sort unsorted tasks from Today →
-flag deadlines and overdue items → agree a realistic Today given the user's time and energy →
-push the rest to Week / Month / Later → note anything learned in memory.
-
-**Why MCP first:** planning seems most useful with the most capable models (Opus-class) and
-the AI client's own memory. Through MCP that comes with the user's existing subscription at no
-extra cost; through the API it would cost roughly $10–20/month per daily user (estimated for
-Opus 5.5 with ~80 tasks and a short daily chat; ~$5–10 on Sonnet, under $1 on Haiku).
-
-### Later options (decide after using the MCP planner for a while)
-
-- **Bring-your-own API key:** in-app chat calling the API directly from the browser. No
-  server, but too much setup for the primary audience; an advanced option at most.
-- **Paid hosted AI:** in-app chat through our server on our API key, sold as an add-on
-  subscription (Obsidian Sync-style: free local app, paid hosted extras). Needs accounts,
-  billing (a merchant of record for VAT), fair-use caps and a privacy policy. Opus-level
-  quality would make it expensive to offer.
-
-Both would reuse the MCP tool definitions.
-
 ## Platforms and distribution
 
-- PWA, served as static files plus the small sign-in Worker (Cloudflare Workers).
-- Capacitor wrapper for the Play Store.
-- Docker image serving the static app, for self-hosters.
-- Hosted MCP server (small and stateless).
+- PWA, served as static files plus the small sign-in Worker (Cloudflare Workers). Install
+  steps for each browser in the app.
+- Self-hosting: a Docker image serving the static app (WebDAV sync only), or the same
+  Cloudflare setup with your own Google client (README).
 
 ## Stack
 
 TypeScript · Vite · Svelte 5 · Dexie · chrono-node · Phosphor icons (app controls; tasks use
 emoji) · fractional-indexing · ulid · vite-plugin-pwa · Vitest · Inter / Inter Display.
-Later: MCP TypeScript SDK.
 
 ## Milestones
 
@@ -372,9 +318,14 @@ Later: MCP TypeScript SDK.
 3. ~~**Sync**~~ — Google Drive backend on top of the existing merge logic, plus a settings place
    for sync and backup export / import. *Built.* WebDAV backend too, pulled forward from
    Release. *Built.*
-4. **MCP server** — hosted, Drive-backed; tools and morning-planning prompt.
-5. **Release** — Play Store wrapper, docs site. (Docker image built, with WebDAV sync only.)
-6. **Decide on more AI** — after daily use of the MCP planner, revisit the later options above.
+4. **Release** — free, as a web app. Docker image (WebDAV sync only), self-host docs for
+   Cloudflare, install steps for each browser, feedback and donate links.
+
+## Maybe later
+
+- **MCP connector:** optional, so the user's own AI client can read and sort their list.
+  Nothing in the app itself. (A full design is in git history.)
+- **Play Store:** a TWA wrapper around the web app.
 
 ## Non-goals
 
@@ -382,17 +333,10 @@ Later: MCP TypeScript SDK.
 - Automatic bucket movement.
 - **Recurring tasks.** If it recurs, it belongs in your calendar, not your to-do list.
 - Languages other than English.
-- Local AI models.
-- In-app AI chat and self-hosted MCP server (for now; see later options).
+- AI in the app: no chat, no local models, no API keys.
 - Collaboration/sharing, user accounts of our own.
 
 ## Open questions
 
-- **MCP auth (main feasibility risk for the AI route).** Check what auth current AI clients'
-  custom connectors require (e.g. OAuth) and how that combines with Google sign-in for Drive
-  access, before building milestone 4.
-- **Hosting the MCP server:** who pays, where it runs, and how that fits Google's
-  verification for an app whose server touches user Drive data.
 - Completed tasks: a collapsible "done today" section? Undo window?
 - Allow a manual icon override (e.g. long-press), or keep it strictly automatic?
-- Licence (MIT vs AGPL).
