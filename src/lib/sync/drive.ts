@@ -3,8 +3,9 @@ import { SignedOutError, type RemoteFile, type SyncBackend } from './engine';
 
 // Each device's data file lives in the app's hidden folder in the user's Google Drive.
 
-const API = 'https://www.googleapis.com/drive/v3';
-const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
+export const ORIGIN = 'https://www.googleapis.com';
+const API = `${ORIGIN}/drive/v3`;
+const UPLOAD = `${ORIGIN}/upload/drive/v3/files`;
 // The one file every device shared before each had its own. Ignored, and deleted with the
 // stale files: a device still on that version recreates it until it updates.
 const LEGACY = 'dumb-tasks.json';
@@ -59,11 +60,16 @@ interface DriveFile {
 export class DriveBackend implements SyncBackend {
   private name: string;
 
-  /** `fileId`: this device's file, if known. Read it back after a sync, as push may make one. */
+  /**
+   * `fileId`: this device's file, if known. Read it back after a sync, as push may make one.
+   * `checked`: settles once the token is known to be the right account's. Reads go ahead
+   * meanwhile, but nothing is written or deleted, and pull returns nothing, until it does.
+   */
   constructor(
     private token: string,
     device: string,
     public fileId: string | null,
+    private checked: Promise<void> = Promise.resolve(),
   ) {
     this.name = deviceFileName(device);
   }
@@ -121,10 +127,10 @@ export class DriveBackend implements SyncBackend {
   /** The files' contents, skipping any removed since they were listed. */
   private async download(files: DriveFile[]): Promise<RemoteFile[]> {
     const texts = await Promise.all(
-      files.map(async ({ id, modifiedTime }) => {
+      files.map(async ({ id, name, modifiedTime }) => {
         try {
           const res = await call(this.token, `${API}/files/${id}?alt=media`, { cache: 'no-store' });
-          return { json: await res.text(), modifiedAt: Date.parse(modifiedTime) };
+          return { name, json: await res.text(), modifiedAt: Date.parse(modifiedTime) };
         } catch (e) {
           if (e instanceof DriveNotFoundError) return null;
           throw e;
@@ -135,6 +141,16 @@ export class DriveBackend implements SyncBackend {
   }
 
   async pull(cursor: string | null) {
+    // Another account's token may fail to read too: say it's the wrong account first
+    const pulled = await this.read(cursor).catch(async (e) => {
+      await this.checked;
+      throw e;
+    });
+    await this.checked;
+    return pulled;
+  }
+
+  private async read(cursor: string | null) {
     if (cursor) {
       const { changed, cursor: next } = await this.changedSince(cursor);
       return { files: await this.download(changed), cursor: next };
@@ -148,6 +164,7 @@ export class DriveBackend implements SyncBackend {
   }
 
   async push(json: string) {
+    await this.checked;
     const body = new Blob([json], { type: 'application/json' });
     this.fileId ??= (await this.listData()).find((f) => f.name === this.name)?.id ?? null;
     if (this.fileId) {
@@ -179,6 +196,7 @@ export class DriveBackend implements SyncBackend {
       ...staleFiles(files, this.name, maxAge, (f) => Date.parse(f.modifiedTime)),
       ...all.filter((f) => f.name === LEGACY),
     ];
+    await this.checked;
     await Promise.all(
       stale.map((f) =>
         call(this.token, `${API}/files/${f.id}`, { method: 'DELETE' }).catch((e) => {
@@ -186,6 +204,6 @@ export class DriveBackend implements SyncBackend {
         }),
       ),
     );
-    return { hasOwnFile: files.some((f) => f.name === this.name) };
+    return { stale: stale.map((f) => f.name), hasOwnFile: files.some((f) => f.name === this.name) };
   }
 }

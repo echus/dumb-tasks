@@ -251,7 +251,8 @@ rewrites this device's file if that left it out of date.
   the app quietly gets a new one from the Worker, so people stay signed in until they
   disconnect or revoke access. "Sign in again" shows only if that fails, and only takes the
   same account: switching accounts means disconnecting first, so this device's tasks never
-  merge into another account by accident. No tasks pass
+  merge into another account by accident. A new token is checked to be the same account's
+  while the sync starts reading; nothing is written, deleted or taken in until it passes. No tasks pass
   through the Worker. Disconnect forgets this device's cookie without revoking Google's grant,
   which would sign out every device.
 - **WebDAV:** the same `device-<id>.json` files, in a `dumb-tasks` folder inside the folder the
@@ -275,10 +276,11 @@ rewrites this device's file if that left it out of date.
   written only when local data no longer matches it.
 - **When:** on app open, when the app comes into view, is left or gets focus, 3 s after
   edits, every minute while in view, and on coming back online.
-- **Stale files:** once per app open, before reading anything, other devices' files
-  unchanged for 90 days (by Drive's clock, measured back from the newest file) are deleted:
-  their changes are in every other file by then, and they may still hold tasks the others
-  have dropped since. A device whose own file went is told by the same check and writes it again.
+- **Stale files:** once per app open, alongside the first pull, other devices' files
+  unchanged for 90 days (by Drive's clock, measured back from the newest file) are deleted
+  and left out of what the pull takes in: their changes are in every other file by then, and
+  they may still hold tasks the others have dropped since. On WebDAV, one listing serves
+  both. A device whose own file went is told by the same check and writes it again.
 - **Tombstone purge:** deleted and completed tasks go for good 90 days after the delete or
   completion.
 - **Coming back after 90 days away:** the other devices may have purged tasks this one never

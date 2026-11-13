@@ -201,6 +201,9 @@ describe('Google Drive', () => {
     expect(google).toMatchObject({ refreshes: 1, signIns: [undefined] });
     expect(tab.sync).toMatchObject({ needsSignIn: false, error: '' });
     expect(drive.calls).not.toEqual([]);
+
+    await tab.syncNow(); // with the new token, kept
+    expect(google.refreshes).toBe(1);
   });
 
   it('asks to sign in again when the Worker has no sign-in left, without asking Drive', async () => {
@@ -218,7 +221,18 @@ describe('Google Drive', () => {
     await tab.syncNow();
     expect(tab.sync.needsSignIn).toBe(true);
     expect(google.signOuts).toBe(1);
-    expect(drive.calls.filter((c) => !c.includes('/about'))).toEqual([]);
+    expect(drive.calls.filter((c) => !c.startsWith('GET'))).toEqual([]); // reads only
+  });
+
+  it('says it is another account even when reading with its token fails', async () => {
+    const tab = await driveTab();
+    google.account = 'someone@example.com';
+    anHourLater();
+    const fetchDrive = drive.fetch;
+    drive.fetch = async (input, init) =>
+      String(input).includes('/about') ? fetchDrive(input, init) : new Response(null, { status: 500 });
+    await tab.syncNow();
+    expect(tab.sync).toMatchObject({ needsSignIn: true, error: '' });
   });
 
   it('gets one new token when Drive ends the old one early', async () => {

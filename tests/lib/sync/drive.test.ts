@@ -103,7 +103,7 @@ describe('DriveBackend', () => {
       drive.add('device-here.json', 'mine', at(0));
       drive.add('device-phone.json', 'phone', at(89));
       drive.add('device-drawer.json', 'drawer', at(91));
-      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: true });
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ stale: ['device-drawer.json'], hasOwnFile: true });
       expect(drive.names()).toEqual(['device-here.json', 'device-phone.json']);
     });
 
@@ -118,11 +118,11 @@ describe('DriveBackend', () => {
     it("never deletes this device's own file, and says when it's missing", async () => {
       drive.add('device-here.json', 'mine', at(200));
       drive.add('device-phone.json', 'phone', at(0));
-      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: true });
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ stale: [], hasOwnFile: true });
       expect(drive.names()).toContain('device-here.json');
 
       drive.files.clear();
-      expect(await backend().removeStale(MAX_AGE)).toEqual({ hasOwnFile: false });
+      expect(await backend().removeStale(MAX_AGE)).toEqual({ stale: [], hasOwnFile: false });
     });
 
     it('deletes the old shared file however recent, and leaves other files alone', async () => {
@@ -131,6 +131,34 @@ describe('DriveBackend', () => {
       drive.add('notes.txt', 'something else', at(300));
       await backend().removeStale(MAX_AGE);
       expect(drive.names()).toEqual(['device-here.json', 'notes.txt']);
+    });
+  });
+
+  describe('with a new token, until it is known to be the right account', () => {
+    beforeEach(() => {
+      drive.add('device-here.json', 'mine', at(0));
+      drive.add('device-drawer.json', 'drawer', at(91));
+      drive.add('device-phone.json', 'phone');
+    });
+
+    it('reads, but returns nothing until then', async () => {
+      let pass!: () => void;
+      const b = new DriveBackend('token', 'here', null, new Promise((resolve) => (pass = resolve)));
+      const pulled = b.pull(null);
+      await vi.waitFor(() => expect(drive.calls.filter((c) => c.startsWith('GET /files/'))).toHaveLength(2));
+      pass();
+      expect(jsons((await pulled).files)).toEqual(['drawer', 'phone']);
+    });
+
+    it('writes and deletes nothing when it is another account', async () => {
+      const other = Promise.reject(new Error('Another account'));
+      const b = new DriveBackend('token', 'here', null, other);
+      await expect(b.pull(null)).rejects.toThrow('Another account');
+      await expect(b.removeStale(90 * DAY)).rejects.toThrow('Another account');
+      await expect(b.push('changed')).rejects.toThrow('Another account');
+      expect(drive.calls.filter((c) => !c.startsWith('GET'))).toEqual([]);
+      expect(drive.names()).toEqual(['device-drawer.json', 'device-here.json', 'device-phone.json']);
+      expect(drive.contents('device-here.json')).toBe('mine');
     });
   });
 

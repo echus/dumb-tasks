@@ -1,5 +1,5 @@
 import { DRIVE_AVAILABLE } from '../config';
-import { DriveAuthError, DriveBackend, fetchEmail } from './drive';
+import { DriveAuthError, DriveBackend, fetchEmail, ORIGIN as DRIVE_ORIGIN } from './drive';
 import { SignedOutError, startFrom, syncWith } from './engine';
 import { loadGoogle, refreshToken, signIn, signOut } from './google-auth';
 import { onLocalChange } from './local-changes';
@@ -96,27 +96,41 @@ function askToSignIn() {
   if (settings?.service === 'drive') loadGoogle().catch(() => {});
 }
 
-/** The saved token, or a new one from the Worker once it runs out. Null: sign in again. */
-async function freshToken(current: DriveSettings): Promise<string | null> {
-  if (current.token.expiresAt - EXPIRY_MARGIN > Date.now()) return current.token.value;
+/** Starts connecting to Drive while the Worker gets a new token, rather than after. */
+function warmUpDrive() {
+  document.head.querySelector(`link[rel=preconnect][href="${DRIVE_ORIGIN}"]`)?.remove();
+  const link = Object.assign(document.createElement('link'), { rel: 'preconnect', href: DRIVE_ORIGIN });
+  link.crossOrigin = 'anonymous'; // as Drive's requests are: CORS, without cookies
+  document.head.append(link);
+}
+
+/**
+ * The saved token, or a new one from the Worker once it runs out. Null: sign in again. A new
+ * one comes with `checked`, which settles once it's known to be this account's.
+ */
+async function freshToken(current: DriveSettings): Promise<{ value: string; checked?: Promise<void> } | null> {
+  if (current.token.expiresAt - EXPIRY_MARGIN > Date.now()) return { value: current.token.value };
+  warmUpDrive();
   const token = await refreshToken();
   if (settings !== current) return null; // disconnected meanwhile
   if (!token) {
     askToSignIn();
     return null;
   }
-  // The Worker's sign-in should be this account's, but check before syncing with it
-  const email = await fetchEmail(token.value);
-  if (settings !== current) return null;
-  if (email !== current.email) {
-    signOut().catch(() => {});
-    askToSignIn();
-    return null;
-  }
-  sync.needsSignIn = false;
-  current.token = token;
-  await saveSettings(settings);
-  return token.value;
+  // The Worker's sign-in should be this account's. Checked while the sync starts reading,
+  // which writes nothing until it's done (see DriveBackend).
+  const checked = fetchEmail(token.value).then(async (email) => {
+    if (settings !== current) throw new Error('Disconnected.'); // not shown: the sync drops it
+    if (email !== current.email) {
+      signOut().catch(() => {});
+      throw new SignedOutError('Signed in to another account.'); // asks to sign in again
+    }
+    sync.needsSignIn = false;
+    current.token = token;
+    await saveSettings(settings);
+  });
+  checked.catch(() => {}); // the sync handles it, if it gets that far
+  return { value: token.value, checked };
 }
 
 /** Where to sync. Null: sign in again first. */
@@ -125,7 +139,7 @@ async function backendFor(current: Settings): Promise<DriveBackend | WebDavBacke
     return current.password === rejectedPassword ? null : new WebDavBackend(current, device);
   }
   const token = await freshToken(current);
-  return token ? new DriveBackend(token, device, current.fileId) : null;
+  return token ? new DriveBackend(token.value, device, current.fileId, token.checked) : null;
 }
 
 async function runOnce(retry = true): Promise<void> {

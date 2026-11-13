@@ -51,7 +51,7 @@ describe.each(inject('servers'))('$name', (account) => {
     await device('drawer').push('old');
     await new Promise((resolve) => setTimeout(resolve, 2_100)); // servers keep whole seconds
     await device('here').push('mine');
-    expect(await device('here').removeStale(1_000)).toEqual({ hasOwnFile: true });
+    expect(await device('here').removeStale(1_000)).toEqual({ stale: ['device-drawer.json'], hasOwnFile: true });
     expect(await read(device('phone').pull(null))).toEqual(['mine']);
   });
 
