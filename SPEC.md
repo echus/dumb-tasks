@@ -1,309 +1,294 @@
-# Dumb Tasks — Spec
+# Dumb Tasks spec
 
-*Status: draft, 2026-10-26. Milestones 1–3 built; release next.*
+*Status: milestones 1 to 3 are built. Release is next.*
 
-A deliberately simple, local-first task list. You brain-dump one-line tasks and drop them into
-Today / Week / Month / Later.
+A simple local-first task list. Each task is one line of text. You put each task in one of
+four buckets: Today, Week, Month or Later.
 
-## Who it's for
+## Who it is for
 
-Regular people who bounce off complex task apps. Every feature has to pass the test
-"would someone who finds Todoist too much still get this without thinking?"
-It's also open source and self-hostable, as a bonus for people who care about that, but they
-are not the primary audience and don't drive design decisions.
+People who find apps like Todoist too complex. Each feature must be easy to understand
+without thought. The app is open source and you can host it yourself, but self-hosters are
+not the main users and do not drive the design.
 
 ## Principles
 
-- **One field.** A task is a line of text. No groups, tags, priorities or forms.
-- **Local-first.** Works fully offline with no account. Sync is optional.
-- **No AI in the app.** The app is complete without it. If an AI connector comes (see Maybe
-  later), it plugs into the AI the user already has, outside the app.
-- **Nothing moves on its own.** Tasks change bucket only by the user or by the AI.
-- **Open source, self-hostable static app.**
+- A task is one line of text. There are no groups, tags, priorities or forms.
+- The app works fully offline and needs no account. Sync is optional.
+- Tasks change bucket only when the user moves them.
 
 ## Buckets
 
-| Bucket  | Meaning |
-|---------|---------|
-| Today   | The working list. Perpetual — not one list per date; undone tasks simply stay. **New tasks land here.** |
-| Week    | Upcoming; candidates for promotion into Today. |
-| Month   | Needs doing on some timeline, not urgent. |
-| Later   | Ideas and someday stuff (stored as `icebox`). |
+| Bucket | Use |
+|--------|-----|
+| Today  | The working list. It is one list, not one for each date. Tasks that are not done stay there. New tasks go here. |
+| Week   | Tasks for the next few days, to move into Today later. |
+| Month  | Tasks that must get done some time, but are not urgent. |
+| Later  | Ideas and things for some day. Stored as `icebox`. |
 
-Completed tasks leave their bucket but are kept (with completion time) as history for 90
-days, then dropped like deleted ones (see Tombstone purge).
+Completed tasks leave their bucket. The app keeps them, with the completion time, for 90
+days. Then they are removed like deleted tasks (see Sync).
 
-## User interactions
+## Interactions
 
-- **Fast capture is the top UX goal:** open app → type → saved in a couple of seconds.
-  Today's "add a task" row is focused on launch; on Android the PWA registers as a share target so text
-  can be shared into it from any app.
-- **Add:** every list starts with an "add a task" row, laid out like a task with an empty
-  + ring for its icon. It stays in view (under the phone tabs) while a long list scrolls. Enter adds the task just below it, ready for the next one.
-- **Move:** drag a task: with a mouse, press and move; on touch screens, long-press to pick
-  it up. Mouse and touch share one implementation, not the browser's drag-and-drop (unreliable
-  with touch, and it can't move the rows). A copy of the task follows the pointer and the rows
-  part to show where it will land; near a list's top or bottom edge the list scrolls. On
-  phones, dropping on a tab sends the task to the end of that list without switching tabs,
-  and holding it over a tab opens that list.
-- **Reorder:** drag within a bucket.
-- **Complete:** click or tap the task's icon. With a mouse, hovering it first turns it into a
-  tick. Task leaves the list.
-- **Edit:** click into the text; it becomes a text field with the cursor where you clicked.
-  Enter or clicking away saves, Escape cancels. Editing re-parses the deadline.
-- **Delete:** a small × at the far right (where the deadline badge is), shown on hover (on touch screens, while the task is
-  being edited; swipe-to-delete is an idea). Removes from view (kept as a tombstone for sync).
-- **Undo / redo:** buttons in the header (and ⌘Z / ⇧⌘Z, Ctrl+Z / Ctrl+Y) step back and forward
-  through adds, edits, completions, deletions and moves made this session. An undo is written
-  as a fresh edit, so it syncs like any other change.
-- **Sync and backup:** a sync button (circling arrows) in the header opens a small menu: a
-  section each for Google Drive and WebDAV (connect / disconnect, sync status; while one is
-  connected, the other says to disconnect it first), and "Save backup" / "Restore" for a full
-  JSON backup.
-  Restoring merges like sync does; it never deletes.
-- **Install:** an "Install app" pill under the intro (so while the app is new), the same
-  in every browser so the intro stays short, and an "install app" section at the end of
-  that menu, until the app runs installed (`ui/install.svelte.ts`). In Chrome and Edge, on
-  Android and computers, both open the browser's own install prompt. Elsewhere the menu
-  gives the steps, and the pill opens the menu there, outlining the section for a moment:
-  iPhone and iPad (Share menu, Add to Home Screen, in any browser), Safari 17+ on a Mac
-  (File > Add to Dock), and other Android browsers (browser menu, Add to Home screen).
-  Firefox on a computer can't install apps, so it gets nothing.
+The main goal is fast capture: open the app, type the task, and it is saved in a few
+seconds.
+
+- **Add:** each list starts with an "add a task" row. It looks like a task with an empty +
+  ring for its icon. When the app opens, the Today row has focus. The row stays in view when
+  a long list scrolls (under the tabs on phones). Enter adds the task below the row, and the
+  row is ready for the next task. On Android the installed app is a share target, so you can
+  share text into it from other apps.
+- **Move:** drag a task to a different place or a different bucket. With a mouse, press and
+  move. On a touch screen, long-press to pick it up. Mouse and touch use the same code, not
+  the browser's drag and drop, which is unreliable with touch and cannot move the rows. A
+  copy of the task follows the pointer, and the rows open a gap where it will go. Near the
+  top or bottom of a list, the list scrolls. On phones, drop a task on a tab to put it at the
+  end of that list, or hold it over a tab to open that list.
+- **Complete:** click or tap the task icon. With a mouse, the icon changes to a tick on hover.
+- **Edit:** click the text. The cursor goes where you clicked. Escape cancels. An edit
+  parses the deadline again.
+- **Delete:** a small × at the right of the task, where the deadline badge is. It shows on
+  hover, or on touch screens while you edit the task. The task stays as a tombstone for sync.
+- **Undo and redo:** buttons in the header, and ⌘Z / ⇧⌘Z or Ctrl+Z / Ctrl+Y. They go through
+  the changes made since the app opened. An undo is written as a new edit, so it syncs like
+  any other change.
+- **Sync menu:** the sync button in the header opens it. There is a section for Google Drive
+  and one for WebDAV, each with its sync status. Only one can be connected at a time. The
+  backup section saves a full JSON backup and restores one. Restore merges like sync does,
+  so it never deletes tasks.
+- **Install:** the intro has an "Install app" pill, and the sync menu has an "install app"
+  section (`ui/install.svelte.ts`). Both go away when the app runs installed. In Chrome and
+  Edge they open the browser's install prompt. In other browsers the section gives the
+  steps, and the pill opens the menu and highlights the section in yellow for a moment.
+  There are steps for iPhone and iPad (any browser), Safari 17 or later on a Mac, and other
+  Android browsers. Firefox on a computer cannot install web apps, so it shows neither.
 
 ## Deadlines
 
-Parsed from the task text — there is no deadline field in the UI.
+The app reads deadlines from the task text. There is no deadline field.
 
-- Use an offline natural-language date parser (chrono-node, English only).
-- **Resolve to an absolute date at creation** (and on edit). Never re-parse daily, or
-  "by friday" would drift forever.
-- Only accept clear date signals: "by …", "due …", "on the 14th", weekday names, explicit dates.
-  Prefer missing a deadline over inventing one ("read 1984", "call May", "march for climate").
-  A bare length or ordinal ("3d", "12 hr", "a day", "12th") only counts after a trigger word:
-  "by 12th" is a deadline, "3d printing", "bathurst 12 hr" and "21st birthday" aren't.
-- Day/month order follows device locale, with a setting to override.
-- Display: subtly underline the parsed phrase and show a badge (e.g. `3 days left`) at a
-  fixed spot on the right of the task, so badges line up and long text wraps before them.
-  Hovering a task swaps its badge for the delete ×, in the same spot, with a remove-date
-  button beside it for a date read wrongly. The task remembers the dismissed phrase, so
-  editing the text doesn't bring it back (a later, different date still counts).
-  The badge gets bolder as the date approaches; past dates show `2 days overdue`.
-- The AI can set or correct a task's deadline; that overrides the parsed value until the
-  user next edits the text.
+- chrono-node parses the dates, offline and in English only.
+- The date is fixed when the task is added or edited. The app does not parse again each day,
+  because then "by friday" would always move forward.
+- Only clear date words count: "by …", "due …", "on the 14th", weekday names and full dates.
+  It is better to miss a deadline than to make one up ("read 1984", "call May", "march for
+  climate"). A length or an ordinal ("3d", "12 hr", "a day", "12th") counts only after a
+  trigger word. "by 12th" is a deadline, but "3d printing", "bathurst 12 hr" and "21st
+  birthday" are not.
+- Day and month order comes from the device locale. Only en-US and en-PH put the month first.
+- The parsed phrase gets a light underline. A badge (for example `3 days left`) shows at a
+  fixed place on the right, so the badges line up and long text wraps before them. Past
+  dates show `2 days overdue`.
+- On hover the badge changes to the delete ×, with a button next to it to remove a date that
+  was read wrongly. The task keeps the removed phrase, so an edit does not bring it back. A
+  different date added later still counts.
 
 ## Icons
 
-Chosen automatically; never asked of the user. Each task shows an **emoji** in a circle tinted
-with a fluoro colour of its own; the circle is also the checkbox (hovering shows a tick).
+The app picks an icon for each task and never asks the user. The icon is an emoji in a
+circle with its own fluoro colour. The circle is also the checkbox.
 
-- `guessIcon(text) → emoji` picks one of 49 emoji. The AI can pick any emoji.
-- **A wrong icon is worse than none:** it says something false about the task, while ⭐
-  says nothing. So when in doubt, no guess.
-- **Keyword matching:** a hand-written table of keywords and word stems. Strong words say
-  what a task is about ("dentist", "groceries"); weak ones are verbs and words with other
-  meanings ("buy", "sync", "garage") and decide only when nothing strong matches. Between
-  equals the later word wins, as the thing comes after the verb ("email Sarah about the
-  invoice" → 🧾).
-- **Phrases first,** standing in for their words: "tip run" → 🗑️, "oil change" → 🚗, "get
-  the bike running" → nothing. A few first words are verbs with a noun meaning elsewhere:
-  "book flights" is booking, "read a good book" is reading.
-- **Typing slips** of long words count ("plumbr", "groceires": a letter left out, added or
-  swapped), tried only when no keyword matches. Not changed letters ("change" isn't
-  "charge"), and no guessing from the start of a word ("super" isn't "supermarket").
-- **Checked on everyday tasks** (`tests/lib/tasks/icon-examples.ts`): at least 90% right and
-  at most 3% wrong icons. Add tasks there when a guess goes wrong.
-- **No match → a ⭐ star**, on any hue (faint on greens, but the colours stay varied).
-- **Better rules reach old tasks:** bumping `COLOURS_VERSION` in `recolour.ts` re-guesses
-  every open task's icon once per device.
-- **Guessed once, then stored:** the icon is picked when a task is added and re-picked
-  whenever its text is edited; otherwise the stored pick is shown. The AI can replace the
-  pick with its own; that holds until the user next edits the text (like deadlines).
-- **Circle colour:** each task gets a random fluoro colour, stored on the task. It's picked
-  again only when the icon changes (an edit or the AI picking a different icon), so a
-  new icon is easy to spot. Hue and lightness vary continuously, so no two tasks
-  quite match. Any hue but straight orange and red (they look dull beside the rest): the
-  warm end runs from golden yellow round to pinky red. Hues an icon would vanish on are
-  skipped (e.g. the grey trolley on blue; white icons get the darker blues and violets),
-  from a per-emoji table measured off Apple's emoji by `scripts/measure-icon-clashes.js`.
-  Emoji not in the table (AI picks) can have any hue.
-  A new task's hue keeps at least 60° from the task it lands above, and its lightness sits on
-  the other side of the range, so neighbours never look alike. Icons with few usable hues
-  (like 📄, blues and violets only) go as far away as they can.
-- Emoji look different on each platform (Apple, Google, Microsoft); that's accepted.
+- `guessIcon(text)` in `tasks/guess-icon.ts` picks one of 49 emoji from a table of keywords
+  and word stems.
+- A wrong icon is worse than no icon, because it says something false about the task. When
+  the match is not clear, the task gets ⭐.
+- Strong keywords tell what the task is about ("dentist", "groceries"). Weak keywords are
+  verbs and words with more than one meaning ("buy", "sync", "garage"), and count only when
+  no strong keyword matches. Between two of the same strength the later word wins, because
+  the thing usually comes after the verb ("email Sarah about the invoice" → 🧾).
+- Phrases are matched first and replace their words: "tip run" → 🗑️, "oil change" → 🚗, "get
+  the bike running" → ⭐. Some first words are verbs here but nouns in other places: "book
+  flights" is booking, "read a good book" is reading.
+- When no keyword matches, small typing errors in long words count ("plumbr", "groceires"):
+  a letter missing, added or swapped. A changed letter does not count, because "change" is
+  not "charge". The start of a word does not count either ("super" is not "supermarket").
+- `tests/lib/tasks/icon-examples.ts` checks everyday tasks: at least 90% must get the right
+  icon, and at most 3% a wrong one. When a guess is wrong, add the task there.
+- The icon is picked when a task is added and again when its text is edited. To apply new
+  rules to old tasks, increase `COLOURS_VERSION` in `tasks/recolour.ts`. Each device then
+  guesses the icons of its open tasks again, one time.
+- Each task gets a random fluoro colour, stored on the task. A new colour is picked only when
+  the icon changes, so a new icon is easy to see. Hue and lightness vary freely. Plain orange
+  and red are not used, because they look dull next to the others, so the warm colours go
+  from golden yellow round to pinky red.
+- Some hues make an icon hard to see, for example the grey trolley on blue. White icons only
+  get dark blues and violets. A table for each emoji lists the hues to skip, measured from
+  Apple's emoji by `scripts/measure-icon-clashes.js`. Emoji that are not in the table, and ⭐,
+  can have any hue.
+- A new task's hue is at least 60° from the task below it, and its lightness is at the other
+  end of the range. Icons with few usable hues (📄 only gets blues and violets) go as far
+  away as they can.
 
 ## Visual design
 
-Calm and minimal, so the focus is on the tasks:
-
-- Inter for text and deadline badges (semibold); Inter Display bold, lowercase, for the logo
-  and bucket names (tabs on phones).
-  No monospace. (Latin subsets, bundled, work offline.)
-- **Ink accent:** the accent is the text colour itself (near-black in light mode, near-white
-  in dark). The fluoro emoji circles and the deadline badges are the only colour in the app.
-- Logo: an ink circle with a tick before "dumb tasks", matching the task icons; the favicon
-  (follows light/dark) and app icon are the same circle on its own.
-- Greyscale surfaces, corners only just rounded (4px), 1px hairlines. The lists have a
-  faint edge instead of borders, with a soft glow in dark mode only.
-- Every list is white on the light grey page. Bucket names are plain text above each list
-  on desktop; on phones the tabs are the same plain text, and the selected one has a 1px ink
-  line under it; the others are grey.
-- On desktop the page fits the window: a list taller than that scrolls inside its own panel,
-  with its "add a task" row stuck on top. Phones scroll the whole page.
-- Header icon buttons are the same faded ink as the unselected tabs.
-- Hover: header buttons darken to ink; the task icon's emoji turns into a tick (same circle).
-- Deadline badges are traffic lights: rounded pills like the icon circles, drawn as outlines
-  so they don't compete with them: green (more than a week) → yellow (this week) → red
-  (≤ 2 days). Overdue is the one filled badge: dark red with white text.
-- Dark by default and follows the system, until the user flips the sun/moon toggle in the
-  header; that choice is stored per device and applied before first paint.
+- Inter for text and deadline badges (semibold). Inter Display bold, in lowercase, for the
+  logo and the bucket names. The fonts are bundled Latin subsets, so they work offline.
+- The accent colour is the text colour: near-black in light mode and near-white in dark
+  mode. The emoji circles and the deadline badges are the only colour in the app.
+- The logo is an ink circle with a tick, then "dumb tasks". The favicon and app icon are the
+  circle on its own. The favicon follows light and dark mode.
+- Surfaces are grey, with 4px corners and 1px lines. Lists have a faint edge, not a border,
+  and a soft glow in dark mode.
+- On desktop the bucket names are plain text above each list. On phones they are tabs, and
+  the selected tab has a 1px ink line under it. The other tabs and the header buttons are
+  faded ink, and the header buttons go to full ink on hover.
+- On desktop the page fits the window, and a long list scrolls in its own panel with the
+  "add a task" row at the top. On phones the whole page scrolls.
+- Deadline badges are outlined pills, so they do not compete with the icon circles. They are
+  green for more than a week, yellow for this week and red for 2 days or less. Overdue badges
+  are filled dark red with white text.
+- The theme is dark by default and follows the system. The sun/moon button in the header
+  changes it. The choice is stored on the device and applied before the first paint.
 
 ## Data model
 
-Single document, versioned (see Versioning below):
+One document with a version (see Versioning).
 
 ```ts
 interface DataFile {
-  schemaVersion: 1;
+  schemaVersion: number;
   exportedAt: string;
   tasks: Task[];
-  memory: string;          // user-level preferences the AI has learned
-  memoryUpdatedAt: string; // for merging
+  memory: string;          // for the MCP connector: what the AI knows about the user
+  memoryUpdatedAt: string;
 }
 
 interface Task {
   id: string;              // ULID
-  text: string;            // the only user-edited field
+  text: string;            // the only field the user edits
   bucket: 'today' | 'week' | 'month' | 'icebox';
-  position: string;        // fractional index, for merge-friendly ordering
+  position: string;        // fractional index, so the order merges well
   createdAt: string;       // ISO timestamps throughout
-  bucketHistory: { bucket: string; at: string }[]; // every move; lets the AI spot tasks
-                                                   // that keep slipping. Merged by union.
-  sorted: boolean;         // false until first moved; not shown, but useful to the AI planner
+  bucketHistory: { bucket: string; at: string }[]; // each move, merged by union. For the
+                                                   // MCP connector, to see tasks that slip
+  sorted: boolean;         // false until first moved. For the MCP connector
   completedAt: string | null;
-  deletedAt: string | null;   // tombstone
+  deletedAt: string | null; // tombstone
 
-  // Derived from the text or set by the AI; never edited directly. Re-derived
-  // whenever the text is edited, replacing anything the AI set.
-  deadline: {                 // one object, so date and phrase merge as a unit
-    date: string;             // YYYY-MM-DD
-    phrase: string | null;    // phrase it was parsed from, for underlining; null if AI-set
+  // Parsed from the text again each time it changes. The MCP connector can also set them.
+  deadline: {              // one object, so the date and phrase merge together
+    date: string;          // YYYY-MM-DD
+    phrase: string | null; // the phrase to underline; null if it was not parsed
   } | null;
-  dismissedPhrases?: string[]; // phrases the user said aren't dates; parsing skips them
-  icon: string | null;        // an emoji; null: no keyword matched (shows ⭐)
-  colour: string;             // icon circle's CSS colour: random, re-picked when the icon changes
-  aiNote: string;             // context the AI keeps about this task
+  dismissedPhrases?: string[]; // phrases the user said are not dates
+  icon: string | null;     // an emoji; null if no keyword matched (shows ⭐)
+  colour: string;          // circle colour, picked again when the icon changes
+  aiNote: string;          // for the MCP connector: notes about this task
 
   fieldUpdatedAt: Record<string, string>; // per-field timestamps for merging
 }
 ```
 
-Device-only settings (never synced): sync credentials, locale override. They get their own
-`settings` table; so far it holds just `drive` (account email, access token, last sync).
+Device settings do not sync. They are in their own `settings` table: the sync service in
+use (`drive` or `webdav`) and its progress.
 
 ## Storage
 
-- IndexedDB (via Dexie) in the browser/PWA. Tables: `tasks` (indexed by bucket), `meta`
-  (synced key/values; just `memory` for now) and `settings` (device-only).
-- Request `navigator.storage.persist()` on first run; Android may otherwise evict data.
-- Once backups have a UI, nudge users without sync to export one now and then.
+- IndexedDB, through Dexie. The tables are `tasks` (indexed by bucket), `meta` (synced
+  key/values, only `memory` for now) and `settings` (device only).
+- On first run the app asks for persistent storage (`navigator.storage.persist()`). Android
+  can delete the data otherwise.
 
 ## Versioning
 
-Released apps hold real data, so stored formats are frozen: every change comes with an
-upgrade. Installed PWAs update themselves, but a device can run an old copy for a while.
+Released apps hold real data, so a change to a stored format must come with an upgrade.
+Installed apps update themselves, but a device can run an old version for some time.
 
-- **Data file** (backups and each device's synced file): `schemaVersion`, with one upgrade
-  step per version in `sync/data-file.ts`. Any change to the file's or a task's shape bumps it, even a new
-  optional field, because an older app merging a newer file would drop fields it doesn't know.
-- **Older app meets newer file: it leaves that file out.** Its changes aren't merged, but the
-  other devices' files still are, and this device's own file is still written, in the shape
-  it knows. The sync menu asks for a reload to update (Restore refuses the file and says the
-  same). A newer app reads older files, so an old device's tasks still arrive, upgraded.
-- **Local database:** Dexie versions in `db.ts`, each with an `.upgrade()` for existing rows.
-  A change to `Task` needs both this and a data-file step. If a newer copy (say, in another
-  tab) upgrades the database, an older copy reloads, or shows "updated, reload" instead of the
-  app, rather than write the old shape into it.
-- **Never roll a deploy back past a version bump**: the older app would refuse the upgraded
-  data until the next deploy. Fix forward instead.
-- Recolour-style passes over existing tasks, where the shape doesn't change, can keep using a
-  run-once flag like `refreshColoursOnce` in `tasks/recolour.ts`.
+- The data file (backups and each device's sync file) has a `schemaVersion`, with one
+  upgrade step for each version in `sync/data-file.ts`. Any change to the shape of the file
+  or a task increases it, even a new optional field, because an older app that merges a
+  newer file drops the fields it does not know.
+- An older app does not merge a newer file. It still merges the other devices' files and
+  writes its own file in the shape it knows. The sync menu says to reload to update, and
+  Restore refuses the file. A newer app upgrades older files, so an old device's tasks still
+  arrive.
+- The local database has Dexie versions in `db.ts`, each with an `.upgrade()` for the rows
+  already there. A change to `Task` needs this and a data-file step. If a newer copy of the
+  app (in another tab, for example) upgrades the database, an older copy reloads or shows
+  "updated, reload". It does not write the old shape.
+- Do not roll a deploy back past a version change. The older app would refuse the upgraded
+  data until the next deploy. Fix forward.
+- A pass over existing tasks that does not change their shape can use a run-once flag, like
+  `refreshColoursOnce` in `tasks/recolour.ts`.
 
 ## Sync
 
-Optional and pluggable. Each device has its own data file holding everything it knows, and
-writes only that one. A sync reads the files other devices changed, merges them in, and
-rewrites this device's file if that left it out of date.
+Sync is optional. Each device has its own data file with everything it knows, and writes
+only that file. A sync reads the files that other devices changed, merges them, and writes
+this device's file again if it is out of date.
 
-- **Backends:** **Google Drive first** — it's what regular people already have. WebDAV (Nextcloud, Apache) as a bonus for self-hosters who want no
-  cloud at all. One at a time per device. A backend is `pull(cursor)`, `push(json)` and
-  `removeStale(maxAge)` (`SyncBackend` in `sync/engine.ts`).
-- **Drive:** a `device-<id>.json` per install in the hidden app folder (`drive.appdata`
-  scope), never full Drive access. The id is made once per install and kept through
-  reconnects. Drive's Changes API says which files changed since the last sync, so a sync with
-  nothing to do is one small request. The file `dumb-tasks.json`, which every device shared
-  before, is ignored and deleted with the stale files; a device still on that version
-  recreates it until it updates, and its changes reach the others only once it has. The app
-  folder belongs to the OAuth client, so anything else that syncs it (e.g. an MCP connector)
-  must use the same client, as one more device with its own file.
-- **Sign-in:** Google Identity Services' popup gives a one-time code; a small Worker
-  (`worker/index.ts`, beside the static files) swaps it for a refresh token, which needs the
-  client secret, and keeps it in an HttpOnly cookie. When the hour-long access token runs out,
-  the app quietly gets a new one from the Worker, so people stay signed in until they
-  disconnect or revoke access. "Sign in again" shows only if that fails, and only takes the
-  same account: switching accounts means disconnecting first, so this device's tasks never
-  merge into another account by accident. A new token is checked to be the same account's
-  while the sync starts reading; nothing is written, deleted or taken in until it passes. No tasks pass
-  through the Worker. Disconnect forgets this device's cookie without revoking Google's grant,
-  which would sign out every device.
-- **WebDAV:** the same `device-<id>.json` files, in a `dumb-tasks` folder inside the folder the
-  user gives, made on first push. The browser talks to the server directly, with Basic auth
-  (ideally an app password), so the server has to allow the app's origin (CORS; setup in the
-  README). Nothing goes through the Worker: a proxy would reach hosted servers that can't be
-  configured, but would see passwords and tasks. A sync lists the folder (one `PROPFIND`) and
-  downloads only files whose ETag changed since the last; the cursor is those ETags. The
-  address, username and password are stored on the device like the Drive token. A wrong
-  password shows "Sign in again" with a password field; a different server or user means
-  disconnecting first.
-- **Merge:** last-write-wins **per field** using `fieldUpdatedAt`, so editing text on one
-  device and moving the task on another both survive. Deletes are tombstones. (Built, and
-  already used by backup import.) An edit is stamped just after the task's last edit when
-  this device's clock is behind the one that made it, so an edit made after seeing another
-  always wins.
-- **Concurrency:** none needed. Each file has one writer, so no write can overwrite another
-  device's. Taking in another device's change rewrites this device's file too, so every file
-  soon holds every change, and any one can be lost without losing data.
-- **Push only when needed:** a hash of what this device's file holds is kept, and the file is
-  written only when local data no longer matches it.
-- **When:** on app open, when the app comes into view, is left or gets focus, as soon as a
-  task is added, 3 s after other edits (so a run of moves goes in one push), every minute
-  while in view, and on coming back online. While an edit waits, the sync menu says
-  "Syncing…", not the time of the last sync.
-- **Stale files:** once per app open, alongside the first pull, other devices' files
-  unchanged for 90 days (by Drive's clock, measured back from the newest file) are deleted
-  and left out of what the pull takes in: their changes are in every other file by then, and
-  they may still hold tasks the others have dropped since. On WebDAV, one listing serves
-  both. A device whose own file went is told by the same check and writes it again.
-- **Tombstone purge:** deleted and completed tasks go for good 90 days after the delete or
-  completion.
-- **Coming back after 90 days away:** the other devices may have purged tasks this one never
-  heard were deleted or completed. Its first sync back reads every file but drops nothing,
-  so those tasks come back on every device. Telling them from tasks the others never had
-  needs more bookkeeping than this rare case is worth, and a wrong guess would lose a task.
-- **First sync, with demo tasks:** reads every file and drops the demo tasks no file has,
-  untouched since they were added, so an account with data replaces them. Skipped when no
-  file exists, or when any file couldn't be read.
-- **A file that can't be read** (from a newer version, or damaged) is skipped, and the rest
-  still sync; the sync menu says so. A newer-version file is read again once this device has
-  updated.
-- **Google verification:** brand verification passed and the OAuth app is published
-  (October 2026), so anyone can connect Drive.
+- Google Drive is the main backend, because most people already have it. WebDAV (Nextcloud,
+  Apache) is for self-hosters who do not want a cloud service. A device uses one at a time.
+  A backend has `pull(cursor)`, `push(json)` and `removeStale(maxAge)` (`SyncBackend` in
+  `sync/engine.ts`).
+- **Drive:** one `device-<id>.json` for each install, in the hidden app folder
+  (`drive.appdata` scope), so the app never gets full Drive access. The id is made once for
+  each install and stays the same when you connect again. Drive's Changes API tells which
+  files changed since the last sync, so a sync with nothing to do is one small request.
+  Before, all devices shared one file, `dumb-tasks.json`. The app now ignores it and deletes
+  it with the stale files. A device that still runs that version makes it again until it
+  updates, and its changes reach the other devices only after that. The app folder belongs
+  to the OAuth client, so an MCP connector must use the same client, as one more device with
+  its own file.
+- **Sign-in:** the Google Identity Services popup gives a one-time code. A small Worker
+  (`worker/index.ts`) exchanges it for a refresh token, which needs the client secret, and
+  keeps it in an HttpOnly cookie. When the access token expires after an hour, the app gets
+  a new one from the Worker, so users stay signed in until they disconnect or remove access.
+  "Sign in again" shows only if that fails, and it accepts only the same account. To change
+  accounts you must disconnect first, so this device's tasks never merge into a different
+  account by accident. While a sync starts to read, the app checks that a new token is for
+  the same account, and it writes or deletes nothing until the check passes. Tasks never go
+  through the Worker. Disconnect removes this device's cookie but not Google's access,
+  because that would sign out all devices.
+- **WebDAV:** the same `device-<id>.json` files, in a `dumb-tasks` folder inside the folder
+  the user gives. The app makes it on the first push. The browser connects to the server
+  directly with Basic auth (an app password is best), so the server must allow the app's
+  origin (CORS, see the README). Nothing goes through the Worker. A proxy could reach hosted
+  servers that cannot be set up for CORS, but it would see passwords and tasks. A sync lists
+  the folder (one `PROPFIND`) and downloads only the files whose ETag changed. The cursor is
+  those ETags. The address, username and password are stored on the device, like the Drive
+  token. A wrong password shows "Sign in again" with a password field. To change server or
+  user, disconnect first.
+- **Merge:** last write wins for each field, from `fieldUpdatedAt`. If you edit the text on
+  one device and move the task on another, both changes stay. Deletes are tombstones. Backup
+  restore uses the same merge. If this device's clock is behind the device that made a
+  task's last edit, a new edit gets a time just after it, so an edit made after you saw
+  another one always wins.
+- Each file has one writer, so no locking is needed and no device overwrites another
+  device's file. A change taken in from another device is also written to this device's
+  file. Soon every file has every change, and losing any one file loses no data.
+- The app keeps a hash of what this device's file holds, and writes the file only when the
+  local data no longer matches.
+- **When:** when the app opens, comes into view, gets focus or is left. Also as soon as a
+  task is added, 3 s after other edits (so a set of moves goes in one push), every minute
+  while in view, and when the device comes back online. While an edit waits, the sync menu
+  shows "Syncing…" in place of the last sync time.
+- **Stale files:** once each time the app opens, with the first pull, the app deletes other
+  devices' files that did not change for 90 days (by Drive's clock, counted back from the
+  newest file). The pull also ignores them. Their changes are in all the other files by
+  then, and they can still hold tasks that the others removed since. On WebDAV one listing
+  does both. If a device's own file was deleted, the same check tells it, and it writes the
+  file again.
+- Deleted and completed tasks are removed for good 90 days after the delete or completion.
+- A device that comes back after more than 90 days can have tasks that the other devices
+  already deleted or completed and then removed. Its first sync reads all files and removes
+  nothing, so those tasks come back on all devices. To tell them apart from new tasks would
+  need more records than this rare case is worth, and a wrong guess would lose a task.
+- On the first sync, the app removes the demo tasks that no file has and that the user did
+  not change, so an account that has data replaces them. It does not do this when there are
+  no files, or when a file could not be read.
+- A file that cannot be read (from a newer version, or damaged) is skipped, and the other
+  files still sync. The sync menu says so. After this device updates, it reads the
+  newer-version file again.
+- Google brand verification passed and the OAuth app is published (October 2026), so anyone
+  can connect Drive.
 
-## Platforms and distribution
+## Platforms
 
-- PWA, served as static files plus the small sign-in Worker (Cloudflare Workers). Install
-  steps for each browser in the app.
-- Self-hosting: a Docker image serving the static app (WebDAV sync only), or the same
-  Cloudflare setup with your own Google client (README).
+- Web app (PWA): static files and the small sign-in Worker, on Cloudflare Workers.
+- Self-hosting: a Docker image with the static files (WebDAV sync only), or the same
+  Cloudflare setup with your own Google client. The README has the steps.
 
 ## Stack
 
@@ -312,31 +297,29 @@ emoji) · fractional-indexing · ulid · vite-plugin-pwa · Vitest · Inter / In
 
 ## Milestones
 
-1. ~~**Local PWA**~~ — four buckets, add / move / reorder / complete / edit, deadline parsing,
-   keyword icons, JSON export/import (UI removed for now), installable and offline. *Built.*
-2. ~~**Redesign**~~ — industrial look, light/dark theme switch. *Built.*
-3. ~~**Sync**~~ — Google Drive backend on top of the existing merge logic, plus a settings place
-   for sync and backup export / import. *Built.* WebDAV backend too, pulled forward from
-   Release. *Built.*
-4. **Release** — free, as a web app. Docker image (WebDAV sync only), self-host docs for
-   Cloudflare, install steps for each browser, feedback and donate links.
+1. Local PWA: built.
+2. Redesign: built. Industrial look, with light and dark themes.
+3. Sync: built. Google Drive and WebDAV, and backup and restore.
+4. Release: a free web app. Docker image, Cloudflare self-host steps, install steps for each
+   browser, and feedback and donate links.
 
-## Maybe later
+## Goals for later
 
-- **MCP connector:** optional, so the user's own AI client can read and sort their list.
-  Nothing in the app itself. (A full design is in git history.)
-- **Play Store:** a TWA wrapper around the web app.
+- An MCP connector, so an AI client can read and sort the tasks.
+- Play Store, with a TWA wrapper.
 
 ## Non-goals
 
-- Groups, tags, priority fields, multiple task fields.
-- Automatic bucket movement.
-- **Recurring tasks.** If it recurs, it belongs in your calendar, not your to-do list.
+- Groups, tags, priorities, or more fields on a task.
+- Automatic moves between buckets.
+- Recurring tasks. They belong in a calendar.
 - Languages other than English.
-- AI in the app: no chat, no local models, no API keys.
-- Collaboration/sharing, user accounts of our own.
+- Sharing, or user accounts of our own.
 
 ## Open questions
 
-- Completed tasks: a collapsible "done today" section? Undo window?
-- Allow a manual icon override (e.g. long-press), or keep it strictly automatic?
+- A section for tasks completed today? Time to undo a completion?
+- Let the user change the icon, for example with a long-press?
+- Swipe to delete on touch screens?
+- A setting for day and month order?
+- Remind users who do not sync to save a backup from time to time?
