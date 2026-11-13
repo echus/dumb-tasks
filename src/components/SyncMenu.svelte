@@ -68,16 +68,22 @@
       <InstallSection />
 
       <footer>
-        <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
         <!-- Self-hosted builds (no Drive) have no privacy page (see vite.config.ts), and their
              feedback and donations go through GitHub, as the README says -->
         {#if sync.driveAvailable}
-          <span class="links">
-            <a href="mailto:contact@dumbtasks.app?subject=Dumb%20Tasks%20feedback">Feedback</a>
-            <a href="https://ko-fi.com/echus" target="_blank" rel="noopener">Donate</a>
-            <a href="/privacy">Privacy</a>
-          </span>
+          <a class="donate" href="https://ko-fi.com/echus" target="_blank" rel="noopener">
+            😴 Buy me a nap
+          </a>
         {/if}
+        <div class="small-print">
+          <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
+          {#if sync.driveAvailable}
+            <span class="links">
+              <a href="mailto:contact@dumbtasks.app?subject=Dumb%20Tasks%20feedback">Feedback</a>
+              <a href="/privacy">Privacy</a>
+            </span>
+          {/if}
+        </div>
       </footer>
     </div>
   {/if}
@@ -261,20 +267,37 @@
     cursor: default;
   }
 
-  /* Small print under the sections: which version this is (to check a device has updated),
-     where to send feedback or a donation, and where Play and Google expect a privacy link
-     (only on the public instance) */
-  /* On a narrow phone the links wrap under the version as a whole, not word by word */
+  /* Under the sections: a donation link, then small print with which version this is (to
+     check a device has updated), where to send feedback, and where Play and Google expect a
+     privacy link (the links only on the public instance) */
   footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--glow-ring);
+    color: var(--muted);
+    font-size: 0.8em;
+  }
+
+  /* The one thing in the footer meant to be seen, so it is in text colour and bold */
+  footer .donate {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 1.15em;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  footer .donate:hover {
+    color: var(--accent);
+  }
+
+  /* On a narrow phone the links wrap under the version as a whole, not word by word */
+  .small-print {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 4px 14px;
     white-space: nowrap;
-    padding: 10px 16px;
-    border-top: 1px solid var(--glow-ring);
-    color: var(--muted);
-    font-size: 0.8em;
   }
 
   .links {

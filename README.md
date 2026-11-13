@@ -209,7 +209,7 @@ Code outside `src/lib/` imports it as `$lib/...`.
 
 Open an issue on GitHub, or send an email to contact@dumbtasks.app.
 
-To support the app, [buy a nap on Ko-fi](https://ko-fi.com/echus).
+If you like the app, [buy me a nap on Ko-fi](https://ko-fi.com/echus) 😴
 
 ## License
 
