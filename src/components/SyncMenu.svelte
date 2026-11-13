@@ -69,9 +69,13 @@
 
       <footer>
         <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
-        <!-- Self-hosted builds (no Drive) have no privacy page: see vite.config.ts -->
+        <!-- Self-hosted builds (no Drive) have no privacy page (see vite.config.ts), and their
+             feedback goes to GitHub, as the README says -->
         {#if sync.driveAvailable}
-          <a href="/privacy">Privacy</a>
+          <span class="links">
+            <a href="mailto:contact@dumbtasks.app?subject=Dumb%20Tasks%20feedback">Feedback</a>
+            <a href="/privacy">Privacy</a>
+          </span>
         {/if}
       </footer>
     </div>
@@ -257,7 +261,8 @@
   }
 
   /* Small print under the sections: which version this is (to check a device has updated),
-     and where Play and Google expect a privacy link (only on the public instance) */
+     where to send feedback, and where Play and Google expect a privacy link (only on the
+     public instance) */
   footer {
     display: flex;
     justify-content: space-between;
@@ -265,6 +270,11 @@
     border-top: 1px solid var(--glow-ring);
     color: var(--muted);
     font-size: 0.8em;
+  }
+
+  .links {
+    display: flex;
+    gap: 14px;
   }
 
   footer a {

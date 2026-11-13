@@ -205,6 +205,10 @@ Code outside `src/lib/` imports it as `$lib/...`.
   - `servers/`: the WebDAV servers for `npm run test:servers` and `npm run test:browser`
   - `browser/`: the tests for `npm run test:browser`: tasks, offline, drag and drop, sync
 
+## Feedback
+
+Open an issue on GitHub, or send an email to contact@dumbtasks.app.
+
 ## License
 
 Copyright © 2026 Varvara Efremova, under the [AGPL-3.0](LICENSE). The license does not cover the
