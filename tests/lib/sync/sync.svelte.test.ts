@@ -86,6 +86,31 @@ describe('a password the server turns down', () => {
   });
 });
 
+describe('a local edit', () => {
+  const synced = (text: string) => [...dav.files.values()].some((f) => f.content.includes(text));
+
+  it('is pushed straight away when it adds a task', async () => {
+    const tab = await connectedTab();
+    const { addTask } = await import('$lib/tasks/tasks'); // this tab's
+    await addTask('buy milk');
+    expect(tab.sync.changesWaiting).toBe(false);
+    // Not the 3 s other edits wait, only the gap WebDAV leaves between writes
+    await vi.waitFor(() => expect(synced('buy milk')).toBe(true), { timeout: 2_500 });
+  });
+
+  it('shows as syncing while it waits for the next sync', async () => {
+    const tab = await connectedTab();
+    const { addTask, editText } = await import('$lib/tasks/tasks');
+    const id = (await addTask('buy milk'))!;
+    await tab.syncNow();
+    await editText(id, 'buy oat milk');
+    expect(tab.sync.changesWaiting).toBe(true);
+    await tab.syncNow();
+    expect(tab.sync.changesWaiting).toBe(false);
+    expect(synced('buy oat milk')).toBe(true);
+  });
+});
+
 describe('a build without Google Drive', () => {
   it('ignores Drive settings saved by a build with it, until a WebDAV connect replaces them', async () => {
     expect(google.clientId).toBeUndefined();

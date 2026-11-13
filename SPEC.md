@@ -274,8 +274,10 @@ rewrites this device's file if that left it out of date.
   soon holds every change, and any one can be lost without losing data.
 - **Push only when needed:** a hash of what this device's file holds is kept, and the file is
   written only when local data no longer matches it.
-- **When:** on app open, when the app comes into view, is left or gets focus, 3 s after
-  edits, every minute while in view, and on coming back online.
+- **When:** on app open, when the app comes into view, is left or gets focus, as soon as a
+  task is added, 3 s after other edits (so a run of moves goes in one push), every minute
+  while in view, and on coming back online. While an edit waits, the sync menu says
+  "Syncing…", not the time of the last sync.
 - **Stale files:** once per app open, alongside the first pull, other devices' files
   unchanged for 90 days (by Drive's clock, measured back from the newest file) are deleted
   and left out of what the pull takes in: their changes are in every other file by then, and

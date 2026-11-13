@@ -108,6 +108,19 @@ describe('the WebDAV section', () => {
     ]);
   });
 
+  it('says Syncing, not the last sync time, while an edit waits to sync', async () => {
+    const tab = await openMenu();
+    const { addTask, editText } = await import('$lib/tasks/tasks'); // this tab's
+    const id = (await addTask('buy milk'))!;
+    connectWithForm();
+    // The push may wait for the gap WebDAV leaves between writes
+    await vi.waitFor(() => expect(text()).toContain('Synced just now'), { timeout: 3_000 });
+    await editText(id, 'buy oat milk');
+    await shows('Syncing');
+    await tab.syncNow();
+    await shows('Synced just now');
+  });
+
   it('keeps the form, with the error in it, when the server turns down the sign-in', async () => {
     await openMenu();
     connectWithForm('wrong');

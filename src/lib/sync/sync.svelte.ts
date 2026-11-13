@@ -15,9 +15,10 @@ import {
 import { serverUrl, WebDavBackend } from './webdav';
 
 // When and how the app syncs, with Google Drive or a WebDAV server, and the state the sync
-// menu shows. Syncs on open, when the app comes back into view or its window gets focus, a
-// few seconds after each edit, and every minute. Never blocks the app: everything is saved
-// locally first. A sync with nothing to do is a single small request.
+// menu shows. Syncs on open, when the app comes back into view or its window gets focus, as
+// soon as a task is added, a few seconds after other edits, and every minute. Never blocks
+// the app: everything is saved locally first. A sync with nothing to do is a single small
+// request.
 
 const EDIT_DELAY = 3_000;
 const INTERVAL = 60_000;
@@ -29,6 +30,7 @@ export const sync = $state({
   service: null as Settings['service'] | null, // null: not syncing
   account: '', // the Google email, or the WebDAV user and server
   syncing: false,
+  changesWaiting: false, // an edit waits for the next sync to start
   needsSignIn: false, // the service signed this device out: signing in again fixes it
   needsUpdate: false, // a device synced from a newer version: a reload fixes it
   error: '',
@@ -195,6 +197,7 @@ async function runOnce(retry = true): Promise<void> {
 /** Syncs now, or straight after the sync already running (which may have missed an edit). */
 export function syncNow(): Promise<void> {
   clearTimeout(editTimer);
+  sync.changesWaiting = false; // this sync, or the one after the running one, takes them
   if (running) {
     again = true;
     return running;
@@ -311,9 +314,11 @@ export async function startSync() {
   settings = await loadSettings();
   show();
 
-  onLocalChange(() => {
+  onLocalChange((now) => {
     if (!settings) return;
+    if (now) return void syncNow();
     clearTimeout(editTimer);
+    sync.changesWaiting = true;
     editTimer = setTimeout(syncNow, EDIT_DELAY);
   });
 

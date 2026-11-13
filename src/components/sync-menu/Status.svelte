@@ -18,7 +18,7 @@
   <p>The server did not accept the saved password. Enter the password again to continue to sync.</p>
 {:else if sync.needsSignIn}
   <p>Google signed out this device. Sign in again to continue to sync.</p>
-{:else if sync.syncing}
+{:else if sync.syncing || sync.changesWaiting}
   <p>Syncing…</p>
 {:else if sync.lastSyncedAt}
   <p>Synced {ago(sync.lastSyncedAt)}</p>
