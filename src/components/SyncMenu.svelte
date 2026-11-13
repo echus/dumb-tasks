@@ -72,7 +72,7 @@
              feedback and donations go through GitHub, as the README says -->
         {#if sync.driveAvailable}
           <a class="donate" href="https://ko-fi.com/echus" target="_blank" rel="noopener">
-            😴 Buy me a nap
+            Buy me a nap 😴
           </a>
         {/if}
         <div class="small-print">
@@ -277,18 +277,23 @@
     font-size: 0.8em;
   }
 
-  /* The one thing in the footer meant to be seen, so it is in text colour and bold */
+  /* The one solid button in the app, in ink colours swapped (dark on the light theme, light on
+     the dark one), so it stands apart from the outlined buttons in the sections */
   footer .donate {
     display: inline-block;
-    margin-bottom: 8px;
-    color: var(--text);
-    font-size: 1.15em;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 1.125em; /* the same size as the buttons above */
     font-weight: 600;
     text-decoration: none;
   }
 
   footer .donate:hover {
-    color: var(--accent);
+    background: color-mix(in srgb, var(--text) 85%, var(--bg));
+    color: var(--bg);
   }
 
   /* On a narrow phone the links wrap under the version as a whole, not word by word */
