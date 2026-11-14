@@ -125,7 +125,7 @@ The server must:
 ### Connect the app
 
 1. In the app, open the sync menu.
-2. Select *Connect WebDAV*.
+2. Select *WebDAV*, then *Connect WebDAV*.
 3. Enter the folder address, your username and your password. On Nextcloud, use the app password.
 4. Select *Connect*.
 

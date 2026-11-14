@@ -4,6 +4,7 @@
   import BucketName from './components/BucketName.svelte';
   import HistoryButtons from './components/HistoryButtons.svelte';
   import InstallPill from './components/InstallPill.svelte';
+  import PageFooter from './components/PageFooter.svelte';
   import SyncMenu from './components/SyncMenu.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { db } from '$lib/db';
@@ -69,7 +70,6 @@
   <p class="intro">
     Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync through
     {sync.driveAvailable ? 'Google Drive or ' : ''}your WebDAV server.
-    {#if sync.driveAvailable}<a href="/privacy">Privacy</a>{/if}
   </p>
   <!-- How to install it, while the app is new: afterwards it's in the sync menu -->
   <InstallPill />
@@ -97,6 +97,8 @@
     <BucketList {bucket} active={activeTab === bucket} tasks={grouped[bucket]} />
   {/each}
 </main>
+
+<PageFooter />
 
 <style>
   header {
@@ -141,18 +143,9 @@
     stroke-width: 2;
   }
 
-  /* Also where Google expects the privacy link on the homepage */
   .intro {
     margin: 4px 0 8px;
     color: var(--muted);
-  }
-
-  .intro a {
-    color: inherit;
-  }
-
-  .intro a:hover {
-    color: var(--text);
   }
 
   /* Tabs stay reachable while scrolling a long list */
@@ -213,10 +206,13 @@
     color: var(--text);
   }
 
+  /* Takes the room left over, which keeps the footer at the bottom of the screen */
   main {
+    flex: 1;
     display: grid;
     gap: 20px;
-    padding: 0 0 96px;
+    align-content: start;
+    padding: 0 0 64px;
   }
 
   @media (min-width: 1100px) {
@@ -224,15 +220,14 @@
       display: none;
     }
 
-    /* Takes the rest of the window; lists taller than that scroll inside it */
+    /* Lists taller than the window scroll inside it */
     main {
-      flex: 1;
       min-height: 0;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       grid-template-rows: minmax(0, 1fr);
       gap: 16px;
       align-items: start;
-      padding: 8px 0 24px;
+      padding: 8px 0 16px;
     }
   }
 </style>

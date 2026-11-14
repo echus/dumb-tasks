@@ -45,6 +45,8 @@ const flushSync = () => svelte.flushSync();
 const text = () => target.querySelector('[role=dialog]')?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
 const buttons = () => [...target.querySelectorAll('button')];
+const pills = () => [...target.querySelectorAll('[role=tab]')].map((p) => p.textContent?.trim());
+const chosen = () => target.querySelector('[role=tab][aria-selected=true]')?.textContent?.trim();
 const hasButton = (name: string) => buttons().some((b) => b.textContent?.trim() === name);
 
 function click(name: string) {
@@ -91,7 +93,7 @@ afterEach(async () => {
   await clearDevice();
 });
 
-describe('the WebDAV section', () => {
+describe('the WebDAV option', () => {
   it('connects from the form, then clears and closes it', async () => {
     await openMenu();
     connectWithForm();
@@ -126,7 +128,7 @@ describe('the WebDAV section', () => {
     connectWithForm('wrong');
     await shows('The WebDAV server did not accept the username or password.');
     expect(target.querySelector('form')).not.toBeNull();
-    expect(text()).toContain('WebDAV sync Folder address');
+    expect(chosen()).toBe('WebDAV');
   });
 
   it('asks for the password again when the server turns it down, and signs in with it', async () => {
@@ -168,15 +170,12 @@ describe('the WebDAV section', () => {
   });
 });
 
-describe('the Google Drive section', () => {
+describe('the Google Drive option', () => {
   it('is only there in a build with Drive', async () => {
     await openMenu();
     expect(text()).not.toContain('Google Drive');
-
-    google.clientId = 'client-id';
-    await openMenu();
-    expect(text()).toContain('Google Drive sync');
-    expect(hasButton('Connect Google Drive')).toBe(true);
+    expect(pills()).toEqual(['WebDAV', 'Manual']);
+    expect(chosen()).toBe('WebDAV');
   });
 
   it('signs in to Drive again after Google signed this device out', async () => {
@@ -192,5 +191,27 @@ describe('the Google Drive section', () => {
     click('Sign in again');
     await shows('Synced just now');
     expect(google.signIns).toEqual([undefined, 'me@example.com']);
+  });
+});
+
+describe('the sync section', () => {
+  it('has a pill for each way to keep tasks, and opens on Drive', async () => {
+    google.clientId = 'client-id';
+    await openMenu();
+    expect(pills()).toEqual(['Google Drive', 'WebDAV', 'Manual']);
+    expect(chosen()).toBe('Google Drive');
+
+    click('Manual');
+    expect(chosen()).toBe('Manual');
+    expect(hasButton('Save backup')).toBe(true);
+    expect(hasButton('Connect Google Drive')).toBe(false);
+  });
+
+  it('opens on the connected service', async () => {
+    google.clientId = 'client-id';
+    const tab = await openMenu();
+    await tab.connectWebDav(dav.root, dav.username, dav.password);
+    await shows('Synced just now'); // the first sync done, so it does not run into the next test
+    expect(chosen()).toBe('WebDAV');
   });
 });

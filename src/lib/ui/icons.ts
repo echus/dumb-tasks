@@ -15,11 +15,12 @@ export { default as moon } from '@phosphor-icons/core/assets/fill/moon-fill.svg?
 export { default as undo } from '@phosphor-icons/core/assets/bold/arrow-u-up-left-bold.svg?raw';
 export { default as sync } from '@phosphor-icons/core/assets/bold/arrows-clockwise-bold.svg?raw';
 export { default as redo } from '@phosphor-icons/core/assets/bold/arrow-u-up-right-bold.svg?raw';
-export { default as download } from '@phosphor-icons/core/assets/bold/download-simple-bold.svg?raw';
-export { default as drive } from '@phosphor-icons/core/assets/bold/google-drive-logo-bold.svg?raw';
-export { default as server } from '@phosphor-icons/core/assets/bold/hard-drives-bold.svg?raw';
 export { default as enter } from '@phosphor-icons/core/assets/bold/arrow-elbow-down-left-bold.svg?raw';
 export { default as install } from '@phosphor-icons/core/assets/bold/device-mobile-bold.svg?raw';
+export { default as heart } from '@phosphor-icons/core/assets/bold/heart-bold.svg?raw';
+export { default as info } from '@phosphor-icons/core/assets/bold/info-bold.svg?raw';
+export { default as feedback } from '@phosphor-icons/core/assets/bold/envelope-simple-bold.svg?raw';
+export { default as privacy } from '@phosphor-icons/core/assets/bold/lock-simple-bold.svg?raw';
 
 // Phosphor's arrow-right with the shaft stretched, so it's 1.5× as wide
 const longArrow =

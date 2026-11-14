@@ -1,21 +1,16 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import BackupSection from './sync-menu/BackupSection.svelte';
-  import DriveSection from './sync-menu/DriveSection.svelte';
   import InstallSection from './sync-menu/InstallSection.svelte';
-  import WebDavSection from './sync-menu/WebDavSection.svelte';
+  import SyncSection from './sync-menu/SyncSection.svelte';
   import { loadGoogle } from '$lib/sync/google-auth';
   import { sync } from '$lib/sync/sync.svelte';
   import * as ui from '$lib/ui/icons';
   import { menu as shared } from '$lib/ui/state.svelte';
 
-  // The sync and backup menu: a button in the header, and a panel with a section for each
-  // service, the backup and installing the app (sync-menu/), and which version this is
+  // The sync and backup menu: a button in the header, and a panel with a section for sync
+  // and backup, one for installing the app (sync-menu/) and one for donations
 
   let menu: HTMLElement;
-  // The service last tried, so a failed connect shows its error in that service's section
-  let tried = $state<'drive' | 'webdav' | null>(null);
-  const errorIn = $derived(sync.error ? (sync.service ?? tried) : null);
 
   const connected = $derived(sync.service !== null);
   const service = $derived(sync.service === 'webdav' ? 'WebDAV' : 'Google Drive');
@@ -60,37 +55,17 @@
 
   {#if shared.open}
     <div class="panel" role="dialog" aria-label="Sync, backup and install">
-      {#if sync.driveAvailable}
-        <DriveSection showError={errorIn === 'drive'} ontry={() => (tried = 'drive')} />
-      {/if}
-      <WebDavSection showError={errorIn === 'webdav'} ontry={() => (tried = 'webdav')} />
-      <BackupSection />
+      <SyncSection />
       <InstallSection />
-
-      <footer>
-        <!-- Self-hosted builds (no Drive) have no privacy page (see vite.config.ts), and their
-             feedback and donations go through GitHub, as the README says -->
-        {#if sync.driveAvailable}
-          <a
-            class="donate"
-            href="https://ko-fi.com/echus"
-            target="_blank"
-            rel="noopener"
-            title="Donate on Ko-fi"
-          >
+      <!-- Self-hosted builds (no Drive): donations go through GitHub, as the README says -->
+      {#if sync.driveAvailable}
+        <section>
+          <h2><span class="icon"><Icon svg={ui.heart} size={14} /></span>Like this app?</h2>
+          <a class="action donate" href="https://ko-fi.com/echus" target="_blank" rel="noopener" title="Donate on Ko-fi">
             Buy me a nap 😴
           </a>
-        {/if}
-        <div class="small-print">
-          <span>version {__COMMIT__}{import.meta.env.DEV ? ' (dev)' : ''}</span>
-          {#if sync.driveAvailable}
-            <span class="links">
-              <a href="mailto:contact@dumbtasks.app?subject=Dumb%20Tasks%20feedback">Feedback</a>
-              <a href="/privacy">Privacy</a>
-            </span>
-          {/if}
-        </div>
-      </footer>
+        </section>
+      {/if}
     </div>
   {/if}
 </div>
@@ -273,54 +248,9 @@
     cursor: default;
   }
 
-  /* Under the sections: a donation link, then small print with which version this is (to
-     check a device has updated), where to send feedback, and where Play and Google expect a
-     privacy link (the links only on the public instance) */
-  footer {
-    padding: 10px 16px;
-    border-top: 1px solid var(--glow-ring);
-    color: var(--muted);
-    font-size: 0.8em;
-  }
-
-  /* Sized like the buttons in the sections (.action), but filled grey, not outlined, so it
-     reads as something apart from them */
-  footer .donate {
+  /* A link that looks like the buttons (.action) */
+  .donate {
     display: inline-block;
-    margin-bottom: 10px;
-    padding: 6px 12px;
-    border-radius: var(--radius);
-    background: var(--donate-fill);
-    color: var(--text);
-    font-size: 1.125em; /* the same size as the buttons above */
-    font-weight: 600;
     text-decoration: none;
-  }
-
-  footer .donate:hover {
-    background: color-mix(in srgb, var(--donate-fill) 85%, var(--muted));
-    color: var(--text);
-  }
-
-  /* On a narrow phone the links wrap under the version as a whole, not word by word */
-  .small-print {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 4px 14px;
-    white-space: nowrap;
-  }
-
-  .links {
-    display: flex;
-    gap: 14px;
-  }
-
-  footer a {
-    color: inherit;
-  }
-
-  footer a:hover {
-    color: var(--text);
   }
 </style>

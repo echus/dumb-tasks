@@ -1,10 +1,9 @@
 <script lang="ts">
-  import Icon from '../Icon.svelte';
   import { exportData, importData, parseDataFile } from '$lib/sync/data-file';
   import { localChanged } from '$lib/sync/local-changes';
-  import * as ui from '$lib/ui/icons';
 
-  // Save all tasks to a file, or restore them from one: merged in, like a sync
+  // The manual option of the sync section: save all tasks to a file, or restore them from
+  // one, merged in like a sync
 
   let fileInput = $state<HTMLInputElement>();
   let message = $state('');
@@ -33,14 +32,12 @@
   }
 </script>
 
-<section>
-  <h2><span class="icon"><Icon svg={ui.download} size={14} /></span>Backup</h2>
-  <div class="actions">
-    <button class="action" onclick={download}>Save backup</button>
-    <button class="action" onclick={() => fileInput?.click()}>Restore</button>
-  </div>
-  <input type="file" accept=".json,application/json" hidden bind:this={fileInput} onchange={upload} />
-  {#if message}
-    <p class="result">{message}</p>
-  {/if}
-</section>
+<p>Save your tasks to a file, or restore them from one.</p>
+<div class="actions">
+  <button class="action" onclick={download}>Save backup</button>
+  <button class="action" onclick={() => fileInput?.click()}>Restore</button>
+</div>
+<input type="file" accept=".json,application/json" hidden bind:this={fileInput} onchange={upload} />
+{#if message}
+  <p class="result">{message}</p>
+{/if}
