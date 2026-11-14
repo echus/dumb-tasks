@@ -35,6 +35,9 @@
      a faint wash inside a bright edge; on white, the wash alone */
   --highlight: color-mix(in srgb, var(--due-near) 18%, transparent);
   --highlight-edge: var(--due-near);
+  /* The grey fill of the donate button. A faint one disappears on dark, so it is stronger
+     here than on white */
+  --donate-fill: color-mix(in srgb, var(--muted) 26%, transparent);
 
   /* A faint light edge and haze around the panels */
   --glow-ring: rgb(255 255 255 / 0.14);
@@ -79,6 +82,7 @@
     --due-soon-ink: color-mix(in srgb, var(--due-soon) 80%, black);
     --highlight: color-mix(in srgb, var(--due-near) 40%, transparent);
     --highlight-edge: transparent;
+    --donate-fill: color-mix(in srgb, var(--muted) 12%, transparent);
     --glow-ring: rgb(0 0 0 / 0.1);
     --glow: transparent; /* no shadow on white: the edge is enough */
     --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));
@@ -103,6 +107,7 @@
   --due-soon-ink: color-mix(in srgb, var(--due-soon) 80%, black);
   --highlight: color-mix(in srgb, var(--due-near) 40%, transparent);
   --highlight-edge: transparent;
+  --donate-fill: color-mix(in srgb, var(--muted) 12%, transparent);
   --glow-ring: rgb(0 0 0 / 0.1);
   --glow: transparent; /* no shadow on white: the edge is enough */
   --icon-quiet: color-mix(in srgb, var(--muted) 75%, var(--bg));

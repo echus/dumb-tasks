@@ -71,7 +71,13 @@
         <!-- Self-hosted builds (no Drive) have no privacy page (see vite.config.ts), and their
              feedback and donations go through GitHub, as the README says -->
         {#if sync.driveAvailable}
-          <a class="donate" href="https://ko-fi.com/echus" target="_blank" rel="noopener">
+          <a
+            class="donate"
+            href="https://ko-fi.com/echus"
+            target="_blank"
+            rel="noopener"
+            title="Donate on Ko-fi"
+          >
             Buy me a nap 😴
           </a>
         {/if}
@@ -277,24 +283,23 @@
     font-size: 0.8em;
   }
 
-  /* The one solid button in the app, in ink colours swapped (dark on the light theme, light on
-     the dark one), so it stands apart from the outlined buttons in the sections */
+  /* Sized like the buttons in the sections (.action), but filled grey, not outlined, so it
+     reads as something apart from them */
   footer .donate {
     display: inline-block;
     margin-bottom: 10px;
     padding: 6px 12px;
     border-radius: var(--radius);
-    /* Softened a little towards the page, so it is not a block of solid black */
-    background: color-mix(in srgb, var(--text) 75%, var(--bg));
-    color: var(--bg);
+    background: var(--donate-fill);
+    color: var(--text);
     font-size: 1.125em; /* the same size as the buttons above */
     font-weight: 600;
     text-decoration: none;
   }
 
   footer .donate:hover {
-    background: color-mix(in srgb, var(--text) 65%, var(--bg));
-    color: var(--bg);
+    background: color-mix(in srgb, var(--donate-fill) 85%, var(--muted));
+    color: var(--text);
   }
 
   /* On a narrow phone the links wrap under the version as a whole, not word by word */
