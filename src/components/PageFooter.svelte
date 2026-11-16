@@ -14,7 +14,7 @@
 </script>
 
 <footer>
-  <span>dumb tasks is made by <a href="https://echus.co" target="_blank" rel="noopener">echus.co</a> instead of real work</span>
+  <span>dumb tasks is a product of procrastination by <a href="https://echus.co" target="_blank" rel="noopener">echus.co</a></span>
   {#if sync.driveAvailable}
     <span class="links">
       <a href="mailto:contact@dumbtasks.app?subject=Dumb%20Tasks%20feedback"
