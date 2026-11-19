@@ -50,7 +50,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--circle) 22%, var(--fill-done));
+    background: color-mix(in srgb, var(--circle) var(--done-tint), var(--fill-done));
     color: var(--ink-done);
   }
 
