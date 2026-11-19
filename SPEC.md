@@ -296,7 +296,7 @@ wrong icon is worse than none.
 ```
 src/components/DoneRow.svelte   a done task, ticked again to undo
 src/lib/ui/done-motion.ts       glide between a list and its done rows
-src/lib/ui/celebrate.ts         burst of hearts, stars, sparkles or sprinkles on a tick, in the task's colour
+src/lib/ui/celebrate.ts         burst on a tick, in the task's colour
 ```
 
 - A task done today stays at the bottom of its own list, struck through, newest first
@@ -308,7 +308,9 @@ src/lib/ui/celebrate.ts         burst of hearts, stars, sparkles or sprinkles on
 - Done rows closed - a ticked task fades out in place
 - Ticking off - the circle pops with a burst and a line draws through the text, then the row
   glides down
-- Done rows have light grey text and their circle keeps a faded trace of its colour
+- Burst - one of ripple, rays, dots, plus signs, diamonds or ticks, picked at random
+- Done rows have light grey text and their circle keeps a faded trace of its colour - less in
+  light mode, where colour shows more on white
 - Reduced motion turns off the pop, the burst and the glide
 
 ## Drag and drop

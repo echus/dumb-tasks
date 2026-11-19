@@ -57,6 +57,7 @@
   /* Done tasks: a light grey, well back from the tasks still to do */
   --ink-done: color-mix(in srgb, var(--muted) 55%, var(--surface));
   --fill-done: color-mix(in srgb, var(--muted) 14%, var(--surface));
+  --done-tint: 22%; /* how much colour a done task's circle keeps */
   /* Placeholder text: muted on the black page (anything darker gets lost) */
   --icon-quiet: var(--muted);
 
@@ -93,6 +94,7 @@
     --tint-base: var(--surface);
     --on-tint: var(--text);
     --circle-tint: 50%;
+    --done-tint: 12%;
 
     color-scheme: light;
   }
@@ -118,6 +120,7 @@
   --tint-base: var(--surface);
   --on-tint: var(--text);
   --circle-tint: 50%;
+  --done-tint: 12%;
 
   color-scheme: light;
 }
