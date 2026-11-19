@@ -1,6 +1,11 @@
 import { addTask } from './tasks/tasks';
+import { runsInstalled } from './ui/install.svelte';
 
-/** Text shared from another Android app arrives as query params; add it to Today once. */
+/**
+ * Text shared from another Android app arrives as query params; add it to Today once. Only in
+ * the installed app, where shares arrive: in a browser tab the same params come from a link,
+ * and any web page could link here to put a task in someone's list.
+ */
 export async function handleShareTarget(): Promise<void> {
   const params = new URLSearchParams(location.search);
   const parts: string[] = [];
@@ -11,7 +16,7 @@ export async function handleShareTarget(): Promise<void> {
   }
   if (!parts.length) return;
   history.replaceState(null, '', location.pathname); // so a reload doesn't add it again
-  await addTask(parts.join(' '));
+  if (runsInstalled()) await addTask(parts.join(' '));
 }
 
 /** Without this, Android may clear local data when storage runs low. */

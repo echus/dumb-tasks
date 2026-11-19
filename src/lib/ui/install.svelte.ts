@@ -36,7 +36,8 @@ export const STEPS: Record<StepsWay, string> = {
   android: 'To install Dumb Tasks, open the browser menu and tap Add to Home screen.',
 };
 
-function runsInstalled(): boolean {
+/** Whether this copy of the app runs installed, not in a browser tab. */
+export function runsInstalled(): boolean {
   // navigator.standalone: an iPhone's home screen app
   return (
     matchMedia('(display-mode: standalone)').matches ||
