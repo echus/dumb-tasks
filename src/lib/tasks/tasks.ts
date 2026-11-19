@@ -12,6 +12,26 @@ export function isActive(t: Task): boolean {
   return t.deletedAt === null && t.completedAt === null;
 }
 
+// A day starts at 4am, so a task done just after midnight still counts with the evening's
+const DAY_START_HOURS = 4;
+
+/** The local date of the day `at` falls in, as YYYY-MM-DD. */
+export function dayOf(at: Date): string {
+  const d = new Date(at.getTime() - DAY_START_HOURS * 3_600_000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Done today: it stays at the bottom of its list till the day ends. */
+export function doneToday(t: Task, now: Date): boolean {
+  return t.deletedAt === null && t.completedAt !== null && dayOf(new Date(t.completedAt)) === dayOf(now);
+}
+
+/** Newest first, so a task just done lands right below the tasks still to do. */
+export function byCompletion(a: Task, b: Task): number {
+  return (b.completedAt ?? '').localeCompare(a.completedAt ?? '');
+}
+
 export function byPosition(a: Task, b: Task): number {
   return a.position < b.position ? -1 : a.position > b.position ? 1 : a.id.localeCompare(b.id);
 }
@@ -176,6 +196,11 @@ export async function shiftTask(id: string, by: -1 | 1, now = new Date()) {
 
 export async function completeTask(id: string, now = new Date()) {
   await updateTask(id, { completedAt: now.toISOString() }, now);
+}
+
+/** It goes back to where it was in its list: its position never changed. */
+export async function uncompleteTask(id: string, now = new Date()) {
+  await updateTask(id, { completedAt: null }, now);
 }
 
 export async function deleteTask(id: string, now = new Date()) {

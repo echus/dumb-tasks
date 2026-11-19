@@ -291,6 +291,20 @@ wrong icon is worse than none.
 - Plain orange and red are not used - they look dull beside the rest
 - Hues an emoji would disappear on are not used
 
+## Done tasks
+
+```
+src/components/DoneRow.svelte   a done task, ticked again to undo
+src/lib/ui/done-motion.ts       glide between a list and its done rows
+```
+
+- A task done today stays at the bottom of its own list, struck through, newest first
+- The day starts at 4am - a task done just after midnight stays with the evening's
+- A done task goes back to its old place when ticked again - its position does not change
+- Done rows cannot be dragged or edited
+- Ticking off - the circle pops and a line draws through the text, then the row glides down
+- Reduced motion - no pop, no glide
+
 ## Drag and drop
 
 ```
@@ -343,7 +357,6 @@ On Android the installed app is a share target for text from other apps.
 
 ### Open questions
 
-- A section for tasks done today or time to undo a completion?
 - Let the user change the icon?
 - Swipe to delete on touch screens?
 - A setting for day and month order?
