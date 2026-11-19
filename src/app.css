@@ -58,8 +58,8 @@
   --ink-done: color-mix(in srgb, var(--muted) 55%, var(--surface));
   --fill-done: color-mix(in srgb, var(--muted) 14%, var(--surface));
   --done-tint: 22%; /* how much colour a done task's circle keeps */
-  /* Done history calendar: a square's colour for 0 to 5+ tasks done, its text colour, and
-     the outline round the picked day. Dark: brighter green for more, as on a dark page */
+  /* Done history calendar: a square's colour for 0 to 5+ tasks done, and its text colour.
+     Dark: brighter green for more, as on a dark page */
   --cal-0: #3b3e44;
   --cal-1: #213b2a;
   --cal-2: #24573a;
@@ -68,7 +68,6 @@
   --cal-5: #7fe08f;
   --cal-ink: #e6edf3;
   --cal-ink-bright: #0d1117; /* on the two brightest greens */
-  --cal-pick: #ffffff;
   --cal-ink-5: var(--cal-ink-bright);
   /* Placeholder text: muted on the black page (anything darker gets lost) */
   --icon-quiet: var(--muted);
@@ -116,7 +115,6 @@
     --cal-ink: #1f2328;
     --cal-ink-bright: #1f2328;
     --cal-ink-5: #ffffff;
-    --cal-pick: #000000;
 
     color-scheme: light;
   }
@@ -152,7 +150,6 @@
   --cal-ink: #1f2328;
   --cal-ink-bright: #1f2328;
   --cal-ink-5: #ffffff;
-  --cal-pick: #000000;
 
   color-scheme: light;
 }

@@ -336,14 +336,14 @@
     font-weight: 700;
   }
 
+  /* The picked day, and a day pointed at, get the same light grey outline. Hover only with a
+     real mouse - phones keep the last-tapped spot "hovered" */
   .picked {
-    outline: 1px solid var(--cal-pick);
+    outline: 1px solid var(--border-strong);
   }
 
-  /* Pointing at a day: the same outline in grey. Only with a real mouse - phones keep the
-     last-tapped spot "hovered" */
   @media (hover: hover) {
-    .day:not(.blank):not(.picked):hover {
+    .day:not(.blank):hover {
       outline: 1px solid var(--border-strong);
     }
   }
