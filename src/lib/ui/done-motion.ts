@@ -21,7 +21,11 @@ type Glide = typeof sendDone;
 
 // Lifted above the rows it passes, with the list's own background, so their text doesn't
 // show through it
-const LIFTED = 'position: relative; z-index: 1; background: var(--surface);';
+const LIFTED = 'position: relative; z-index: 1; background: var(--surface)';
+
+/** Adds to a transition's CSS. Svelte stops reading it at an empty part, as from a ";;". */
+const withCss = (css: string | undefined, extra: string) =>
+  [css?.trim().replace(/;$/, ''), extra].filter(Boolean).join('; ');
 
 /** A row gliding in over the others. */
 function lifted(glide: Glide): Glide {
@@ -30,7 +34,7 @@ function lifted(glide: Glide): Glide {
     return () => {
       const config = made();
       if (!config.duration) return config;
-      return { ...config, css: (t: number, u: number) => `${config.css?.(t, u) ?? ''}; ${LIFTED}` };
+      return { ...config, css: (t: number, u: number) => withCss(config.css?.(t, u), LIFTED) };
     };
   };
 }
@@ -49,7 +53,7 @@ function closingGap(glide: Glide): Glide {
       return {
         ...config,
         css: (t: number, u: number) =>
-          `${config.css?.(t, u) ?? ''}; height: ${t * height}px; overflow: hidden; ${LIFTED}`,
+          withCss(config.css?.(t, u), `height: ${t * height}px; overflow: hidden; ${LIFTED}`),
       };
     };
   };

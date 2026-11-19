@@ -70,7 +70,12 @@
     navigator.vibrate?.(10);
     if (!reduceMotion()) await new Promise((r) => setTimeout(r, 380));
     clock.now = new Date(); // so a task done just after the day turns over shows as today's
-    await track([task.id], () => completeTask(task.id));
+    try {
+      await track([task.id], () => completeTask(task.id));
+    } catch (e) {
+      ticking = false; // not on success: the row would lose its line as it glides away
+      throw e;
+    }
   }
 
   async function removeDeadline() {
@@ -327,6 +332,11 @@
   }
 
   /* Ticking off: the tick shows in a circle that pops, and a line draws through the text */
+  /* Nothing else to do with it in the moment before it goes */
+  li.ticking {
+    pointer-events: none;
+  }
+
   li.ticking .icon {
     color: var(--on-tint);
     animation: pop 300ms cubic-bezier(0.3, 1.6, 0.5, 1);
