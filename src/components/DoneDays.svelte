@@ -19,6 +19,7 @@
   import * as ui from '$lib/ui/icons';
   import { closeDoneView, doneView, showDone } from '$lib/ui/done-view.svelte';
   import { clock } from '$lib/ui/state.svelte';
+  import { effectiveTheme } from '$lib/ui/theme.svelte';
   import type { Task } from '$lib/types';
 
   let { tasks }: { tasks: Task[] } = $props();
@@ -34,6 +35,15 @@
   const target = $derived(doneView.target);
   const month = $derived((target ?? today).slice(0, 7));
   const picked = $derived(target === null ? today : target.length === 10 ? target : null);
+
+  // The month's total, shaded smoothly from empty grey to the deepest green at 100: about five
+  // a day, the days' own top step. The number flips colour once the green is strong enough
+  // that it reads better (later in light mode, where the green darkens slowly)
+  const monthTotal = $derived(
+    [...byDay].filter(([day]) => day.startsWith(month)).reduce((sum, [, done]) => sum + done.length, 0),
+  );
+  const monthShade = $derived(Math.min(monthTotal, 100));
+  const monthInkFlips = $derived(monthShade >= (effectiveTheme() === 'dark' ? 55 : 85));
 
   const kept = (day: string) => day >= firstKept && day <= today;
   const count = (day: string) => byDay.get(day)?.length ?? 0;
@@ -102,13 +112,23 @@
         >
           <Icon svg={ui.caretLeft} size={16} />
         </button>
-        <!-- The month's name lists every task done that month -->
-        <button
-          class="month"
-          aria-pressed={picked === null}
-          aria-label="Show every task done in {monthLabel(month)}"
-          onclick={() => showDone(month)}>{monthLabel(month)}</button
-        >
+        <!-- The month's name, and its total beside it, list every task done that month -->
+        <div class="month-head">
+          <button
+            class="month"
+            aria-pressed={picked === null}
+            aria-label="Show every task done in {monthLabel(month)}"
+            onclick={() => showDone(month)}>{monthLabel(month)}</button
+          >
+          <button
+            class="month-total"
+            class:flipped={monthInkFlips}
+            class:picked={picked === null}
+            style:--shade="{monthShade}%"
+            aria-label="{monthTotal} done in {monthLabel(month)}"
+            onclick={() => showDone(month)}>{monthTotal}</button
+          >
+        </div>
         <button class="arrow" aria-label="Next month" disabled={month >= today.slice(0, 7)} onclick={() => showDone(addMonths(month, 1))}>
           <Icon svg={ui.caretRight} size={16} />
         </button>
@@ -257,6 +277,49 @@
     background: none;
     font-weight: 600;
     cursor: pointer;
+  }
+
+  .month-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .month-total {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 3px;
+    background: color-mix(in oklab, var(--cal-5) var(--shade), var(--cal-0));
+    color: var(--cal-ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .month-total.flipped {
+    color: var(--cal-ink-5);
+  }
+
+  .month-total.picked {
+    outline: 1px solid var(--cal-outline);
+    outline-offset: -3px;
+  }
+
+  .month-total.picked.flipped {
+    outline-color: var(--cal-outline-deep);
+  }
+
+  @media (hover: hover) {
+    .month-total:hover {
+      outline: 1px solid var(--cal-outline);
+      outline-offset: -3px;
+    }
+
+    .month-total.flipped:hover {
+      outline-color: var(--cal-outline-deep);
+    }
   }
 
   /* Showing the whole month, or pointed at: the same thin grey box as a day */
