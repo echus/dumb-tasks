@@ -312,13 +312,14 @@
     outline-color: var(--cal-outline-deep);
   }
 
+  /* The name and the total do the same, so pointing at either lights up the total */
   @media (hover: hover) {
-    .month-total:hover {
+    .month-head:hover .month-total {
       outline: 1px solid var(--cal-outline);
       outline-offset: -3px;
     }
 
-    .month-total.flipped:hover {
+    .month-head:hover .month-total.flipped {
       outline-color: var(--cal-outline-deep);
     }
   }
