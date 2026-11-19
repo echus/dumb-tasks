@@ -416,17 +416,14 @@
     line-height: 1;
   }
 
-  /* Today: bold, with a yellow ring round the outside. Its thin amber edge keeps it clear on
-     the white list, and for anyone who can't tell the yellow from the greens */
+  /* Today: bold, with a yellow ring round the outside */
   .today .date,
   .today .count {
     font-weight: 700;
   }
 
   .today {
-    box-shadow:
-      0 0 0 2px var(--cal-today),
-      0 0 0 3px var(--cal-today-edge);
+    box-shadow: 0 0 0 2px var(--cal-today);
   }
 
   /* The picked day, and a day pointed at, get a thin line just inside the square: dark on the
