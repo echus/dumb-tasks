@@ -334,26 +334,18 @@
     font-weight: 700;
   }
 
+  /* Unlike a day, the month's total is outlined just outside its box, against the list - so
+     the one grey reads on every green */
   .month-sum.picked {
     outline: 1px solid var(--cal-outline);
-    outline-offset: -3px;
-  }
-
-  .month-sum.picked.level-4,
-  .month-sum.picked.level-5 {
-    outline-color: var(--cal-outline-deep);
+    outline-offset: 1px;
   }
 
   /* The name and the total do the same, so pointing at either lights up the total */
   @media (hover: hover) {
     .month-head:hover .month-sum {
       outline: 1px solid var(--cal-outline);
-      outline-offset: -3px;
-    }
-
-    .month-head:hover .month-sum.level-4,
-    .month-head:hover .month-sum.level-5 {
-      outline-color: var(--cal-outline-deep);
+      outline-offset: 1px;
     }
   }
 
