@@ -6,7 +6,8 @@
   import { doneGlides, undoneGlides } from '$lib/ui/done-motion';
   import type { Task } from '$lib/types';
 
-  let { task }: { task: Task } = $props();
+  // `when`: the day it was done, where the list mixes days
+  let { task, when }: { task: Task; when?: string } = $props();
 
   async function undo() {
     await track([task.id], () => uncompleteTask(task.id));
@@ -25,6 +26,7 @@
   <button class="undo" aria-label="Mark not done: {task.text}" onclick={undo}>
     <span class="icon" style:--circle={task.colour}><Icon svg={ui.check} size={16} /></span>
     <span class="text">{task.text}</span>
+    {#if when}<span class="when">{when}</span>{/if}
   </button>
   <button class="delete" aria-label="Delete {task.text}" onclick={remove}>
     <Icon svg={ui.x} size={14} />
@@ -77,6 +79,11 @@
     overflow-wrap: anywhere;
     text-decoration: line-through;
     text-decoration-thickness: 1.5px;
+  }
+
+  .when {
+    flex: none;
+    font-size: 0.8rem;
   }
 
   /* As on a task to do: shown on hover or focus */

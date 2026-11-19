@@ -297,9 +297,9 @@ wrong icon is worse than none.
 src/components/DoneRow.svelte   a done task, ticked again to undo
 src/lib/ui/done-motion.ts       glide between a list and its done rows
 src/lib/ui/celebrate.ts         burst on a tick, in the task's colour
-src/components/DoneDays.svelte  past done tasks, by day
-src/lib/tasks/done-days.ts      groups done tasks by day and names the days
-src/lib/ui/done-view.svelte.ts  opens and closes the past done tasks at #done
+src/components/DoneDays.svelte  done history: a month calendar and the tasks of a day or month
+src/lib/tasks/done-days.ts      groups done tasks by day, lays out months, names days
+src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 ```
 
 - A task done today stays at the bottom of its own list, struck through, newest first
@@ -309,22 +309,34 @@ src/lib/ui/done-view.svelte.ts  opens and closes the past done tasks at #done
 - The "done today" line opens and closes the done rows in every list. Open by default, and
   the choice is kept on the device
 - Done rows closed - a ticked task fades out in place
-
-### Past done tasks
-
-- One view for every list, by day, newest first - which list a task was in stops mattering
-  once the day is over
-- Each day is headed by its date, with "today" or "yesterday" after it - a heading "today"
-  would read as the Today list
-- Opens from the header and from "see history" on the "done today" line
-- Has its own address `#done` - the system back button closes it and does not leave the app
-- Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 - Ticking off - the circle pops with a burst and a line draws through the text, then the row
   glides down
 - Burst - one of ripple, rays, dots, plus signs, diamonds or ticks, picked at random
 - Done rows have light grey text and their circle keeps a faded trace of its colour - less in
   light mode, where colour shows more on white
 - Reduced motion turns off the pop, the burst and the glide
+
+### Done history
+
+- One view for every list - which list a task was in stops mattering once the day is over
+- Opens from the header and from "see history" on the "done today" line
+- Has its own address `#done` - the system back button closes it and does not leave the app
+- A month calendar, Monday first, with the tasks of the picked day below it. Opens on today
+- The month's name lists every task done that month, each with its day
+- Arrows step through the months that hold kept days. Days before what is kept, or still to
+  come, are blank
+
+| Done that day | Square |
+| --- | --- |
+| 0 | Grey |
+| 1 to 4 | A green for each count, deeper for more (brighter in dark mode) |
+| 5 or more | The deepest green - a good day's worth, reachable on a normal day |
+
+- Shade is by lightness, not hue, and each square prints its count - it reads with colour
+  blindness
+- Today - a bigger, bold date and count, with no mark that relies on colour
+- The picked day - a thin black outline (white in dark mode)
+- Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 
 ## Drag and drop
 

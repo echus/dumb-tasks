@@ -2,7 +2,19 @@
   import DoneRow from './DoneRow.svelte';
   import Icon from './Icon.svelte';
   import { KEEP_DAYS } from '$lib/sync/data-file';
-  import { doneDays } from '$lib/tasks/done-days';
+  import {
+    addDays,
+    addMonths,
+    dateLabel,
+    doneByDay,
+    monthCells,
+    monthLabel,
+    monthName,
+    relativeDay,
+    shortDayLabel,
+    weekdayLabels,
+  } from '$lib/tasks/done-days';
+  import { dayOf } from '$lib/tasks/tasks';
   import * as ui from '$lib/ui/icons';
   import { closeDoneView } from '$lib/ui/done-view.svelte';
   import { clock } from '$lib/ui/state.svelte';
@@ -11,7 +23,35 @@
   let { tasks }: { tasks: Task[] } = $props();
 
   // From every list: once a day is over, which list a task was in no longer matters
-  const days = $derived(doneDays(tasks, clock.now));
+  const byDay = $derived(doneByDay(tasks));
+  const today = $derived(dayOf(clock.now));
+  const firstKept = $derived(addDays(today, 1 - KEEP_DAYS)); // older done tasks are removed
+  const weekdays = weekdayLabels();
+
+  // Opens on today. Picking the month's name (or stepping to another month) lists the whole month.
+  let month = $state(dayOf(new Date()).slice(0, 7));
+  let picked = $state<string | null>(dayOf(new Date()));
+
+  const kept = (day: string) => day >= firstKept && day <= today;
+  const count = (day: string) => byDay.get(day)?.length ?? 0;
+
+  function step(by: -1 | 1) {
+    month = addMonths(month, by);
+    picked = null;
+  }
+
+  const shown = $derived(
+    picked
+      ? (byDay.get(picked) ?? []).map((task) => ({ task, when: undefined }))
+      : [...byDay]
+          .filter(([day]) => day.startsWith(month))
+          .sort(([a], [b]) => b.localeCompare(a))
+          .flatMap(([day, done]) => done.map((task) => ({ task, when: shortDayLabel(day) }))),
+  );
+
+  const heading = $derived(
+    picked ? (relativeDay(picked, clock.now) ?? dateLabel(picked, clock.now)) : `all of ${monthName(month)}`,
+  );
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && !(e.target as HTMLElement).closest('input, [popover]')) closeDoneView();
@@ -29,23 +69,72 @@
       <h2 id="done-days-title">done history</h2>
     </div>
 
-    {#each days as day (day.day)}
-      <!-- The date leads, so "today" isn't read as the Today list -->
-      <h3 id="done-{day.day}">
-        <span>{day.date}</span>
-        <span class="relative">{day.relative ?? ''}</span>
-        <span class="count">{day.tasks.length} done</span>
-      </h3>
+    <div class="calendar">
+      <div class="nav">
+        <button
+          class="arrow"
+          aria-label="Previous month"
+          disabled={month <= firstKept.slice(0, 7)}
+          onclick={() => step(-1)}
+        >
+          <Icon svg={ui.caretLeft} size={16} />
+        </button>
+        <!-- The month's name lists every task done that month -->
+        <button
+          class="month"
+          aria-pressed={picked === null}
+          aria-label="Show every task done in {monthLabel(month)}"
+          onclick={() => (picked = null)}>{monthLabel(month)}</button
+        >
+        <button class="arrow" aria-label="Next month" disabled={month >= today.slice(0, 7)} onclick={() => step(1)}>
+          <Icon svg={ui.caretRight} size={16} />
+        </button>
+      </div>
+
+      <div class="grid">
+        {#each weekdays as weekday (weekday)}
+          <span class="weekday" aria-hidden="true">{weekday}</span>
+        {/each}
+        {#each monthCells(month) as day, i (day ?? `blank-${i}`)}
+          {#if day === null}
+            <span></span>
+          {:else if kept(day)}
+            {@const n = count(day)}
+            <!-- Greener for more done, up to 5: a good day's worth -->
+            <button
+              class="day level-{Math.min(n, 5)}"
+              class:today={day === today}
+              class:picked={day === picked}
+              aria-pressed={day === picked}
+              aria-label="{n} done on {dateLabel(day, clock.now)}{day === today ? ', today' : ''}"
+              onclick={() => (picked = day)}
+            >
+              <span class="date">{Number(day.slice(8))}</span>
+              {#if n}<span class="count">{n}</span>{/if}
+            </button>
+          {:else}
+            <!-- Not kept yet, or no longer: nothing to show -->
+            <span class="day blank">{Number(day.slice(8))}</span>
+          {/if}
+        {/each}
+      </div>
+    </div>
+
+    <h3 id="done-shown">
+      <span>{heading}</span>
+      <span class="total">{shown.length} done</span>
+    </h3>
+    {#if shown.length}
       <div class="list">
-        <ul aria-labelledby="done-{day.day}">
-          {#each day.tasks as task (task.id)}
-            <DoneRow {task} />
+        <ul aria-labelledby="done-shown">
+          {#each shown as { task, when } (task.id)}
+            <DoneRow {task} {when} />
           {/each}
         </ul>
       </div>
     {:else}
-      <p class="note">Nothing done yet. Tasks show here once they are ticked off.</p>
-    {/each}
+      <p class="note">Nothing done {picked ? 'this day' : 'this month'}.</p>
+    {/if}
 
     <p class="note">Done tasks are kept for {KEEP_DAYS} days.</p>
   </div>
@@ -57,13 +146,13 @@
     padding: 8px 0 64px;
   }
 
-  /* One column in the middle: a log reads top to bottom, newest first */
+  /* One column in the middle */
   .inner {
-    max-width: 600px;
+    max-width: 480px;
     margin: 0 auto;
   }
 
-  /* Desktop: the page fills the window, so the days scroll within it */
+  /* Desktop: the page fills the window, so the view scrolls within it */
   @media (min-width: 1100px) {
     section {
       min-height: 0;
@@ -80,7 +169,8 @@
     margin: 0 0 8px -8px; /* the arrow's own space, so it lines up with the page edge */
   }
 
-  .back {
+  .back,
+  .arrow {
     display: grid;
     place-items: center;
     width: 36px;
@@ -91,8 +181,13 @@
     cursor: pointer;
   }
 
-  .back:hover {
+  .back:hover,
+  .arrow:hover {
     color: var(--accent);
+  }
+
+  .arrow:disabled {
+    visibility: hidden;
   }
 
   h2,
@@ -108,44 +203,142 @@
     font-size: 1.1rem;
   }
 
-  /* The same plain text above a white list as the bucket names */
-  /* Date at the left, "today" or "yesterday" in the middle, the count at the right */
-  h3 {
+  /* On the list's own white, like a task list */
+  .calendar,
+  .list {
+    position: relative;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow:
+      0 0 10px var(--glow),
+      inset 0 0 0 1px var(--glow-ring);
+  }
+
+  .calendar {
+    padding: 4px 12px 12px;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .month {
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .month:hover,
+  .month[aria-pressed='true'] {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .grid {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+  }
+
+  .weekday {
+    padding-bottom: 2px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
+  .day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 0 0;
+    border: none;
+    border-radius: 3px;
+    background: var(--cal-0);
+    color: var(--cal-ink);
+    font-size: 13px;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  .level-1 {
+    background: var(--cal-1);
+  }
+
+  .level-2 {
+    background: var(--cal-2);
+  }
+
+  .level-3 {
+    background: var(--cal-3);
+  }
+
+  .level-4 {
+    background: var(--cal-4);
+    color: var(--cal-ink-bright);
+  }
+
+  .level-5 {
+    background: var(--cal-5);
+    color: var(--cal-ink-5);
+  }
+
+  .count {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  /* Today: bigger and bold, with no mark that leans on colour */
+  .today {
+    padding-top: 3px;
+  }
+
+  .today .date {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 19px;
+  }
+
+  .today .count {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .picked {
+    outline: 1px solid var(--cal-pick);
+  }
+
+  /* Before what's kept, or still to come */
+  .blank {
+    background: none;
+    color: var(--muted);
+    cursor: default;
+  }
+
+  /* Over the list: what it shows, and how many */
+  h3 {
+    display: flex;
+    justify-content: space-between;
     align-items: baseline;
-    gap: 6px;
-    padding: 16px 2px 8px;
+    padding: 18px 2px 8px;
     font-size: 0.95rem;
   }
 
-  .relative,
-  .count {
+  .total {
     color: var(--muted);
+    font-size: 0.8rem;
     font-weight: 600;
   }
 
-  .count {
-    justify-self: end;
-    font-size: 0.8rem;
-  }
-
   .list {
-    position: relative;
     overflow: clip;
-    border-radius: var(--radius);
-    background: var(--surface);
-    box-shadow: 0 0 10px var(--glow);
-  }
-
-  .list::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    border-radius: inherit;
-    box-shadow: inset 0 0 0 1px var(--glow-ring);
-    pointer-events: none;
   }
 
   ul {

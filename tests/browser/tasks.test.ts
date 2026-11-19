@@ -77,6 +77,14 @@ test('shows done tasks by day, and closes with the back button', async ({ page }
   await expect(page.getByRole('list', { name: /today 1 done/ })).toContainText('Water the basil');
   await expect(page.getByLabel('New task in Today')).toBeHidden();
 
+  // The calendar: today is picked; the month's name lists the whole month
+  const todaySquare = page.getByRole('button', { name: /^1 done on .*, today$/ });
+  await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: /^Show every task done in/ }).click();
+  await expect(page.getByRole('list', { name: /all of .* 1 done/ })).toContainText('Water the basil');
+  await todaySquare.click();
+  await expect(page.getByRole('list', { name: /today 1 done/ })).toBeVisible();
+
   await page.goBack();
   await expect(page.getByLabel('New task in Today')).toBeVisible();
 
