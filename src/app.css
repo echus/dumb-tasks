@@ -69,7 +69,7 @@
   --cal-ink: #e6edf3;
   --cal-ink-bright: #0d1117; /* on the two brightest greens */
   --cal-ink-5: var(--cal-ink-bright);
-  --cal-outline: #4a4d52; /* round the picked day, and a day pointed at */
+  --cal-outline: rgb(255 255 255 / 0.55); /* inside the picked day, and a day pointed at */
   --cal-outline-deep: rgb(13 17 23 / 0.55); /* inside the two brightest greens */
   /* Placeholder text: muted on the black page (anything darker gets lost) */
   --icon-quiet: var(--muted);
@@ -117,7 +117,7 @@
     --cal-ink: #1f2328;
     --cal-ink-bright: #1f2328;
     --cal-ink-5: #ffffff;
-    --cal-outline: #c9ccd1;
+    --cal-outline: rgb(31 35 40 / 0.4);
     --cal-outline-deep: rgb(255 255 255 / 0.8);
 
     color-scheme: light;
@@ -154,7 +154,7 @@
   --cal-ink: #1f2328;
   --cal-ink-bright: #1f2328;
   --cal-ink-5: #ffffff;
-  --cal-outline: #c9ccd1;
+  --cal-outline: rgb(31 35 40 / 0.4);
   --cal-outline-deep: rgb(255 255 255 / 0.8);
 
   color-scheme: light;

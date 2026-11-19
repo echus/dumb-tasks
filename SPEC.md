@@ -350,9 +350,8 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 - Shade is by lightness, not hue, and each square prints its count - it reads with colour
   blindness
 - Today - a bold date and count, with no mark that relies on colour
-- The picked day, and a day pointed at - a thin light grey outline. On the two strongest
-  greens it goes just inside the square, light (dark in dark mode) - a grey line beside a
-  strong colour reads as its edge
+- The picked day, and a day pointed at - a thin line just inside the square. Dark on the
+  paler squares and light on the two strongest greens, the other way round in dark mode
 - Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 
 ## Drag and drop

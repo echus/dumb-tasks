@@ -330,31 +330,31 @@
     font-weight: 700;
   }
 
-  /* The picked day, and a day pointed at, get the same light grey outline. Hover only with a
-     real mouse - phones keep the last-tapped spot "hovered" */
+  /* The picked day, and a day pointed at, get a thin line just inside the square: dark on the
+     paler squares, light on the two strongest greens (the other way round in dark mode, where
+     those greens are the brightest). Hover only with a real mouse - phones keep the
+     last-tapped spot "hovered" */
   .picked {
     outline: 1px solid var(--cal-outline);
+    outline-offset: -3px;
   }
 
   @media (hover: hover) {
     .day:not(.blank):hover {
       outline: 1px solid var(--cal-outline);
+      outline-offset: -3px;
     }
   }
 
-  /* Next to the two strongest greens a thin grey line reads as part of the edge, so there it
-     goes just inside, light on dark green (dark on bright green in dark mode) */
-  .level-4.picked,
-  .level-5.picked {
+  .day.level-4.picked,
+  .day.level-5.picked {
     outline-color: var(--cal-outline-deep);
-    outline-offset: -3px;
   }
 
   @media (hover: hover) {
-    .level-4:hover,
-    .level-5:hover {
+    .day.level-4:hover,
+    .day.level-5:hover {
       outline-color: var(--cal-outline-deep);
-      outline-offset: -3px;
     }
   }
 
