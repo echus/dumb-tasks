@@ -339,12 +339,12 @@
   /* The picked day, and a day pointed at, get the same light grey outline. Hover only with a
      real mouse - phones keep the last-tapped spot "hovered" */
   .picked {
-    outline: 1px solid var(--border-strong);
+    outline: 1px solid var(--cal-outline);
   }
 
   @media (hover: hover) {
     .day:not(.blank):hover {
-      outline: 1px solid var(--border-strong);
+      outline: 1px solid var(--cal-outline);
     }
   }
 
