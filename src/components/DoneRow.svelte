@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
   import * as ui from '$lib/ui/icons';
-  import { uncompleteTask } from '$lib/tasks/tasks';
+  import { deleteTask, uncompleteTask } from '$lib/tasks/tasks';
   import { track } from '$lib/tasks/history.svelte';
   import { doneGlides, undoneGlides } from '$lib/ui/done-motion';
   import type { Task } from '$lib/types';
@@ -11,30 +11,45 @@
   async function undo() {
     await track([task.id], () => uncompleteTask(task.id));
   }
+
+  // For a task ticked off that should have been deleted
+  async function remove() {
+    await track([task.id], () => deleteTask(task.id));
+  }
 </script>
 
 <!-- A task done today: struck through at the bottom of its list. Ticking it again puts it
      back where it was. -->
 <li in:doneGlides.in={{ key: task.id }} out:undoneGlides.out={{ key: task.id }}>
-  <button aria-label="Mark not done: {task.text}" onclick={undo}>
+  <!-- The circle and text are one button, so a tap anywhere on them undoes it -->
+  <button class="undo" aria-label="Mark not done: {task.text}" onclick={undo}>
     <span class="icon" style:--circle={task.colour}><Icon svg={ui.check} size={16} /></span>
     <span class="text">{task.text}</span>
+  </button>
+  <button class="delete" aria-label="Delete {task.text}" onclick={remove}>
+    <Icon svg={ui.x} size={14} />
   </button>
 </li>
 
 <style>
+  li {
+    display: flex;
+    align-items: center;
+    padding-right: 12px;
+  }
+
   li:not(:first-child) {
     border-top: 1px solid var(--bg);
   }
 
-  /* The whole row is the button */
-  button {
+  .undo {
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 100%;
     min-height: 46px;
-    padding: 0 12px;
+    padding: 0 10px 0 12px;
     border: none;
     background: none;
     color: var(--ink-done);
@@ -62,5 +77,38 @@
     overflow-wrap: anywhere;
     text-decoration: line-through;
     text-decoration-thickness: 1.5px;
+  }
+
+  /* As on a task to do: shown on hover or focus */
+  .delete {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    visibility: hidden;
+  }
+
+  .delete:hover {
+    color: var(--accent);
+  }
+
+  li:hover .delete,
+  li:focus-within .delete {
+    visibility: visible;
+  }
+
+  /* Touch screens have no hover, and a tap on the row undoes it, so the x stays, faint */
+  @media (hover: none) {
+    .delete {
+      visibility: visible;
+      color: var(--ink-done);
+    }
   }
 </style>
