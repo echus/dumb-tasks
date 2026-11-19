@@ -14,9 +14,10 @@
     shortDayLabel,
     weekdayLabels,
   } from '$lib/tasks/done-days';
+  import { tick } from 'svelte';
   import { dayOf } from '$lib/tasks/tasks';
   import * as ui from '$lib/ui/icons';
-  import { closeDoneView } from '$lib/ui/done-view.svelte';
+  import { closeDoneView, doneView, showDone } from '$lib/ui/done-view.svelte';
   import { clock } from '$lib/ui/state.svelte';
   import type { Task } from '$lib/types';
 
@@ -28,16 +29,35 @@
   const firstKept = $derived(addDays(today, 1 - KEEP_DAYS)); // older done tasks are removed
   const weekdays = weekdayLabels();
 
-  // Opens on today. Picking the month's name (or stepping to another month) lists the whole month.
-  let month = $state(dayOf(new Date()).slice(0, 7));
-  let picked = $state<string | null>(dayOf(new Date()));
+  // What shows comes from the address (see done-view): today, a picked day, or a whole month.
+  // The month's name, or stepping to another month, lists the whole month.
+  const target = $derived(doneView.target);
+  const month = $derived((target ?? today).slice(0, 7));
+  const picked = $derived(target === null ? today : target.length === 10 ? target : null);
 
   const kept = (day: string) => day >= firstKept && day <= today;
   const count = (day: string) => byDay.get(day)?.length ?? 0;
+  const pick = (day: string) => showDone(day === today ? null : day);
 
-  function step(by: -1 | 1) {
-    month = addMonths(month, by);
-    picked = null;
+  // The calendar is one Tab stop, on the picked day (or today, or the month's last kept day);
+  // the arrow keys move from there, as in a date picker
+  const focusDay = $derived.by(() => {
+    if (picked?.startsWith(month)) return picked;
+    const days = monthCells(month).filter((d): d is string => d !== null && kept(d));
+    return days.includes(today) ? today : days.at(-1);
+  });
+
+  const MOVES: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+
+  async function moveByKey(e: KeyboardEvent) {
+    const from = (e.target as HTMLElement).dataset.day;
+    if (!from || !(e.key in MOVES)) return;
+    e.preventDefault();
+    const to = addDays(from, MOVES[e.key]);
+    if (!kept(to)) return;
+    pick(to);
+    await tick();
+    document.querySelector<HTMLElement>(`[data-day="${to}"]`)?.focus();
   }
 
   const shown = $derived(
@@ -78,7 +98,7 @@
           class="arrow"
           aria-label="Previous month"
           disabled={month <= firstKept.slice(0, 7)}
-          onclick={() => step(-1)}
+          onclick={() => showDone(addMonths(month, -1))}
         >
           <Icon svg={ui.caretLeft} size={16} />
         </button>
@@ -87,14 +107,15 @@
           class="month"
           aria-pressed={picked === null}
           aria-label="Show every task done in {monthLabel(month)}"
-          onclick={() => (picked = null)}>{monthLabel(month)}</button
+          onclick={() => showDone(month)}>{monthLabel(month)}</button
         >
-        <button class="arrow" aria-label="Next month" disabled={month >= today.slice(0, 7)} onclick={() => step(1)}>
+        <button class="arrow" aria-label="Next month" disabled={month >= today.slice(0, 7)} onclick={() => showDone(addMonths(month, 1))}>
           <Icon svg={ui.caretRight} size={16} />
         </button>
       </div>
 
-      <div class="grid">
+      <!-- svelte-ignore a11y_no_static_element_interactions: the keys are handled on the day buttons, bubbling up -->
+      <div class="grid" onkeydown={moveByKey}>
         {#each weekdays as weekday (weekday)}
           <span class="weekday" aria-hidden="true">{weekday}</span>
         {/each}
@@ -109,15 +130,18 @@
               class:today={day === today}
               class:picked={day === picked}
               aria-pressed={day === picked}
+              tabindex={day === focusDay ? 0 : -1}
+              data-day={day}
               aria-label="{n} done on {dateLabel(day, clock.now)}{day === today ? ', today' : ''}"
-              onclick={() => (picked = day)}
+              onclick={() => pick(day)}
             >
               <span class="date">{Number(day.slice(8))}</span>
-              {#if n}<span class="count">{n}</span>{/if}
+              <!-- Always there, so dates line up across a row whether or not a day has a count -->
+              <span class="count">{n || ''}</span>
             </button>
           {:else}
             <!-- Not kept yet, or no longer: nothing to show -->
-            <span class="day blank">{Number(day.slice(8))}</span>
+            <span class="day blank"><span class="date">{Number(day.slice(8))}</span><span class="count"></span></span>
           {/if}
         {/each}
       </div>
@@ -259,8 +283,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 2px;
-    padding: 5px 0 0;
+    padding: 0;
     border: none;
     border-radius: 3px;
     background: var(--cal-0);
@@ -293,16 +318,13 @@
   }
 
   .count {
+    min-height: 1em;
     font-size: 11px;
     font-weight: 500;
     line-height: 1;
   }
 
   /* Today: bigger and bold, with no mark that leans on colour */
-  .today {
-    padding-top: 3px;
-  }
-
   .today .date {
     font-size: 17px;
     font-weight: 700;
@@ -322,7 +344,7 @@
      last-tapped spot "hovered" */
   @media (hover: hover) {
     .day:not(.blank):not(.picked):hover {
-      outline: 1px solid var(--muted);
+      outline: 1px solid var(--border-strong);
     }
   }
 

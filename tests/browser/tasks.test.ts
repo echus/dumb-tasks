@@ -85,6 +85,23 @@ test('shows done tasks by day, and closes with the back button', async ({ page }
   await todaySquare.click();
   await expect(page.getByRole('list', { name: '1 task done today' })).toBeVisible();
 
+  // Back from a picked day goes to today, then out of the history
+  await page.getByRole('button', { name: /^Show every task done in/ }).click();
+  await expect(page).toHaveURL(/#done\/\d{4}-\d{2}$/);
+  await page.goBack();
+  await expect(page.getByRole('list', { name: '1 task done today' })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+
+  // The arrow keys move between days, and back still steps out
+  await page.getByRole('button', { name: 'Done tasks', exact: true }).click();
+  await todaySquare.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('heading', { name: /tasks done yesterday/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^0 done on .*/ }).and(page.locator(':focus'))).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('ArrowRight');
+  await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
+  await expect(todaySquare).toBeFocused();
   await page.goBack();
   await expect(page.getByLabel('New task in Today')).toBeVisible();
 

@@ -320,7 +320,19 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 
 - One view for every list - which list a task was in stops mattering once the day is over
 - Opens from the header and from "see history" on the "done today" line
-- Has its own address `#done` - the system back button closes it and does not leave the app
+- Has its own address, so the system back button steps back through it and does not leave
+  the app
+
+| Address | Shows |
+| --- | --- |
+| `#done` | Today |
+| `#done/2026-11-17` | A picked day |
+| `#done/2026-11` | A whole month |
+
+- Moving off today adds one step to the browser history, and later picks replace it - back
+  goes to today, then to the lists, not through every day tapped
+- The calendar is one Tab stop. Arrow keys move a day or a week, across months, as in a date
+  picker
 - The app's name at the top goes back to the lists, as on most sites
 - A month calendar, Monday first, with the tasks of the picked day below it. Opens on today
 - The month's name lists every task done that month, each with its day
@@ -339,7 +351,7 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
   blindness
 - Today - a bigger, bold date and count, with no mark that relies on colour
 - The picked day - a thin black outline (white in dark mode)
-- Pointing at a day - the same outline in grey
+- Pointing at a day - the same outline in light grey
 - Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 
 ## Drag and drop
