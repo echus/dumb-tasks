@@ -342,6 +342,22 @@
     }
   }
 
+  /* Next to the two strongest greens a thin grey line reads as part of the edge, so there it
+     goes just inside, light on dark green (dark on bright green in dark mode) */
+  .level-4.picked,
+  .level-5.picked {
+    outline-color: var(--cal-outline-deep);
+    outline-offset: -3px;
+  }
+
+  @media (hover: hover) {
+    .level-4:hover,
+    .level-5:hover {
+      outline-color: var(--cal-outline-deep);
+      outline-offset: -3px;
+    }
+  }
+
   /* Before what's kept, or still to come */
   .blank {
     background: none;
