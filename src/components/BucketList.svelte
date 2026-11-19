@@ -38,15 +38,19 @@
       </ul>
       <div class="done">
         {#if done.length}
-          <button
-            class="done-toggle"
-            aria-expanded={doneRows.open}
-            aria-controls="done-{bucket}"
-            onclick={toggleDoneRows}
-          >
-            {done.length} done today
-            <span class="caret" class:closed={!doneRows.open}><Icon svg={ui.caretDown} size={12} /></span>
-          </button>
+          <!-- The whole line opens and closes the done rows; "see all" sits on it, by the arrow -->
+          <div class="done-head">
+            <button
+              class="done-toggle"
+              aria-expanded={doneRows.open}
+              aria-controls="done-{bucket}"
+              onclick={toggleDoneRows}
+            >
+              {done.length} done today
+              <span class="caret" class:closed={!doneRows.open}><Icon svg={ui.caretDown} size={12} /></span>
+            </button>
+            <button class="see-all" aria-label="See all done tasks" onclick={openDoneView}>see all</button>
+          </div>
         {/if}
         <!-- Always there while open, even empty, so the first task done glides in: a row only
              glides when its own list adds it. Closed, a ticked task fades away instead. -->
@@ -56,9 +60,6 @@
               <DoneRow {task} />
             {/each}
           </ul>
-          {#if done.length}
-            <button class="all-done" onclick={openDoneView}>See all done tasks</button>
-          {/if}
         {/if}
       </div>
     </div>
@@ -157,21 +158,29 @@
     cursor: pointer;
   }
 
-  .all-done {
-    display: block;
-    width: 100%;
-    padding: 10px 12px;
+  .done-head {
+    position: relative;
+  }
+
+  /* Just left of the arrow (12px padding, 24px arrow) */
+  .see-all {
+    position: absolute;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
+    padding: 4px;
     border: none;
-    border-top: 1px solid var(--bg);
     background: none;
     color: var(--muted);
     font-size: 0.75rem;
-    font-weight: 600;
-    text-align: left;
     cursor: pointer;
   }
 
-  .all-done:hover,
+  .see-all:hover {
+    color: var(--text);
+    text-decoration: underline;
+  }
+
   .done-toggle:hover {
     color: var(--text);
   }

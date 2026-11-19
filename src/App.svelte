@@ -74,6 +74,7 @@
     </svg>dumb tasks
   </h1>
   <div class="header-actions">
+    <HistoryButtons />
     <button
       class="done-days"
       aria-label="Done tasks"
@@ -83,7 +84,6 @@
     >
       <Icon svg={ui.doneDays} size={18} />
     </button>
-    <HistoryButtons />
     <SyncMenu />
     <ThemeToggle />
   </div>
