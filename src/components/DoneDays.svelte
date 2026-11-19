@@ -120,14 +120,15 @@
             aria-label="Show every task done in {monthLabel(month)}"
             onclick={() => showDone(month)}>{monthLabel(month)}</button
           >
-          <button
-            class="month-total"
-            class:flipped={monthInkFlips}
-            class:picked={picked === null}
-            style:--shade="{monthShade}%"
-            aria-label="{monthTotal} done in {monthLabel(month)}"
-            onclick={() => showDone(month)}>{monthTotal}</button
-          >
+          <button class="month-sum" aria-label="{monthTotal} done in {monthLabel(month)}" onclick={() => showDone(month)}>
+            <span
+              class="month-total"
+              class:flipped={monthInkFlips}
+              class:picked={picked === null}
+              style:--shade="{monthShade}%">{monthTotal}</span
+            >
+            {monthTotal === 1 ? 'task' : 'tasks'} completed
+          </button>
         </div>
         <button class="arrow" aria-label="Next month" disabled={month >= today.slice(0, 7)} onclick={() => showDone(addMonths(month, 1))}>
           <Icon svg={ui.caretRight} size={16} />
@@ -280,17 +281,33 @@
     cursor: pointer;
   }
 
+  /* The name, with the month's total under it */
   .month-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .month-sum {
     display: flex;
     align-items: center;
     gap: 6px;
+    padding: 2px 4px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
   }
 
   .month-total {
+    display: grid;
+    place-items: center;
     min-width: 30px;
     height: 30px;
     padding: 0 6px;
-    border: none;
     border-radius: 3px;
     background: color-mix(in oklab, var(--cal-5) var(--shade), var(--cal-0));
     color: var(--cal-ink);

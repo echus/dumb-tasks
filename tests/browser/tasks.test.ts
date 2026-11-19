@@ -82,7 +82,7 @@ test('shows done tasks by day, and closes with the back button', async ({ page }
   await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: /^Show every task done in/ }).click();
   await expect(page.getByRole('list', { name: /^1 task done in / })).toContainText('Water the basil');
-  await expect(page.getByRole('button', { name: /^1 done in / })).toHaveText('1');
+  await expect(page.getByRole('button', { name: /^1 done in / })).toHaveText(/1\s+task completed/);
   await todaySquare.click();
   await expect(page.getByRole('list', { name: '1 task done today' })).toBeVisible();
 
