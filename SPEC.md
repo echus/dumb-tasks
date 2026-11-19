@@ -301,9 +301,9 @@ src/lib/ui/done-motion.ts       glide between a list and its done rows
 - A task done today stays at the bottom of its own list, struck through, newest first
 - The day starts at 4am - a task done just after midnight stays with the evening's
 - A done task goes back to its old place when ticked again - its position does not change
-- Done rows cannot be dragged or edited
+- Done rows cannot be dragged or edited - a tap anywhere on one undoes it
 - Ticking off - the circle pops and a line draws through the text, then the row glides down
-- Reduced motion - no pop, no glide
+- Reduced motion turns off the pop and the glide
 
 ## Drag and drop
 

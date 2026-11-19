@@ -3,7 +3,7 @@
   import BucketName from './BucketName.svelte';
   import DoneRow from './DoneRow.svelte';
   import TaskRow from './TaskRow.svelte';
-  import type { Bucket, Task } from '$lib/types';
+  import { BUCKET_LABELS, type Bucket, type Task } from '$lib/types';
 
   interface Props {
     bucket: Bucket;
@@ -37,7 +37,7 @@
       {/if}
       <!-- Always there, even empty, so the first task done glides in: a row only glides when
            its own list adds it -->
-      <ul aria-label="Done today in {bucket}">
+      <ul aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
         {#each done as task (task.id)}
           <DoneRow {task} />
         {/each}

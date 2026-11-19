@@ -16,24 +16,30 @@
 <!-- A task done today: struck through at the bottom of its list. Ticking it again puts it
      back where it was. -->
 <li in:doneGlides.in={{ key: task.id }} out:undoneGlides.out={{ key: task.id }}>
-  <button class="icon" style:--circle={task.colour} aria-label="Mark not done: {task.text}" onclick={undo}>
-    <Icon svg={ui.check} size={16} />
+  <button aria-label="Mark not done: {task.text}" onclick={undo}>
+    <span class="icon" style:--circle={task.colour}><Icon svg={ui.check} size={16} /></span>
+    <span class="text">{task.text}</span>
   </button>
-  <span class="text">{task.text}</span>
 </li>
 
 <style>
-  li {
+  li:not(:first-child) {
+    border-top: 1px solid var(--bg);
+  }
+
+  /* The whole row is the button */
+  button {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
     min-height: 46px;
     padding: 0 12px;
+    border: none;
+    background: none;
     color: var(--muted);
-  }
-
-  li:not(:first-child) {
-    border-top: 1px solid var(--bg);
+    text-align: left;
+    cursor: pointer;
   }
 
   /* The same circle as a task to do, showing the tick it was given */
@@ -43,12 +49,9 @@
     place-items: center;
     width: 28px;
     height: 28px;
-    padding: 0;
-    border: none;
     border-radius: 50%;
     background: color-mix(in srgb, var(--circle) var(--circle-tint), var(--tint-base));
     color: var(--on-tint);
-    cursor: pointer;
   }
 
   .text {
