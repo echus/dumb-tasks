@@ -68,10 +68,19 @@
 
 <header>
   <h1>
-    <svg class="mark" viewBox="0 0 16 16" aria-hidden="true">
-      <circle cx="8" cy="8" r="8" />
-      <path d="M4.5 8.3 7 10.8 11.5 5.5" />
-    </svg>dumb tasks
+    <!-- Back to the lists from anywhere, as on most sites -->
+    <a
+      class="home"
+      href="./"
+      onclick={(e) => {
+        e.preventDefault();
+        closeDoneView();
+      }}
+      ><svg class="mark" viewBox="0 0 16 16" aria-hidden="true">
+        <circle cx="8" cy="8" r="8" />
+        <path d="M4.5 8.3 7 10.8 11.5 5.5" />
+      </svg>dumb tasks</a
+    >
   </h1>
   <div class="header-actions">
     <HistoryButtons />
@@ -143,6 +152,11 @@
     font-weight: 700;
     letter-spacing: -0.01em;
     white-space: nowrap;
+  }
+
+  .home {
+    color: inherit;
+    text-decoration: none;
   }
 
   /* Positioned so the sync menu's panel lines up with the header's right edge */

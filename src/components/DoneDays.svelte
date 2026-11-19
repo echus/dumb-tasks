@@ -49,9 +49,12 @@
           .flatMap(([day, done]) => done.map((task) => ({ task, when: shortDayLabel(day) }))),
   );
 
-  const heading = $derived(
-    picked ? (relativeDay(picked, clock.now) ?? dateLabel(picked, clock.now)) : `all of ${monthName(month)}`,
-  );
+  // "3 tasks done today", "1 task done on Tue 17 Nov", "51 tasks done in November"
+  const when = $derived.by(() => {
+    if (!picked) return { link: 'in', what: monthName(month) };
+    const relative = relativeDay(picked, clock.now);
+    return relative ? { link: '', what: relative } : { link: 'on', what: dateLabel(picked, clock.now) };
+  });
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && !(e.target as HTMLElement).closest('input, [popover]')) closeDoneView();
@@ -120,9 +123,11 @@
       </div>
     </div>
 
+    <!-- The eye goes to the number and the day; the words between are quieter -->
     <h3 id="done-shown">
-      <span>{heading}</span>
-      <span class="total">{shown.length} done</span>
+      <span class="total" class:none={shown.length === 0}>{shown.length}</span>
+      <span class="quiet">{shown.length === 1 ? 'task' : 'tasks'} done {when.link}</span>
+      {when.what}
     </h3>
     {#if shown.length}
       <div class="list">
@@ -132,8 +137,6 @@
           {/each}
         </ul>
       </div>
-    {:else}
-      <p class="note">Nothing done {picked ? 'this day' : 'this month'}.</p>
     {/if}
 
     <p class="note">Done tasks are kept for {KEEP_DAYS} days.</p>
@@ -315,6 +318,14 @@
     outline: 1px solid var(--cal-pick);
   }
 
+  /* Pointing at a day: the same outline in grey. Only with a real mouse - phones keep the
+     last-tapped spot "hovered" */
+  @media (hover: hover) {
+    .day:not(.blank):not(.picked):hover {
+      outline: 1px solid var(--muted);
+    }
+  }
+
   /* Before what's kept, or still to come */
   .blank {
     background: none;
@@ -322,18 +333,24 @@
     cursor: default;
   }
 
-  /* Over the list: what it shows, and how many */
+  /* Over the list: how many, and when */
   h3 {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
     padding: 18px 2px 8px;
     font-size: 0.95rem;
   }
 
+  /* The number in the calendar's deepest green */
   .total {
+    color: var(--cal-5);
+  }
+
+  /* Nothing to celebrate */
+  .total.none {
+    color: var(--text);
+  }
+
+  .quiet {
     color: var(--muted);
-    font-size: 0.8rem;
     font-weight: 600;
   }
 

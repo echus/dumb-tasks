@@ -321,8 +321,11 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 - One view for every list - which list a task was in stops mattering once the day is over
 - Opens from the header and from "see history" on the "done today" line
 - Has its own address `#done` - the system back button closes it and does not leave the app
+- The app's name at the top goes back to the lists, as on most sites
 - A month calendar, Monday first, with the tasks of the picked day below it. Opens on today
 - The month's name lists every task done that month, each with its day
+- Over the list - "3 tasks done on Tue 17 Nov", with the number in green (or plain for 0)
+  and the words between in grey, so the eye goes to the number and the day
 - Arrows step through the months that hold kept days. Days before what is kept, or still to
   come, are blank
 
@@ -336,6 +339,7 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
   blindness
 - Today - a bigger, bold date and count, with no mark that relies on colour
 - The picked day - a thin black outline (white in dark mode)
+- Pointing at a day - the same outline in grey
 - Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 
 ## Drag and drop
