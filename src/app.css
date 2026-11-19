@@ -61,10 +61,10 @@
   /* Done history calendar: a square's colour for 0 to 5+ tasks done, and its text colour.
      Dark: stronger, more vivid green for more - never a pale green at the top, which reads
      as weak on a dark page */
-  --cal-0: #3b3e44;
-  --cal-1: #1f3a28;
-  --cal-2: #1e5631;
-  --cal-3: #1f6b38;
+  --cal-0: #36383c; /* just above the list's own grey, and below every green */
+  --cal-1: #2a4734;
+  --cal-2: #25603a;
+  --cal-3: #23783f;
   --cal-4: #27904a;
   --cal-5: #3fb950;
   --cal-ink: #e6edf3;
