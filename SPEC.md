@@ -338,7 +338,7 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 - The month's name lists every task done that month, each with its day
 - Across from the name, "54 tasks completed" in a box with a day's colours, one step for each
   20 done - the strongest green from 81, about four a day. It lists the month too, and gets an
-  outline just outside the box while the month shows
+  outline on its edge while the month shows
 - "back to today" on the title line, only while something other than today shows
 - Over the list - "3 tasks done on Tue 17 Nov", with the number in green (or plain for 0)
   and the words between in grey, so the eye goes to the number and the day

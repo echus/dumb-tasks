@@ -334,18 +334,18 @@
     font-weight: 700;
   }
 
-  /* Unlike a day, the month's total is outlined just outside its box, against the list - so
-     the one grey reads on every green */
+  /* Unlike a day, the month's total is outlined on its own edge, with no gap - the one grey
+     reads on every green */
   .month-sum.picked {
     outline: 1px solid var(--cal-outline);
-    outline-offset: 1px;
+    outline-offset: 0;
   }
 
   /* The name and the total do the same, so pointing at either lights up the total */
   @media (hover: hover) {
     .month-head:hover .month-sum {
       outline: 1px solid var(--cal-outline);
-      outline-offset: 1px;
+      outline-offset: 0;
     }
   }
 
