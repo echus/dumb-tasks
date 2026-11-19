@@ -10,12 +10,15 @@ import {
   addTask,
   byPosition,
   completeTask,
+  dayOf,
   deleteTask,
   dismissDeadline,
+  doneToday,
   editText,
   isActive,
   moveTask,
   shiftTask,
+  uncompleteTask,
 } from '$lib/tasks/tasks';
 import type { Bucket } from '$lib/types';
 
@@ -198,6 +201,42 @@ describe('tasks', () => {
     await deleteTask(b, later(1));
     expect(await texts('today')).toEqual([]);
     expect(await db.tasks.count()).toBe(2);
+  });
+
+  it('puts an unticked task back where it was', async () => {
+    const a = (await addTask('a', t0))!;
+    await addTask('b', later(1));
+    await addTask('c', later(2));
+    await completeTask(a, later(3));
+    await uncompleteTask(a, later(4));
+    expect(await texts('today')).toEqual(['c', 'b', 'a']);
+  });
+});
+
+describe('done today', () => {
+  const at = (day: number, hour: number, min = 0) => new Date(2026, 10, day, hour, min);
+
+  it('starts the day at 4am', () => {
+    expect(dayOf(at(19, 23, 59))).toBe('2026-11-19');
+    expect(dayOf(at(20, 3, 59))).toBe('2026-11-19');
+    expect(dayOf(at(20, 4, 0))).toBe('2026-11-20');
+  });
+
+  it('counts a task done since the day started, and drops it the next day', async () => {
+    const id = (await addTask('a', at(19, 9)))!;
+    await completeTask(id, at(19, 23, 30));
+    const task = (await db.tasks.get(id))!;
+    expect(doneToday(task, at(20, 1))).toBe(true);
+    expect(doneToday(task, at(20, 4))).toBe(false);
+  });
+
+  it('leaves out tasks not done, or deleted', async () => {
+    const a = (await addTask('a', at(19, 9)))!;
+    const b = (await addTask('b', at(19, 9)))!;
+    await completeTask(b, at(19, 10));
+    await deleteTask(b, at(19, 11));
+    expect(doneToday((await db.tasks.get(a))!, at(19, 12))).toBe(false);
+    expect(doneToday((await db.tasks.get(b))!, at(19, 12))).toBe(false);
   });
 });
 

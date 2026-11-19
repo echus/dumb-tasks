@@ -10,6 +10,7 @@
   import { clickOffset } from '$lib/ui/caret';
   import { dragTask } from '$lib/ui/drag-and-drop';
   import { clock, drag } from '$lib/ui/state.svelte';
+  import { doneGlides, reduceMotion, undoneGlides } from '$lib/ui/done-motion';
 
   let { task, first, last }: { task: Task; first: boolean; last: boolean } = $props();
 
@@ -59,7 +60,16 @@
   // vanish (along with the field) before the tap lands.
   const keepFocus = (e: PointerEvent) => e.preventDefault();
 
+  // Ticking a task off: the circle pops and the text is struck through, then the row glides
+  // down to the tasks done today (see done-motion.ts)
+  let ticking = $state(false);
+
   async function complete() {
+    if (ticking) return;
+    ticking = true;
+    navigator.vibrate?.(10);
+    if (!reduceMotion()) await new Promise((r) => setTimeout(r, 380));
+    clock.now = new Date(); // so a task done just after the day turns over shows as today's
     await track([task.id], () => completeTask(task.id));
   }
 
@@ -142,6 +152,9 @@
   use:dragTask={{ id: task.id }}
   class:dragging={drag.id !== null}
   class:menu-open={menuOpen}
+  class:ticking
+  in:undoneGlides.in={{ key: task.id }}
+  out:doneGlides.out={{ key: task.id }}
 >
   <div class="row">
     <!-- The task's icon doubles as its checkbox: hovering shows a tick, clicking completes -->
@@ -170,7 +183,7 @@
       />
     {:else}
       <button class="text" aria-label="Edit {task.text}" onclick={startEdit}>
-        <span bind:this={words}
+        <span class="words" bind:this={words}
           >{parts.before}{#if parts.phrase}<span class="phrase">{parts.phrase}</span>{/if}{parts.after}</span
         >
       </button>
@@ -310,6 +323,50 @@
 
     li:not(.dragging) .icon:hover .done-glyph {
       display: contents;
+    }
+  }
+
+  /* Ticking off: the tick shows in a circle that pops, and a line draws through the text */
+  li.ticking .icon {
+    color: var(--on-tint);
+    animation: pop 300ms cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+
+  li.ticking .task-glyph {
+    display: none;
+  }
+
+  li.ticking .done-glyph {
+    display: contents;
+  }
+
+  @keyframes pop {
+    40% {
+      transform: scale(1.25);
+    }
+  }
+
+  .words {
+    background: linear-gradient(currentColor, currentColor) no-repeat 0 55% / 0 1.5px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    transition:
+      background-size 300ms ease-out,
+      color 300ms;
+  }
+
+  li.ticking .words {
+    background-size: 100% 1.5px;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    li.ticking .icon {
+      animation: none;
+    }
+
+    .words {
+      transition: none;
     }
   }
 

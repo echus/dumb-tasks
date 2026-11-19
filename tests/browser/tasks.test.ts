@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 // The task list in a real browser: the build works, and IndexedDB keeps the tasks.
 
-test('keeps a task through a reload, and drops it once done', async ({ page }) => {
+test('keeps a task through a reload, and moves it to the done rows once done', async ({ page }) => {
   await page.goto('/');
   const newTask = page.getByLabel('New task in Today');
   await newTask.fill('Water the basil');
@@ -14,10 +14,17 @@ test('keeps a task through a reload, and drops it once done', async ({ page }) =
   await expect(task).toBeVisible();
   await page.getByRole('listitem').filter({ has: task }).getByRole('button', { name: 'Mark done' }).click();
   await expect(task).toBeHidden();
+  const undo = page.getByRole('button', { name: 'Mark not done: Water the basil' });
+  await expect(undo).toBeVisible();
+  await expect(page.getByText('1 done today')).toBeVisible();
 
   await page.reload();
-  await expect(newTask).toBeVisible();
   await expect(task).toBeHidden();
+  await expect(undo).toBeVisible();
+
+  await undo.click();
+  await expect(task).toBeVisible();
+  await expect(undo).toBeHidden();
 });
 
 test('puts the caret where the text was clicked, to edit it there', async ({ page }) => {

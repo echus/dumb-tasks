@@ -1,6 +1,7 @@
 <script lang="ts">
   import AddTask from './AddTask.svelte';
   import BucketName from './BucketName.svelte';
+  import DoneRow from './DoneRow.svelte';
   import TaskRow from './TaskRow.svelte';
   import type { Bucket, Task } from '$lib/types';
 
@@ -8,9 +9,10 @@
     bucket: Bucket;
     active: boolean; // the selected tab, when buckets are shown as tabs
     tasks: Task[];
+    done: Task[]; // done today, newest first
   }
 
-  let { bucket, active, tasks }: Props = $props();
+  let { bucket, active, tasks, done }: Props = $props();
 </script>
 
 <section
@@ -28,6 +30,16 @@
       <ul>
         {#each tasks as task, i (task.id)}
           <TaskRow {task} first={i === 0} last={i === tasks.length - 1} />
+        {/each}
+      </ul>
+      {#if done.length}
+        <p class="done-count">{done.length} done today</p>
+      {/if}
+      <!-- Always there, even empty, so the first task done glides in: a row only glides when
+           its own list adds it -->
+      <ul aria-label="Done today in {bucket}">
+        {#each done as task (task.id)}
+          <DoneRow {task} />
         {/each}
       </ul>
     </div>
@@ -108,6 +120,15 @@
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+
+  .done-count {
+    margin: 0;
+    padding: 10px 12px 4px;
+    border-top: 1px solid var(--bg);
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
   }
 
   /* The same divider under the "add a task" row as between tasks */

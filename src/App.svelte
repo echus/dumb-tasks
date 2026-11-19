@@ -10,9 +10,9 @@
   import { db } from '$lib/db';
   import { sync } from '$lib/sync/sync.svelte';
   import { isDemoTask } from '$lib/tasks/demo-tasks';
-  import { byPosition, isActive } from '$lib/tasks/tasks';
+  import { byCompletion, byPosition, doneToday, isActive } from '$lib/tasks/tasks';
   import { BUCKETS, type Bucket, type Task } from '$lib/types';
-  import { drag } from '$lib/ui/state.svelte';
+  import { clock, drag } from '$lib/ui/state.svelte';
 
   // Re-runs whenever the tasks table changes, from any tab.
   const tasks = liveQuery(() => db.tasks.toArray());
@@ -24,9 +24,19 @@
     return out;
   });
 
-  // Only the demo tasks, or nothing to do (a first visit, or everything done): say what the
-  // app is. Waits for the first read so it doesn't flash up before the tasks load.
-  const showIntro = $derived($tasks !== undefined && $tasks.filter(isActive).every(isDemoTask));
+  const done = $derived.by(() => {
+    const out = Object.fromEntries(BUCKETS.map((b) => [b, [] as Task[]])) as Record<Bucket, Task[]>;
+    for (const t of ($tasks ?? []).filter((t) => doneToday(t, clock.now))) out[t.bucket].push(t);
+    for (const b of BUCKETS) out[b].sort(byCompletion);
+    return out;
+  });
+
+  // Only the demo tasks, or nothing at all (a first visit, or everything done before today):
+  // say what the app is. Waits for the first read so it doesn't flash up before the tasks load.
+  const showIntro = $derived(
+    $tasks !== undefined &&
+      $tasks.filter((t) => isActive(t) || doneToday(t, clock.now)).every(isDemoTask),
+  );
 
   // Which bucket shows when they're tabs (below desktop width). Kept for this session only,
   // so a refresh stays put but a fresh visit opens on today.
@@ -94,7 +104,7 @@
 
 <main style:--sticky-top="{barHeight}px">
   {#each BUCKETS as bucket (bucket)}
-    <BucketList {bucket} active={activeTab === bucket} tasks={grouped[bucket]} />
+    <BucketList {bucket} active={activeTab === bucket} tasks={grouped[bucket]} done={done[bucket]} />
   {/each}
 </main>
 
