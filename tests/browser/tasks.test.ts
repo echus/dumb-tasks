@@ -74,7 +74,7 @@ test('shows done tasks by day, and closes with the back button', async ({ page }
 
   await page.getByRole('button', { name: 'Done tasks', exact: true }).click();
   await expect(page).toHaveURL(/#done$/);
-  await expect(page.getByRole('list', { name: /Today/ })).toContainText('Water the basil');
+  await expect(page.getByRole('list', { name: /today 1 done/ })).toContainText('Water the basil');
   await expect(page.getByLabel('New task in Today')).toBeHidden();
 
   await page.goBack();

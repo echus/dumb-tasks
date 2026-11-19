@@ -26,11 +26,16 @@
       <button class="back" aria-label="Back to tasks" title="Back to tasks" onclick={closeDoneView}>
         <Icon svg={ui.arrowLeft} size={18} />
       </button>
-      <h2 id="done-days-title">done</h2>
+      <h2 id="done-days-title">done history</h2>
     </div>
 
     {#each days as day (day.day)}
-      <h3 id="done-{day.day}">{day.label} <span class="count">{day.tasks.length}</span></h3>
+      <!-- The date leads, so "today" isn't read as the Today list -->
+      <h3 id="done-{day.day}">
+        {day.date}
+        {#if day.relative}<span class="relative">{day.relative}</span>{/if}
+        <span class="count">{day.tasks.length} done</span>
+      </h3>
       <div class="list">
         <ul aria-labelledby="done-{day.day}">
           {#each day.tasks as task (task.id)}
@@ -105,14 +110,23 @@
 
   /* The same plain text above a white list as the bucket names */
   h3 {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
     padding: 16px 2px 8px;
     font-size: 0.95rem;
   }
 
+  .relative,
   .count {
-    margin-left: 4px;
     color: var(--muted);
     font-weight: 600;
+  }
+
+  /* Over the right end of the day's list */
+  .count {
+    margin-left: auto;
+    font-size: 0.8rem;
   }
 
   .list {

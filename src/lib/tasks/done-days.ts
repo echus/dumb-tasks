@@ -3,7 +3,8 @@ import { byCompletion, dayOf } from './tasks';
 
 export interface DoneDay {
   day: string; // YYYY-MM-DD, as dayOf gives it
-  label: string;
+  date: string; // as the device writes dates
+  relative: 'today' | 'yesterday' | null;
   tasks: Task[]; // newest first
 }
 
@@ -17,14 +18,23 @@ export function doneDays(tasks: Task[], now: Date, locale?: string): DoneDay[] {
   }
   return [...byDay]
     .sort(([a], [b]) => b.localeCompare(a))
-    .map(([day, done]) => ({ day, label: dayLabel(day, now, locale), tasks: done.sort(byCompletion) }));
+    .map(([day, done]) => ({
+      day,
+      date: dateLabel(day, now, locale),
+      relative: relativeDay(day, now),
+      tasks: done.sort(byCompletion),
+    }));
 }
 
-/** "Today", "Yesterday", or the date in the device's own order, with the year if it isn't this one. */
-export function dayLabel(day: string, now: Date, locale?: string): string {
+export function relativeDay(day: string, now: Date): DoneDay['relative'] {
+  if (day === dayOf(now)) return 'today';
+  if (day === dayOf(new Date(now.getTime() - 86_400_000))) return 'yesterday';
+  return null;
+}
+
+/** The date in the device's own order, with the year if it isn't this one. */
+export function dateLabel(day: string, now: Date, locale?: string): string {
   const today = dayOf(now);
-  if (day === today) return 'Today';
-  if (day === dayOf(new Date(now.getTime() - 86_400_000))) return 'Yesterday';
   const [year, month, date] = day.split('-').map(Number);
   return new Date(year, month - 1, date).toLocaleDateString(locale, {
     weekday: 'short',

@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '$lib/db';
-import { dayLabel, doneDays } from '$lib/tasks/done-days';
+import { dateLabel, doneDays, relativeDay } from '$lib/tasks/done-days';
 import { addTask, completeTask, deleteTask, moveTask } from '$lib/tasks/tasks';
 
 const at = (month: number, day: number, hour: number, min = 0) => new Date(2026, month - 1, day, hour, min);
@@ -22,9 +22,9 @@ describe('doneDays', () => {
     await completeTask(c, at(11, 19, 11));
 
     const days = doneDays(await db.tasks.toArray(), now, 'en-GB');
-    expect(days.map((d) => [d.label, d.tasks.map((t) => t.text)])).toEqual([
-      ['Today', ['c', 'b']],
-      ['Yesterday', ['a']],
+    expect(days.map((d) => [d.date, d.relative, d.tasks.map((t) => t.text)])).toEqual([
+      ['Thu 19 Nov', 'today', ['c', 'b']],
+      ['Wed 18 Nov', 'yesterday', ['a']],
     ]);
   });
 
@@ -43,15 +43,19 @@ describe('doneDays', () => {
   });
 });
 
-describe('dayLabel', () => {
-  it('names today and yesterday, and dates older days', () => {
-    expect(dayLabel('2026-11-19', now)).toBe('Today');
-    expect(dayLabel('2026-11-18', now)).toBe('Yesterday');
-    expect(dayLabel('2026-11-17', now, 'en-GB')).toBe('Tue 17 Nov');
-    expect(dayLabel('2026-11-17', now, 'en-US')).toBe('Tue, Nov 17');
+describe('day labels', () => {
+  it('names today and yesterday', () => {
+    expect(relativeDay('2026-11-19', now)).toBe('today');
+    expect(relativeDay('2026-11-18', now)).toBe('yesterday');
+    expect(relativeDay('2026-11-17', now)).toBe(null);
+  });
+
+  it('writes the date in the device order', () => {
+    expect(dateLabel('2026-11-17', now, 'en-GB')).toBe('Tue 17 Nov');
+    expect(dateLabel('2026-11-17', now, 'en-US')).toBe('Tue, Nov 17');
   });
 
   it('adds the year to a day in another year', () => {
-    expect(dayLabel('2025-12-30', at(1, 2, 12), 'en-GB')).toBe('Tue, 30 Dec 2025');
+    expect(dateLabel('2025-12-30', at(1, 2, 12), 'en-GB')).toBe('Tue, 30 Dec 2025');
   });
 });
