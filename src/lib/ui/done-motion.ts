@@ -19,9 +19,9 @@ const [sendUndone, receiveUndone] = crossfade(options);
 
 type Glide = typeof sendDone;
 
-// Lifted above the rows it passes, with its list's own background, so their text doesn't
+// Lifted above the rows it passes, with the list's own background, so their text doesn't
 // show through it
-const LIFTED = 'position: relative; z-index: 1; background: var(--row-bg, var(--surface))';
+const LIFTED = 'position: relative; z-index: 1; background: var(--surface)';
 
 /** Adds to a transition's CSS. Svelte stops reading it at an empty part, as from a ";;". */
 const withCss = (css: string | undefined, extra: string) =>
@@ -49,6 +49,14 @@ function closingGap(glide: Glide): Glide {
     const made = glide(node, params);
     return () => {
       const config = made();
+      // Ticked off with the done rows closed: nowhere to glide to, so it fades as it goes
+      if (!config.duration && node.classList.contains('ticking') && !reduceMotion()) {
+        return {
+          duration: 300,
+          easing: cubicOut,
+          css: (t: number) => `opacity: ${t}; height: ${t * height}px; overflow: hidden`,
+        };
+      }
       if (!config.duration) return config;
       return {
         ...config,

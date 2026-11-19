@@ -2,6 +2,9 @@
   import AddTask from './AddTask.svelte';
   import BucketName from './BucketName.svelte';
   import DoneRow from './DoneRow.svelte';
+  import Icon from './Icon.svelte';
+  import * as ui from '$lib/ui/icons';
+  import { doneRows, toggleDoneRows } from '$lib/ui/state.svelte';
   import TaskRow from './TaskRow.svelte';
   import { BUCKET_LABELS, type Bucket, type Task } from '$lib/types';
 
@@ -34,15 +37,25 @@
       </ul>
       <div class="done">
         {#if done.length}
-          <p class="done-count">{done.length} done today</p>
+          <button
+            class="done-toggle"
+            aria-expanded={doneRows.open}
+            aria-controls="done-{bucket}"
+            onclick={toggleDoneRows}
+          >
+            {done.length} done today
+            <span class="caret" class:closed={!doneRows.open}><Icon svg={ui.caretDown} size={12} /></span>
+          </button>
         {/if}
-        <!-- Always there, even empty, so the first task done glides in: a row only glides when
-             its own list adds it -->
-        <ul aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
-          {#each done as task (task.id)}
-            <DoneRow {task} />
-          {/each}
-        </ul>
+        <!-- Always there while open, even empty, so the first task done glides in: a row only
+             glides when its own list adds it. Closed, a ticked task fades away instead. -->
+        {#if doneRows.open}
+          <ul id="done-{bucket}" aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
+            {#each done as task (task.id)}
+              <DoneRow {task} />
+            {/each}
+          </ul>
+        {/if}
       </div>
     </div>
   </div>
@@ -124,19 +137,42 @@
     padding: 0;
   }
 
-  /* A gliding row takes this background too (done-motion.ts) */
-  .done {
-    --row-bg: var(--surface-done);
-    background: var(--surface-done);
-  }
-
-  .done-count {
-    margin: 0;
-    padding: 10px 12px 4px;
+  .done-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
     border-top: 1px solid var(--bg);
+    background: none;
     color: var(--muted);
     font-size: 0.75rem;
     font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .done-toggle:hover {
+    color: var(--text);
+  }
+
+  /* At the far right, over where the row buttons sit */
+  .caret {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    transition: transform 150ms;
+  }
+
+  .caret.closed {
+    transform: rotate(-90deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .caret {
+      transition: none;
+    }
   }
 
   /* The same divider under the "add a task" row as between tasks */

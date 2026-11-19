@@ -303,10 +303,12 @@ src/lib/ui/celebrate.ts         burst of hearts, stars, sparkles or sprinkles on
 - The day starts at 4am - a task done just after midnight stays with the evening's
 - A done task goes back to its old place when ticked again - its position does not change
 - Done rows cannot be dragged or edited - a tap anywhere on one undoes it
+- The "done today" line opens and closes the done rows in every list. Open by default, and
+  the choice is kept on the device
+- Done rows closed - a ticked task fades out in place
 - Ticking off - the circle pops with a burst and a line draws through the text, then the row
   glides down
-- Done rows have light grey text on a grey between the list and the page, and their circle
-  keeps a faded trace of its colour
+- Done rows have light grey text and their circle keeps a faded trace of its colour
 - Reduced motion turns off the pop, the burst and the glide
 
 ## Drag and drop

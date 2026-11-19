@@ -44,37 +44,37 @@ export function celebrate(from: Element, colour: string) {
     pointerEvents: 'none',
   });
 
-  const count = kind === 'sprinkles' ? 14 : 9;
+  const count = kind === 'sprinkles' ? 10 : 7;
   const animations: Animation[] = [];
   for (let i = 0; i < count; i++) {
     const bit = document.createElement('span');
     const tint = near(colour);
     Object.assign(bit.style, { position: 'absolute', left: '0', top: '0', lineHeight: '1' });
     if (kind === 'sprinkles') {
-      Object.assign(bit.style, { width: '3px', height: '8px', borderRadius: '2px', background: tint });
+      Object.assign(bit.style, { width: '2px', height: '6px', borderRadius: '1px', background: tint });
     } else {
       bit.textContent = GLYPHS[kind];
-      Object.assign(bit.style, { color: tint, fontSize: `${Math.round(random(9, 15))}px` });
+      Object.assign(bit.style, { color: tint, fontSize: `${Math.round(random(7, 10))}px` });
     }
     layer.append(bit);
 
     const angle = (i / count) * Math.PI * 2 + random(-0.3, 0.3);
-    const distance = random(24, 42);
+    const distance = random(20, 32);
     const x = Math.cos(angle) * distance;
     const y = Math.sin(angle) * distance;
-    const turn = random(-180, 180);
+    const turn = random(-90, 90);
     const at = (dx: number, dy: number, scale: number, deg: number) =>
       `translate(-50%, -50%) translate(${dx}px, ${dy}px) scale(${scale}) rotate(${deg}deg)`;
     animations.push(
       bit.animate(
         [
-          { transform: at(0, 0, 0.3, 0), opacity: 1 },
-          { transform: at(x * 0.85, y * 0.85, 1, turn / 2), opacity: 1, offset: 0.55 },
-          { transform: at(x, y + 8, 0.6, turn), opacity: 0 }, // a little fall as it fades
+          { transform: at(0, 0, 0.3, 0), opacity: 0.8 },
+          { transform: at(x * 0.85, y * 0.85, 1, turn / 2), opacity: 0.8, offset: 0.5 },
+          { transform: at(x, y + 4, 0.7, turn), opacity: 0 }, // a little fall as it fades
         ],
         // Holds the faded last frame: without it a bit that ends before the rest springs back
         // to the middle, in full, till the layer goes
-        { duration: random(600, 800), easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)', fill: 'forwards' },
+        { duration: random(500, 650), easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)', fill: 'forwards' },
       ),
     );
   }
