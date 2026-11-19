@@ -7,3 +7,12 @@
   Cache-Control: no-cache
 /manifest.webmanifest
   Cache-Control: no-cache
+
+# Keep previews (staging.dumbtasks.app and the like) and workers.dev addresses out of search
+# results - only dumbtasks.app itself should be found
+https://:preview.dumbtasks.app/*
+  X-Robots-Tag: noindex
+https://:worker.:account.workers.dev/*
+  X-Robots-Tag: noindex
+https://:version.:worker.:account.workers.dev/*
+  X-Robots-Tag: noindex
