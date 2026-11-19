@@ -416,14 +416,14 @@
     line-height: 1;
   }
 
-  /* Today: bold, with a yellow ring round the outside */
+  /* Today: bold, with a yellow ring just inside its edge, so the square keeps its size */
   .today .date,
   .today .count {
     font-weight: 700;
   }
 
   .today {
-    box-shadow: 0 0 0 2px var(--cal-today);
+    box-shadow: inset 0 0 0 2px var(--cal-today);
   }
 
   /* The picked day, and a day pointed at, get a thin line just inside the square: dark on the
