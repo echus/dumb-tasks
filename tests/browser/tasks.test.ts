@@ -27,6 +27,27 @@ test('keeps a task through a reload, and moves it to the done rows once done', a
   await expect(undo).toBeHidden();
 });
 
+test('closes the done rows in every list, and keeps them closed', async ({ page }) => {
+  await page.goto('/');
+  const newTask = page.getByLabel('New task in Today');
+  await newTask.fill('Water the basil');
+  await newTask.press('Enter');
+  await page.getByRole('listitem').filter({ hasText: 'Water the basil' }).getByRole('button', { name: 'Mark done' }).click();
+  const toggle = page.getByRole('button', { name: '1 done today' });
+  const undo = page.getByRole('button', { name: 'Mark not done: Water the basil' });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(undo).toBeVisible();
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(undo).toBeHidden();
+
+  await page.reload();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await expect(undo).toBeVisible();
+});
+
 test('puts the caret where the text was clicked, to edit it there', async ({ page }) => {
   await page.goto('/');
   const newTask = page.getByLabel('New task in Today');

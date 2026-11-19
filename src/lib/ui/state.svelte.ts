@@ -27,6 +27,26 @@ export const drag = $state<{
  */
 export const menu = $state<{ open: boolean; highlight: 'install' | null }>({ open: false, highlight: null });
 
+/** Whether the tasks done today show, in every list. Open unless closed on this device. */
+export const doneRows = $state({ open: savedDoneOpen() });
+
+function savedDoneOpen(): boolean {
+  try {
+    return localStorage.getItem('done-rows') !== 'closed';
+  } catch {
+    return true; // Storage blocked: open
+  }
+}
+
+export function toggleDoneRows() {
+  doneRows.open = !doneRows.open;
+  try {
+    localStorage.setItem('done-rows', doneRows.open ? 'open' : 'closed');
+  } catch {
+    // Not kept; it still toggles
+  }
+}
+
 export function endDrag() {
   drag.id = null;
   drag.overTab = null;
