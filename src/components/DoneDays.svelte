@@ -279,6 +279,8 @@
   }
 
   .day {
+    position: relative;
+    overflow: hidden; /* clips today's corner to the rounding */
     aspect-ratio: 1;
     display: flex;
     flex-direction: column;
@@ -324,10 +326,22 @@
     line-height: 1;
   }
 
-  /* Today: bold, with no mark that leans on colour */
+  /* Today: bold, with a yellow corner like a page folded down - a shape too, so it doesn't
+     lean on colour alone */
   .today .date,
   .today .count {
     font-weight: 700;
+  }
+
+  .today::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    background: var(--cal-today);
+    clip-path: polygon(0 0, 100% 0, 0 100%);
   }
 
   /* The picked day, and a day pointed at, get a thin line just inside the square: dark on the

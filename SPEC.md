@@ -351,7 +351,8 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
   blindness
 - Dark mode - the top step is the most vivid green, not the palest - pale reads as weak on a
   dark page
-- Today - a bold date and count, with no mark that relies on colour
+- Today - a bold date and count, and a small yellow corner at the top left - a shape too, so
+  it does not rely on colour alone
 - The picked day, and a day pointed at - a thin line just inside the square. Dark on the
   paler squares and light on the two strongest greens, the other way round in dark mode
 - Shows what is kept - done tasks are removed after 90 days (see Clean-up)
