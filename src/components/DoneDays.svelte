@@ -269,6 +269,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 8px; /* clear of the day names */
   }
 
   .month {
@@ -322,20 +323,7 @@
     }
   }
 
-  /* Showing the whole month, or pointed at: the same thin grey box as a day */
-  .month {
-    border-radius: 3px;
-  }
 
-  .month[aria-pressed='true'] {
-    outline: 1px solid var(--cal-outline);
-  }
-
-  @media (hover: hover) {
-    .month:hover {
-      outline: 1px solid var(--cal-outline);
-    }
-  }
 
   .grid {
     display: grid;
