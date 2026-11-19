@@ -80,7 +80,7 @@ test('shows done tasks by day, and closes with the back button', async ({ page }
   await page.goBack();
   await expect(page.getByLabel('New task in Today')).toBeVisible();
 
-  await page.getByRole('button', { name: 'See all done tasks' }).first().click();
+  await page.getByRole('button', { name: 'See done history' }).first().click();
   await page.getByRole('button', { name: 'Back to tasks' }).click();
   await expect(page.getByLabel('New task in Today')).toBeVisible();
   await expect(page).not.toHaveURL(/#done/);

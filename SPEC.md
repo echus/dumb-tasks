@@ -316,7 +316,7 @@ src/lib/ui/done-view.svelte.ts  opens and closes the past done tasks at #done
   once the day is over
 - Each day is headed by its date, with "today" or "yesterday" after it - a heading "today"
   would read as the Today list
-- Opens from the header and from "see all" on the "done today" line
+- Opens from the header and from "see history" on the "done today" line
 - Has its own address `#done` - the system back button closes it and does not leave the app
 - Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 - Ticking off - the circle pops with a burst and a line draws through the text, then the row

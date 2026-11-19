@@ -38,7 +38,7 @@
       </ul>
       <div class="done">
         {#if done.length}
-          <!-- The whole line opens and closes the done rows; "see all" sits on it, by the arrow -->
+          <!-- The whole line opens and closes the done rows; "see history" sits on it, by the arrow -->
           <div class="done-head">
             <button
               class="done-toggle"
@@ -49,7 +49,7 @@
               {done.length} done today
               <span class="caret" class:closed={!doneRows.open}><Icon svg={ui.caretDown} size={12} /></span>
             </button>
-            <button class="see-all" aria-label="See all done tasks" onclick={openDoneView}>see all</button>
+            <button class="see-all" aria-label="See done history" onclick={openDoneView}>see history</button>
           </div>
         {/if}
         <!-- Always there while open, even empty, so the first task done glides in: a row only
