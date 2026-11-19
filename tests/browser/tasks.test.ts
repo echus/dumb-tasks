@@ -64,6 +64,72 @@ test('closes the done rows in every list, and keeps them closed', async ({ page 
   await expect(undo).toBeVisible();
 });
 
+test('shows done tasks by day, and closes with the back button', async ({ page }) => {
+  await page.goto('/');
+  const newTask = page.getByLabel('New task in Today');
+  await newTask.fill('Water the basil');
+  await newTask.press('Enter');
+  await page.getByRole('listitem').filter({ hasText: 'Water the basil' }).getByRole('button', { name: 'Mark done' }).click();
+  await expect(page.getByRole('button', { name: '1 done today' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Done tasks', exact: true }).click();
+  await expect(page).toHaveURL(/#done$/);
+  await expect(page.getByRole('list', { name: '1 task done today' })).toContainText('Water the basil');
+  await expect(page.getByLabel('New task in Today')).toBeHidden();
+
+  // The calendar: today is picked; the month's name lists the whole month
+  const todaySquare = page.getByRole('button', { name: /^1 done on .*, today$/ });
+  await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: /^Show every task done in/ }).click();
+  await expect(page.getByRole('list', { name: /^1 task done in / })).toContainText('Water the basil');
+  await expect(page.getByRole('button', { name: /^1 done in / })).toHaveText(/1\s+task completed/);
+  await todaySquare.click();
+  await expect(page.getByRole('list', { name: '1 task done today' })).toBeVisible();
+
+  // Back from a picked day goes to today, then out of the history
+  await page.getByRole('button', { name: /^Show every task done in/ }).click();
+  await expect(page).toHaveURL(/#done\/\d{4}-\d{2}$/);
+  await page.goBack();
+  await expect(page.getByRole('list', { name: '1 task done today' })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+
+  // The arrow keys move between days, and back still steps out
+  await page.getByRole('button', { name: 'Done tasks', exact: true }).click();
+  await todaySquare.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('heading', { name: /tasks done yesterday/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^0 done on .*/ }).and(page.locator(':focus'))).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('ArrowRight');
+  await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
+  await expect(todaySquare).toBeFocused();
+
+  // "back to today" shows only away from today, and goes there
+  const toToday = page.getByRole('button', { name: 'back to today' });
+  await expect(toToday).toBeHidden();
+  await page.getByRole('button', { name: 'Previous month' }).click();
+  await toToday.click();
+  await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
+  await expect(toToday).toBeHidden();
+  await page.goBack();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+
+  // The name at the top goes home too
+  await page.getByRole('button', { name: 'Done tasks', exact: true }).click();
+  await page.getByRole('link', { name: 'dumb tasks' }).click();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+
+  await page.getByRole('button', { name: 'See done history' }).first().click();
+  await page.getByRole('button', { name: 'Back to tasks' }).click();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+  await expect(page).not.toHaveURL(/#done/);
+
+  // Opened straight at #done, back to tasks stays in the app
+  await page.goto('/#done');
+  await page.getByRole('button', { name: 'Back to tasks' }).click();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+});
+
 test('puts the caret where the text was clicked, to edit it there', async ({ page }) => {
   await page.goto('/');
   const newTask = page.getByLabel('New task in Today');

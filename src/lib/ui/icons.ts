@@ -5,6 +5,10 @@ import dots from '@phosphor-icons/core/assets/bold/dots-three-bold.svg?raw';
 import type { Bucket } from '../types';
 
 // Bold, not fill: Phosphor's filled check is a solid box with the tick cut out
+export { default as arrowLeft } from '@phosphor-icons/core/assets/bold/arrow-left-bold.svg?raw';
+export { default as doneDays } from '@phosphor-icons/core/assets/bold/calendar-check-bold.svg?raw';
+export { default as caretLeft } from '@phosphor-icons/core/assets/bold/caret-left-bold.svg?raw';
+export { default as caretRight } from '@phosphor-icons/core/assets/bold/caret-right-bold.svg?raw';
 export { default as caretDown } from '@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw';
 export { default as check } from '@phosphor-icons/core/assets/bold/check-bold.svg?raw';
 export { default as plus } from '@phosphor-icons/core/assets/bold/plus-bold.svg?raw';

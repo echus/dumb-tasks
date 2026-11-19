@@ -297,6 +297,9 @@ wrong icon is worse than none.
 src/components/DoneRow.svelte   a done task, ticked again to undo
 src/lib/ui/done-motion.ts       glide between a list and its done rows
 src/lib/ui/celebrate.ts         burst on a tick, in the task's colour
+src/components/DoneDays.svelte  done history: a month calendar and the tasks of a day or month
+src/lib/tasks/done-days.ts      groups done tasks by day, lays out months, names days
+src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 ```
 
 - A task done today stays at the bottom of its own list, struck through, newest first
@@ -312,6 +315,50 @@ src/lib/ui/celebrate.ts         burst on a tick, in the task's colour
 - Done rows have light grey text and their circle keeps a faded trace of its colour - less in
   light mode, where colour shows more on white
 - Reduced motion turns off the pop, the burst and the glide
+
+### Done history
+
+- One view for every list - which list a task was in stops mattering once the day is over
+- Opens from the header and from "see history" on the "done today" line
+- Has its own address, so the system back button steps back through it and does not leave
+  the app
+
+| Address | Shows |
+| --- | --- |
+| `#done` | Today |
+| `#done/2026-11-17` | A picked day |
+| `#done/2026-11` | A whole month |
+
+- Moving off today adds one step to the browser history, and later picks replace it - back
+  goes to today, then to the lists, not through every day tapped
+- The calendar is one Tab stop. Arrow keys move a day or a week, across months, as in a date
+  picker
+- The app's name at the top goes back to the lists, as on most sites
+- A month calendar, Monday first, with the tasks of the picked day below it. Opens on today
+- The month's name lists every task done that month, each with its day
+- Across from the name, "54 tasks completed" in a box with a day's colours, one step for each
+  20 done - the strongest green from 81, about four a day. It lists the month too, and gets an
+  outline on its edge while the month shows
+- "back to today" on the title line, only while something other than today shows
+- Over the list - "3 tasks done on Tue 17 Nov", with the number in green (or plain for 0)
+  and the words between in grey, so the eye goes to the number and the day
+- Arrows step through the months that hold kept days. Days before what is kept, or still to
+  come, are blank
+
+| Done that day | Square |
+| --- | --- |
+| 0 | Grey |
+| 1 to 4 | A green for each count, stronger for more |
+| 5 or more | The strongest green - a good day's worth, reachable on a normal day |
+
+- Shade is by lightness, not hue, and each square prints its count - it reads with colour
+  blindness
+- Dark mode - the top step is the most vivid green, not the palest - pale reads as weak on a
+  dark page
+- Today - a bold date and count, and a yellow ring just inside the square
+- The picked day, and a day pointed at - a thin line just inside the square. Dark on the
+  paler squares and light on the two strongest greens, the other way round in dark mode
+- Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 
 ## Drag and drop
 

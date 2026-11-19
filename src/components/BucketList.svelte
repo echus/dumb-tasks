@@ -5,6 +5,7 @@
   import Icon from './Icon.svelte';
   import * as ui from '$lib/ui/icons';
   import { doneRows, toggleDoneRows } from '$lib/ui/state.svelte';
+  import { openDoneView } from '$lib/ui/done-view.svelte';
   import TaskRow from './TaskRow.svelte';
   import { BUCKET_LABELS, type Bucket, type Task } from '$lib/types';
 
@@ -35,8 +36,9 @@
           <TaskRow {task} first={i === 0} last={i === tasks.length - 1} />
         {/each}
       </ul>
-      <div class="done">
-        {#if done.length}
+      {#if done.length}
+        <!-- The whole line opens and closes the done rows; "see history" sits on it, by the arrow -->
+        <div class="done-head">
           <button
             class="done-toggle"
             aria-expanded={doneRows.open}
@@ -46,17 +48,18 @@
             {done.length} done today
             <span class="caret" class:closed={!doneRows.open}><Icon svg={ui.caretDown} size={12} /></span>
           </button>
-        {/if}
-        <!-- Always there while open, even empty, so the first task done glides in: a row only
-             glides when its own list adds it. Closed, a ticked task fades away instead. -->
-        {#if doneRows.open}
-          <ul id="done-{bucket}" aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
-            {#each done as task (task.id)}
-              <DoneRow {task} />
-            {/each}
-          </ul>
-        {/if}
-      </div>
+          <button class="see-history" aria-label="See done history" onclick={openDoneView}>see history</button>
+        </div>
+      {/if}
+      <!-- Always there while open, even empty, so the first task done glides in: a row only
+           glides when its own list adds it. Closed, a ticked task fades away instead. -->
+      {#if doneRows.open}
+        <ul id="done-{bucket}" aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
+          {#each done as task (task.id)}
+            <DoneRow {task} />
+          {/each}
+        </ul>
+      {/if}
     </div>
   </div>
 </section>
@@ -151,6 +154,29 @@
     font-weight: 600;
     text-align: left;
     cursor: pointer;
+  }
+
+  .done-head {
+    position: relative;
+  }
+
+  /* Just left of the arrow (12px padding, 24px arrow) */
+  .see-history {
+    position: absolute;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
+    padding: 4px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .see-history:hover {
+    color: var(--text);
+    text-decoration: underline;
   }
 
   .done-toggle:hover {
