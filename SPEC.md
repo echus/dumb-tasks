@@ -302,7 +302,7 @@ src/lib/ui/celebrate.ts         burst on a tick, in the task's colour
 - A task done today stays at the bottom of its own list, struck through, newest first
 - The day starts at 4am - a task done just after midnight stays with the evening's
 - A done task goes back to its old place when ticked again - its position does not change
-- Done rows cannot be dragged or edited - a tap anywhere on one undoes it
+- Done rows cannot be dragged or edited - a tap on one undoes it, and the x deletes it
 - The "done today" line opens and closes the done rows in every list. Open by default, and
   the choice is kept on the device
 - Done rows closed - a ticked task fades out in place

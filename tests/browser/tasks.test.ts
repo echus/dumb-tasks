@@ -27,6 +27,22 @@ test('keeps a task through a reload, and moves it to the done rows once done', a
   await expect(undo).toBeHidden();
 });
 
+test('deletes a done task', async ({ page }) => {
+  await page.goto('/');
+  const newTask = page.getByLabel('New task in Today');
+  await newTask.fill('Water the basil');
+  await newTask.press('Enter');
+  await page.getByRole('listitem').filter({ hasText: 'Water the basil' }).getByRole('button', { name: 'Mark done' }).click();
+  const undo = page.getByRole('button', { name: 'Mark not done: Water the basil' });
+  await undo.hover();
+  await page.getByRole('button', { name: 'Delete Water the basil' }).click();
+  await expect(undo).toBeHidden();
+  await expect(page.getByRole('button', { name: /done today/ })).toBeHidden();
+
+  await page.reload();
+  await expect(page.getByText('Water the basil')).toBeHidden();
+});
+
 test('closes the done rows in every list, and keeps them closed', async ({ page }) => {
   await page.goto('/');
   const newTask = page.getByLabel('New task in Today');
