@@ -297,6 +297,9 @@ wrong icon is worse than none.
 src/components/DoneRow.svelte   a done task, ticked again to undo
 src/lib/ui/done-motion.ts       glide between a list and its done rows
 src/lib/ui/celebrate.ts         burst on a tick, in the task's colour
+src/components/DoneDays.svelte  past done tasks, by day
+src/lib/tasks/done-days.ts      groups done tasks by day and names the days
+src/lib/ui/done-view.svelte.ts  opens and closes the past done tasks at #done
 ```
 
 - A task done today stays at the bottom of its own list, struck through, newest first
@@ -306,6 +309,14 @@ src/lib/ui/celebrate.ts         burst on a tick, in the task's colour
 - The "done today" line opens and closes the done rows in every list. Open by default, and
   the choice is kept on the device
 - Done rows closed - a ticked task fades out in place
+
+### Past done tasks
+
+- One view for every list, by day, newest first - which list a task was in stops mattering
+  once the day is over
+- Opens from the header and from "See all done tasks" under the done rows
+- Has its own address `#done` - the system back button closes it and does not leave the app
+- Shows what is kept - done tasks are removed after 90 days (see Clean-up)
 - Ticking off - the circle pops with a burst and a line draws through the text, then the row
   glides down
 - Burst - one of ripple, rays, dots, plus signs, diamonds or ticks, picked at random

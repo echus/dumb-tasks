@@ -64,6 +64,33 @@ test('closes the done rows in every list, and keeps them closed', async ({ page 
   await expect(undo).toBeVisible();
 });
 
+test('shows done tasks by day, and closes with the back button', async ({ page }) => {
+  await page.goto('/');
+  const newTask = page.getByLabel('New task in Today');
+  await newTask.fill('Water the basil');
+  await newTask.press('Enter');
+  await page.getByRole('listitem').filter({ hasText: 'Water the basil' }).getByRole('button', { name: 'Mark done' }).click();
+  await expect(page.getByRole('button', { name: '1 done today' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Done tasks', exact: true }).click();
+  await expect(page).toHaveURL(/#done$/);
+  await expect(page.getByRole('list', { name: /Today/ })).toContainText('Water the basil');
+  await expect(page.getByLabel('New task in Today')).toBeHidden();
+
+  await page.goBack();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+
+  await page.getByRole('button', { name: 'See all done tasks' }).first().click();
+  await page.getByRole('button', { name: 'Back to tasks' }).click();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+  await expect(page).not.toHaveURL(/#done/);
+
+  // Opened straight at #done, back to tasks stays in the app
+  await page.goto('/#done');
+  await page.getByRole('button', { name: 'Back to tasks' }).click();
+  await expect(page.getByLabel('New task in Today')).toBeVisible();
+});
+
 test('puts the caret where the text was clicked, to edit it there', async ({ page }) => {
   await page.goto('/');
   const newTask = page.getByLabel('New task in Today');

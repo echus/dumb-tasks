@@ -5,6 +5,7 @@
   import Icon from './Icon.svelte';
   import * as ui from '$lib/ui/icons';
   import { doneRows, toggleDoneRows } from '$lib/ui/state.svelte';
+  import { openDoneView } from '$lib/ui/done-view.svelte';
   import TaskRow from './TaskRow.svelte';
   import { BUCKET_LABELS, type Bucket, type Task } from '$lib/types';
 
@@ -55,6 +56,9 @@
               <DoneRow {task} />
             {/each}
           </ul>
+          {#if done.length}
+            <button class="all-done" onclick={openDoneView}>See all done tasks</button>
+          {/if}
         {/if}
       </div>
     </div>
@@ -153,6 +157,21 @@
     cursor: pointer;
   }
 
+  .all-done {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-top: 1px solid var(--bg);
+    background: none;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .all-done:hover,
   .done-toggle:hover {
     color: var(--text);
   }

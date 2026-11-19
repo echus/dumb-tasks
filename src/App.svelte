@@ -2,6 +2,8 @@
   import { liveQuery } from 'dexie';
   import BucketList from './components/BucketList.svelte';
   import BucketName from './components/BucketName.svelte';
+  import DoneDays from './components/DoneDays.svelte';
+  import Icon from './components/Icon.svelte';
   import HistoryButtons from './components/HistoryButtons.svelte';
   import InstallPill from './components/InstallPill.svelte';
   import PageFooter from './components/PageFooter.svelte';
@@ -13,6 +15,8 @@
   import { byCompletion, byPosition, doneToday, isActive } from '$lib/tasks/tasks';
   import { BUCKETS, type Bucket, type Task } from '$lib/types';
   import { clock, drag } from '$lib/ui/state.svelte';
+  import { closeDoneView, doneView, openDoneView } from '$lib/ui/done-view.svelte';
+  import * as ui from '$lib/ui/icons';
 
   // Re-runs whenever the tasks table changes, from any tab.
   const tasks = liveQuery(() => db.tasks.toArray());
@@ -70,43 +74,56 @@
     </svg>dumb tasks
   </h1>
   <div class="header-actions">
+    <button
+      class="done-days"
+      aria-label="Done tasks"
+      title="Done tasks"
+      aria-pressed={doneView.open}
+      onclick={() => (doneView.open ? closeDoneView() : openDoneView())}
+    >
+      <Icon svg={ui.doneDays} size={18} />
+    </button>
     <HistoryButtons />
     <SyncMenu />
     <ThemeToggle />
   </div>
 </header>
 
-{#if showIntro}
-  <p class="intro">
-    Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync through
-    {sync.driveAvailable ? 'Google Drive or ' : ''}your WebDAV server.
-  </p>
-  <!-- How to install it, while the app is new: afterwards it's in the sync menu -->
-  <InstallPill />
-{/if}
+{#if doneView.open}
+  <DoneDays tasks={$tasks ?? []} />
+{:else}
+  {#if showIntro}
+    <p class="intro">
+      Dumb Tasks is a simple local-first task list. Tasks stay on your device, or sync through
+      {sync.driveAvailable ? 'Google Drive or ' : ''}your WebDAV server.
+    </p>
+    <!-- How to install it, while the app is new: afterwards it's in the sync menu -->
+    <InstallPill />
+  {/if}
 
-<div class="bar" bind:clientHeight={barHeight}>
-  <!-- Dropping a dragged task on a tab sends it to the end of that list, without switching
-       tabs; holding it there opens the tab (see drag-and-drop.ts) -->
-  <div class="tabs" role="tablist" aria-label="Buckets">
-    {#each BUCKETS as bucket (bucket)}
-      <button
-        role="tab"
-        aria-selected={activeTab === bucket}
-        aria-controls="panel-{bucket}"
-        data-tab={bucket}
-        class:drop-target={drag.id && drag.overTab === bucket}
-        onclick={() => (activeTab = bucket)}><BucketName {bucket} /></button
-      >
-    {/each}
+  <div class="bar" bind:clientHeight={barHeight}>
+    <!-- Dropping a dragged task on a tab sends it to the end of that list, without switching
+         tabs; holding it there opens the tab (see drag-and-drop.ts) -->
+    <div class="tabs" role="tablist" aria-label="Buckets">
+      {#each BUCKETS as bucket (bucket)}
+        <button
+          role="tab"
+          aria-selected={activeTab === bucket}
+          aria-controls="panel-{bucket}"
+          data-tab={bucket}
+          class:drop-target={drag.id && drag.overTab === bucket}
+          onclick={() => (activeTab = bucket)}><BucketName {bucket} /></button
+        >
+      {/each}
+    </div>
   </div>
-</div>
 
-<main style:--sticky-top="{barHeight}px">
-  {#each BUCKETS as bucket (bucket)}
-    <BucketList {bucket} active={activeTab === bucket} tasks={grouped[bucket]} done={done[bucket]} />
-  {/each}
-</main>
+  <main style:--sticky-top="{barHeight}px">
+    {#each BUCKETS as bucket (bucket)}
+      <BucketList {bucket} active={activeTab === bucket} tasks={grouped[bucket]} done={done[bucket]} />
+    {/each}
+  </main>
+{/if}
 
 <PageFooter />
 
@@ -133,6 +150,23 @@
     position: relative;
     display: flex;
     gap: 4px;
+  }
+
+  /* Like the other header buttons (HistoryButtons, ThemeToggle) */
+  .done-days {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: none;
+    color: var(--ink-faded);
+    cursor: pointer;
+  }
+
+  .done-days:hover,
+  .done-days[aria-pressed='true'] {
+    color: var(--accent);
   }
 
   /* A ticked circle, matching the task icons */
