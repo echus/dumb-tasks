@@ -120,13 +120,15 @@
             aria-label="Show every task done in {monthLabel(month)}"
             onclick={() => showDone(month)}>{monthLabel(month)}</button
           >
-          <button class="month-sum" aria-label="{monthTotal} done in {monthLabel(month)}" onclick={() => showDone(month)}>
-            <span
-              class="month-total"
-              class:flipped={monthInkFlips}
-              class:picked={picked === null}
-              style:--shade="{monthShade}%">{monthTotal}</span
-            >
+          <button
+            class="month-sum"
+            class:flipped={monthInkFlips}
+            class:picked={picked === null}
+            style:--shade="{monthShade}%"
+            aria-label="{monthTotal} done in {monthLabel(month)}"
+            onclick={() => showDone(month)}
+          >
+            <span class="month-total">{monthTotal}</span>
             {monthTotal === 1 ? 'task' : 'tasks'} completed
           </button>
         </div>
@@ -289,59 +291,49 @@
     gap: 2px;
   }
 
+  /* The month's total, shaded smoothly from empty grey to the deepest green at 100 */
   .month-sum {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 4px;
+    align-items: baseline;
+    gap: 5px;
+    padding: 5px 10px;
     border: none;
-    background: none;
-    color: var(--muted);
+    border-radius: 3px;
+    background: color-mix(in oklab, var(--cal-5) var(--shade), var(--cal-0));
+    color: var(--cal-ink);
     font-size: 0.8rem;
-    font-weight: 600;
     cursor: pointer;
   }
 
   .month-total {
-    display: grid;
-    place-items: center;
-    min-width: 30px;
-    height: 30px;
-    padding: 0 6px;
-    border-radius: 3px;
-    background: color-mix(in oklab, var(--cal-5) var(--shade), var(--cal-0));
-    color: var(--cal-ink);
     font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
+    font-weight: 700;
   }
 
-  .month-total.flipped {
+  .month-sum.flipped {
     color: var(--cal-ink-5);
   }
 
-  .month-total.picked {
+  .month-sum.picked {
     outline: 1px solid var(--cal-outline);
     outline-offset: -3px;
   }
 
-  .month-total.picked.flipped {
+  .month-sum.picked.flipped {
     outline-color: var(--cal-outline-deep);
   }
 
   /* The name and the total do the same, so pointing at either lights up the total */
   @media (hover: hover) {
-    .month-head:hover .month-total {
+    .month-head:hover .month-sum {
       outline: 1px solid var(--cal-outline);
       outline-offset: -3px;
     }
 
-    .month-head:hover .month-total.flipped {
+    .month-head:hover .month-sum.flipped {
       outline-color: var(--cal-outline-deep);
     }
   }
-
-
 
   .grid {
     display: grid;
