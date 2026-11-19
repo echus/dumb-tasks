@@ -259,10 +259,19 @@
     cursor: pointer;
   }
 
-  .month:hover,
+  /* Showing the whole month, or pointed at: the same thin grey box as a day */
+  .month {
+    border-radius: 3px;
+  }
+
   .month[aria-pressed='true'] {
-    text-decoration: underline;
-    text-underline-offset: 4px;
+    outline: 1px solid var(--cal-outline);
+  }
+
+  @media (hover: hover) {
+    .month:hover {
+      outline: 1px solid var(--cal-outline);
+    }
   }
 
   .grid {
