@@ -338,8 +338,8 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 10px;
-    height: 10px;
+    width: 16px;
+    height: 16px;
     background: var(--cal-today);
     clip-path: polygon(0 0, 100% 0, 0 100%);
   }
