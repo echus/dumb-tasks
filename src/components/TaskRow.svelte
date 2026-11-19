@@ -11,6 +11,7 @@
   import { dragTask } from '$lib/ui/drag-and-drop';
   import { clock, drag } from '$lib/ui/state.svelte';
   import { doneGlides, reduceMotion, undoneGlides } from '$lib/ui/done-motion';
+  import { celebrate } from '$lib/ui/celebrate';
 
   let { task, first, last }: { task: Task; first: boolean; last: boolean } = $props();
 
@@ -64,10 +65,11 @@
   // down to the tasks done today (see done-motion.ts)
   let ticking = $state(false);
 
-  async function complete() {
+  async function complete(e: MouseEvent) {
     if (ticking) return;
     ticking = true;
     navigator.vibrate?.(10);
+    celebrate(e.currentTarget as Element, task.colour);
     if (!reduceMotion()) await new Promise((r) => setTimeout(r, 380));
     clock.now = new Date(); // so a task done just after the day turns over shows as today's
     try {
@@ -367,7 +369,7 @@
 
   li.ticking .words {
     background-size: 100% 1.5px;
-    color: var(--muted);
+    color: var(--ink-done);
   }
 
   @media (prefers-reduced-motion: reduce) {

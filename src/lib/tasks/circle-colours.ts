@@ -98,7 +98,7 @@ function cutAround(arcs: [number, number][], hue: number, gap: number): [number,
   });
 }
 
-function parseHsl(colour: string): { hue: number; lightness: number } | null {
+export function parseHsl(colour: string): { hue: number; lightness: number } | null {
   const m = /^hsl\(([\d.]+) [\d.]+% ([\d.]+)%\)$/.exec(colour);
   return m && { hue: +m[1], lightness: +m[2] };
 }

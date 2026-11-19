@@ -19,9 +19,9 @@ const [sendUndone, receiveUndone] = crossfade(options);
 
 type Glide = typeof sendDone;
 
-// Lifted above the rows it passes, with the list's own background, so their text doesn't
+// Lifted above the rows it passes, with its list's own background, so their text doesn't
 // show through it
-const LIFTED = 'position: relative; z-index: 1; background: var(--surface)';
+const LIFTED = 'position: relative; z-index: 1; background: var(--row-bg, var(--surface))';
 
 /** Adds to a transition's CSS. Svelte stops reading it at an empty part, as from a ";;". */
 const withCss = (css: string | undefined, extra: string) =>
