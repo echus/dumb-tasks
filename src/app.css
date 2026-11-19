@@ -59,13 +59,14 @@
   --fill-done: color-mix(in srgb, var(--muted) 14%, var(--surface));
   --done-tint: 22%; /* how much colour a done task's circle keeps */
   /* Done history calendar: a square's colour for 0 to 5+ tasks done, and its text colour.
-     Dark: brighter green for more, as on a dark page */
+     Dark: stronger, more vivid green for more - never a pale green at the top, which reads
+     as weak on a dark page */
   --cal-0: #3b3e44;
-  --cal-1: #213b2a;
-  --cal-2: #24573a;
-  --cal-3: #2a7a3f;
-  --cal-4: #46b45f;
-  --cal-5: #7fe08f;
+  --cal-1: #1f3a28;
+  --cal-2: #1e5631;
+  --cal-3: #1f6b38;
+  --cal-4: #27904a;
+  --cal-5: #3fb950;
   --cal-ink: #e6edf3;
   --cal-ink-bright: #0d1117; /* on the two brightest greens */
   --cal-ink-5: var(--cal-ink-bright);

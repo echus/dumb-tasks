@@ -344,11 +344,13 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 | Done that day | Square |
 | --- | --- |
 | 0 | Grey |
-| 1 to 4 | A green for each count, deeper for more (brighter in dark mode) |
-| 5 or more | The deepest green - a good day's worth, reachable on a normal day |
+| 1 to 4 | A green for each count, stronger for more |
+| 5 or more | The strongest green - a good day's worth, reachable on a normal day |
 
 - Shade is by lightness, not hue, and each square prints its count - it reads with colour
   blindness
+- Dark mode - the top step is the most vivid green, not the palest - pale reads as weak on a
+  dark page
 - Today - a bold date and count, with no mark that relies on colour
 - The picked day, and a day pointed at - a thin line just inside the square. Dark on the
   paler squares and light on the two strongest greens, the other way round in dark mode
