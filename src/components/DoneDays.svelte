@@ -290,7 +290,7 @@
     border-radius: 3px;
     background: var(--cal-0);
     color: var(--cal-ink);
-    font-size: 13px;
+    font-size: 15px; /* the date, a step bigger than the count under it */
     line-height: 1.2;
     cursor: pointer;
   }
@@ -324,15 +324,9 @@
     line-height: 1;
   }
 
-  /* Today: bigger and bold, with no mark that leans on colour */
-  .today .date {
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 19px;
-  }
-
+  /* Today: bold, with no mark that leans on colour */
+  .today .date,
   .today .count {
-    font-size: 13px;
     font-weight: 700;
   }
 
