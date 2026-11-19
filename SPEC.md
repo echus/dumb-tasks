@@ -336,7 +336,7 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 - The app's name at the top goes back to the lists, as on most sites
 - A month calendar, Monday first, with the tasks of the picked day below it. Opens on today
 - The month's name lists every task done that month, each with its day
-- Under the name, "54 tasks completed" in a box shaded smoothly from grey to the deepest green
+- Across from the name, "54 tasks completed" in a box shaded smoothly from grey to the deepest green
   at 100 - about five a day. It lists the month too, and gets a day's outline while the month
   shows
 - Over the list - "3 tasks done on Tue 17 Nov", with the number in green (or plain for 0)

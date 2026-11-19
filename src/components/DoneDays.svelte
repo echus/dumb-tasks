@@ -240,6 +240,11 @@
     visibility: hidden;
   }
 
+  /* Narrower month arrows, so the name and total fit beside them on a small phone */
+  .arrow {
+    width: 28px;
+  }
+
   h2,
   h3 {
     margin: 0;
@@ -265,7 +270,7 @@
   }
 
   .calendar {
-    padding: 4px 12px 12px;
+    padding: 20px 12px 12px;
   }
 
   .nav {
@@ -276,19 +281,22 @@
   }
 
   .month {
-    padding: 4px 8px;
+    padding: 4px;
+    white-space: nowrap;
     border: none;
     background: none;
     font-weight: 600;
     cursor: pointer;
   }
 
-  /* The name, with the month's total under it */
+  /* The name at the left, the month's total at the right */
   .month-head {
+    flex: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
   }
 
   /* The month's total, shaded smoothly from empty grey to the deepest green at 100 */
@@ -302,6 +310,7 @@
     background: color-mix(in oklab, var(--cal-5) var(--shade), var(--cal-0));
     color: var(--cal-ink);
     font-size: 0.8rem;
+    white-space: nowrap;
     cursor: pointer;
   }
 
