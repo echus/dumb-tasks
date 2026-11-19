@@ -103,6 +103,14 @@ test('shows done tasks by day, and closes with the back button', async ({ page }
   await page.keyboard.press('ArrowRight');
   await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
   await expect(todaySquare).toBeFocused();
+
+  // "back to today" shows only away from today, and goes there
+  const toToday = page.getByRole('button', { name: 'back to today' });
+  await expect(toToday).toBeHidden();
+  await page.getByRole('button', { name: 'Previous month' }).click();
+  await toToday.click();
+  await expect(todaySquare).toHaveAttribute('aria-pressed', 'true');
+  await expect(toToday).toBeHidden();
   await page.goBack();
   await expect(page.getByLabel('New task in Today')).toBeVisible();
 

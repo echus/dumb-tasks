@@ -19,7 +19,6 @@
   import * as ui from '$lib/ui/icons';
   import { closeDoneView, doneView, showDone } from '$lib/ui/done-view.svelte';
   import { clock } from '$lib/ui/state.svelte';
-  import { effectiveTheme } from '$lib/ui/theme.svelte';
   import type { Task } from '$lib/types';
 
   let { tasks }: { tasks: Task[] } = $props();
@@ -36,14 +35,12 @@
   const month = $derived((target ?? today).slice(0, 7));
   const picked = $derived(target === null ? today : target.length === 10 ? target : null);
 
-  // The month's total, shaded smoothly from empty grey to the deepest green at 100: about five
-  // a day, the days' own top step. The number flips colour once the green is strong enough
-  // that it reads better (later in light mode, where the green darkens slowly)
+  // The month's total, in the days' own greens with the steps spread over a month: one for
+  // each 20 done, so the strongest green comes at 81 - about four a day
   const monthTotal = $derived(
     [...byDay].filter(([day]) => day.startsWith(month)).reduce((sum, [, done]) => sum + done.length, 0),
   );
-  const monthShade = $derived(Math.min(monthTotal, 100));
-  const monthInkFlips = $derived(monthShade >= (effectiveTheme() === 'dark' ? 55 : 85));
+  const monthLevel = $derived(Math.min(Math.ceil(monthTotal / 20), 5));
 
   const kept = (day: string) => day >= firstKept && day <= today;
   const count = (day: string) => byDay.get(day)?.length ?? 0;
@@ -100,6 +97,10 @@
         <Icon svg={ui.arrowLeft} size={18} />
       </button>
       <h2 id="done-days-title">done history</h2>
+      <!-- Only while something else shows: today is where the view opens -->
+      {#if target !== null}
+        <button class="to-today" onclick={() => showDone(null)}>back to today</button>
+      {/if}
     </div>
 
     <div class="calendar">
@@ -121,10 +122,8 @@
             onclick={() => showDone(month)}>{monthLabel(month)}</button
           >
           <button
-            class="month-sum"
-            class:flipped={monthInkFlips}
+            class="month-sum level-{monthLevel}"
             class:picked={picked === null}
-            style:--shade="{monthShade}%"
             aria-label="{monthTotal} done in {monthLabel(month)}"
             onclick={() => showDone(month)}
           >
@@ -219,6 +218,22 @@
     margin: 0 0 8px -8px; /* the arrow's own space, so it lines up with the page edge */
   }
 
+  .to-today {
+    margin-left: auto;
+    padding: 4px 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .to-today:hover {
+    color: var(--text);
+    text-decoration: underline;
+  }
+
   .back,
   .arrow {
     display: grid;
@@ -299,7 +314,7 @@
     min-width: 0;
   }
 
-  /* The month's total, shaded smoothly from empty grey to the deepest green at 100 */
+  /* The month's total: a day's colours, from the level classes below */
   .month-sum {
     display: flex;
     align-items: baseline;
@@ -307,7 +322,7 @@
     padding: 5px 10px;
     border: none;
     border-radius: 3px;
-    background: color-mix(in oklab, var(--cal-5) var(--shade), var(--cal-0));
+    background: var(--cal-0);
     color: var(--cal-ink);
     font-size: 0.8rem;
     white-space: nowrap;
@@ -319,16 +334,13 @@
     font-weight: 700;
   }
 
-  .month-sum.flipped {
-    color: var(--cal-ink-5);
-  }
-
   .month-sum.picked {
     outline: 1px solid var(--cal-outline);
     outline-offset: -3px;
   }
 
-  .month-sum.picked.flipped {
+  .month-sum.picked.level-4,
+  .month-sum.picked.level-5 {
     outline-color: var(--cal-outline-deep);
   }
 
@@ -339,7 +351,8 @@
       outline-offset: -3px;
     }
 
-    .month-head:hover .month-sum.flipped {
+    .month-head:hover .month-sum.level-4,
+    .month-head:hover .month-sum.level-5 {
       outline-color: var(--cal-outline-deep);
     }
   }
@@ -358,8 +371,6 @@
   }
 
   .day {
-    position: relative;
-    overflow: hidden; /* clips today's corner to the rounding */
     aspect-ratio: 1;
     display: flex;
     flex-direction: column;
@@ -405,22 +416,17 @@
     line-height: 1;
   }
 
-  /* Today: bold, with a yellow corner like a page folded down - a shape too, so it doesn't
-     lean on colour alone */
+  /* Today: bold, with a yellow ring round the outside. Its thin amber edge keeps it clear on
+     the white list, and for anyone who can't tell the yellow from the greens */
   .today .date,
   .today .count {
     font-weight: 700;
   }
 
-  .today::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 38%; /* grows with the square, and stays clear of the date on a phone */
-    aspect-ratio: 1;
-    background: var(--cal-today);
-    clip-path: polygon(0 0, 100% 0, 0 100%);
+  .today {
+    box-shadow:
+      0 0 0 2px var(--cal-today),
+      0 0 0 3px var(--cal-today-edge);
   }
 
   /* The picked day, and a day pointed at, get a thin line just inside the square: dark on the

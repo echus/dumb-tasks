@@ -336,9 +336,10 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
 - The app's name at the top goes back to the lists, as on most sites
 - A month calendar, Monday first, with the tasks of the picked day below it. Opens on today
 - The month's name lists every task done that month, each with its day
-- Across from the name, "54 tasks completed" in a box shaded smoothly from grey to the deepest green
-  at 100 - about five a day. It lists the month too, and gets a day's outline while the month
-  shows
+- Across from the name, "54 tasks completed" in a box with a day's colours, one step for each
+  20 done - the strongest green from 81, about four a day. It lists the month too, and gets a
+  day's outline while the month shows
+- "back to today" on the title line, only while something other than today shows
 - Over the list - "3 tasks done on Tue 17 Nov", with the number in green (or plain for 0)
   and the words between in grey, so the eye goes to the number and the day
 - Arrows step through the months that hold kept days. Days before what is kept, or still to
@@ -354,8 +355,8 @@ src/lib/ui/done-view.svelte.ts  opens and closes the done history at #done
   blindness
 - Dark mode - the top step is the most vivid green, not the palest - pale reads as weak on a
   dark page
-- Today - a bold date and count, and a small yellow corner at the top left - a shape too, so
-  it does not rely on colour alone
+- Today - a bold date and count, and a yellow ring round the square with a thin amber edge -
+  the edge keeps it clear on the white list and with colour blindness
 - The picked day, and a day pointed at - a thin line just inside the square. Dark on the
   paler squares and light on the two strongest greens, the other way round in dark mode
 - Shows what is kept - done tasks are removed after 90 days (see Clean-up)
