@@ -32,8 +32,8 @@
     {#each days as day (day.day)}
       <!-- The date leads, so "today" isn't read as the Today list -->
       <h3 id="done-{day.day}">
-        {day.date}
-        {#if day.relative}<span class="relative">{day.relative}</span>{/if}
+        <span>{day.date}</span>
+        <span class="relative">{day.relative ?? ''}</span>
         <span class="count">{day.tasks.length} done</span>
       </h3>
       <div class="list">
@@ -109,8 +109,10 @@
   }
 
   /* The same plain text above a white list as the bucket names */
+  /* Date at the left, "today" or "yesterday" in the middle, the count at the right */
   h3 {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: baseline;
     gap: 6px;
     padding: 16px 2px 8px;
@@ -123,9 +125,8 @@
     font-weight: 600;
   }
 
-  /* Over the right end of the day's list */
   .count {
-    margin-left: auto;
+    justify-self: end;
     font-size: 0.8rem;
   }
 
