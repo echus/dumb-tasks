@@ -52,8 +52,10 @@
     padding: 8px 0 64px;
   }
 
+  /* One column in the middle: a log reads top to bottom, newest first */
   .inner {
-    max-width: 560px;
+    max-width: 600px;
+    margin: 0 auto;
   }
 
   /* Desktop: the page fills the window, so the days scroll within it */
