@@ -55,7 +55,8 @@ export default defineConfig(({ mode }) => ({
       // Fonts too, so the app looks right offline.
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        globIgnores: ['og-image.png'], // for link previews, not the installed app
+        // For link previews and the install dialog, not the installed app
+        globIgnores: ['og-image.png', 'screenshots/**'],
         // The privacy page is its own HTML, not a route in the app
         navigateFallbackDenylist: [/^\/privacy(\.html)?$/],
       },
@@ -71,6 +72,11 @@ export default defineConfig(({ mode }) => ({
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+        // Shown in Chrome's install dialog (made by scripts/make-preview-image.js)
+        screenshots: [
+          { src: 'screenshots/wide.png', sizes: '2560x1600', type: 'image/png', form_factor: 'wide' },
+          { src: 'screenshots/narrow.png', sizes: '780x1688', type: 'image/png', form_factor: 'narrow' },
         ],
         // Lets Android share text from any app straight into Today.
         share_target: {

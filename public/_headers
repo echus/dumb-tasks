@@ -1,3 +1,12 @@
+# Basic hardening for every page and file
+#   X-Content-Type-Options - browsers use the stated file type and do not guess one
+#   Referrer-Policy - other sites get the origin only, not the full address
+#   X-Frame-Options - other sites cannot show the app in a frame
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+
 # Always check for a new service worker and app shell, so deploys reach installed apps
 /sw.js
   Cache-Control: no-cache

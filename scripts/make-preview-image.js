@@ -3,15 +3,19 @@
 //   the desktop layout under the logo and tagline (light only: a card can't follow the theme)
 // - docs/preview.png and docs/preview-dark.png: the top of the README, desktop and phone
 //   together, for GitHub's light and dark themes
+// - public/screenshots/wide.png and narrow.png: the screenshots in the app manifest, which
+//   Chrome shows in its install dialog (light only, like the card)
 //
 // Start the dev server (npm run dev), then: node scripts/make-preview-image.js
+// To make only the manifest screenshots: node scripts/make-preview-image.js screenshots
 // Uses the Chrome installed on this computer, so the emoji are the system's own. Circle
 // colours are random, so run it again for a different mix.
 
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const APP = process.env.APP_URL ?? 'http://localhost:5173';
+const ONLY_SCREENSHOTS = process.argv[2] === 'screenshots';
 const TITLE_FONT = new URL(
   '../node_modules/@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2',
   import.meta.url,
@@ -96,13 +100,24 @@ async function screenshots(colorScheme) {
   const shot = async (width, height) => {
     await page.setViewportSize({ width, height });
     await page.waitForTimeout(500);
-    return png(await page.screenshot());
+    return await page.screenshot();
   };
   const shots = {
-    desktop: await shot(1280, 800),
-    card: await shot(1200, 520),
-    phone: await shot(390, 700),
+    desktop: png(await shot(1280, 800)),
+    card: png(await shot(1200, 520)),
+    phone: png(await shot(390, 700)),
   };
+  if (colorScheme === 'light') {
+    await mkdir(new URL('../public/screenshots/', import.meta.url), { recursive: true });
+    for (const [name, width, height] of [
+      ['wide', 1280, 800],
+      ['narrow', 390, 844],
+    ]) {
+      const out = new URL(`../public/screenshots/${name}.png`, import.meta.url);
+      await writeFile(out, await shot(width, height));
+      console.log(`Wrote ${out.pathname}`);
+    }
+  }
   await context.close();
   return shots;
 }
@@ -155,6 +170,10 @@ const MARK = `<svg class="mark" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" 
 // The link card: logo, tagline and what sets the app apart, the desktop layout below running
 // off the bottom
 const light = await screenshots('light');
+if (ONLY_SCREENSHOTS) {
+  await browser.close();
+  process.exit(0);
+}
 await render(
   `<style>
     header {
