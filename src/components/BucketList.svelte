@@ -36,32 +36,30 @@
           <TaskRow {task} first={i === 0} last={i === tasks.length - 1} />
         {/each}
       </ul>
-      <div class="done">
-        {#if done.length}
-          <!-- The whole line opens and closes the done rows; "see history" sits on it, by the arrow -->
-          <div class="done-head">
-            <button
-              class="done-toggle"
-              aria-expanded={doneRows.open}
-              aria-controls="done-{bucket}"
-              onclick={toggleDoneRows}
-            >
-              {done.length} done today
-              <span class="caret" class:closed={!doneRows.open}><Icon svg={ui.caretDown} size={12} /></span>
-            </button>
-            <button class="see-all" aria-label="See done history" onclick={openDoneView}>see history</button>
-          </div>
-        {/if}
-        <!-- Always there while open, even empty, so the first task done glides in: a row only
-             glides when its own list adds it. Closed, a ticked task fades away instead. -->
-        {#if doneRows.open}
-          <ul id="done-{bucket}" aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
-            {#each done as task (task.id)}
-              <DoneRow {task} />
-            {/each}
-          </ul>
-        {/if}
-      </div>
+      {#if done.length}
+        <!-- The whole line opens and closes the done rows; "see history" sits on it, by the arrow -->
+        <div class="done-head">
+          <button
+            class="done-toggle"
+            aria-expanded={doneRows.open}
+            aria-controls="done-{bucket}"
+            onclick={toggleDoneRows}
+          >
+            {done.length} done today
+            <span class="caret" class:closed={!doneRows.open}><Icon svg={ui.caretDown} size={12} /></span>
+          </button>
+          <button class="see-history" aria-label="See done history" onclick={openDoneView}>see history</button>
+        </div>
+      {/if}
+      <!-- Always there while open, even empty, so the first task done glides in: a row only
+           glides when its own list adds it. Closed, a ticked task fades away instead. -->
+      {#if doneRows.open}
+        <ul id="done-{bucket}" aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
+          {#each done as task (task.id)}
+            <DoneRow {task} />
+          {/each}
+        </ul>
+      {/if}
     </div>
   </div>
 </section>
@@ -163,7 +161,7 @@
   }
 
   /* Just left of the arrow (12px padding, 24px arrow) */
-  .see-all {
+  .see-history {
     position: absolute;
     top: 50%;
     right: 40px;
@@ -176,7 +174,7 @@
     cursor: pointer;
   }
 
-  .see-all:hover {
+  .see-history:hover {
     color: var(--text);
     text-decoration: underline;
   }
