@@ -37,12 +37,12 @@
     padding: 0 12px;
     border: none;
     background: none;
-    color: var(--muted);
+    color: var(--ink-done);
     text-align: left;
     cursor: pointer;
   }
 
-  /* The same circle as a task to do, showing the tick it was given */
+  /* The circle keeps a faded trace of its colour, and the tick it was given */
   .icon {
     flex: none;
     display: grid;
@@ -50,8 +50,8 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--circle) var(--circle-tint), var(--tint-base));
-    color: var(--on-tint);
+    background: color-mix(in srgb, var(--circle) 22%, var(--fill-done));
+    color: var(--ink-done);
   }
 
   .text {

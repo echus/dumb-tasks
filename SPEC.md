@@ -296,14 +296,18 @@ wrong icon is worse than none.
 ```
 src/components/DoneRow.svelte   a done task, ticked again to undo
 src/lib/ui/done-motion.ts       glide between a list and its done rows
+src/lib/ui/celebrate.ts         burst of hearts, stars, sparkles or sprinkles on a tick, in the task's colour
 ```
 
 - A task done today stays at the bottom of its own list, struck through, newest first
 - The day starts at 4am - a task done just after midnight stays with the evening's
 - A done task goes back to its old place when ticked again - its position does not change
 - Done rows cannot be dragged or edited - a tap anywhere on one undoes it
-- Ticking off - the circle pops and a line draws through the text, then the row glides down
-- Reduced motion turns off the pop and the glide
+- Ticking off - the circle pops with a burst and a line draws through the text, then the row
+  glides down
+- Done rows have light grey text on a grey between the list and the page, and their circle
+  keeps a faded trace of its colour
+- Reduced motion turns off the pop, the burst and the glide
 
 ## Drag and drop
 

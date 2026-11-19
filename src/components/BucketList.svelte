@@ -32,16 +32,18 @@
           <TaskRow {task} first={i === 0} last={i === tasks.length - 1} />
         {/each}
       </ul>
-      {#if done.length}
-        <p class="done-count">{done.length} done today</p>
-      {/if}
-      <!-- Always there, even empty, so the first task done glides in: a row only glides when
-           its own list adds it -->
-      <ul aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
-        {#each done as task (task.id)}
-          <DoneRow {task} />
-        {/each}
-      </ul>
+      <div class="done">
+        {#if done.length}
+          <p class="done-count">{done.length} done today</p>
+        {/if}
+        <!-- Always there, even empty, so the first task done glides in: a row only glides when
+             its own list adds it -->
+        <ul aria-label={done.length ? `Done today in ${BUCKET_LABELS[bucket]}` : undefined}>
+          {#each done as task (task.id)}
+            <DoneRow {task} />
+          {/each}
+        </ul>
+      </div>
     </div>
   </div>
 </section>
@@ -120,6 +122,12 @@
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+
+  /* A gliding row takes this background too (done-motion.ts) */
+  .done {
+    --row-bg: var(--surface-done);
+    background: var(--surface-done);
   }
 
   .done-count {
