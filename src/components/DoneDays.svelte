@@ -223,9 +223,9 @@
     padding: 4px 0;
     border: none;
     background: none;
-    color: var(--muted);
+    color: color-mix(in srgb, var(--muted) 65%, var(--bg)); /* quieter than the headings */
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
   }
 
